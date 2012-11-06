@@ -1,0 +1,491 @@
+### Copyright: Peter Williams (2012) - All rights reserved
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the GNU General Public License as published by
+### the Free Software Foundation; version 2 of the License only.
+###
+### This program is distributed in the hope that it will be useful,
+### but WITHOUT ANY WARRANTY; without even the implied warranty of
+### MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+### GNU General Public License for more details.
+###
+### You should have received a copy of the GNU General Public License
+### along with this program; if not, write to the Free Software
+### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+'''
+Virtual paint library
+'''
+
+import collections
+import math
+import re
+import fractions
+
+from pcatk import rgbh
+
+if __name__ == '__main__':
+    import doctest
+    _ = lambda x: x
+
+class RGB(rgbh.RGB):
+    pass
+
+class Hue(rgbh.Hue):
+    pass
+
+class XY(rgbh.XY):
+    pass
+
+# Primary Colours
+RGB_RED = RGB(red=fractions.Fraction(1), green=fractions.Fraction(0), blue=fractions.Fraction(0))
+RGB_GREEN = RGB(red=fractions.Fraction(0), green=fractions.Fraction(1), blue=fractions.Fraction(0))
+RGB_BLUE = RGB(red=fractions.Fraction(0), green=fractions.Fraction(0), blue=fractions.Fraction(1))
+# Secondary Colours
+RGB_CYAN = RGB_BLUE + RGB_GREEN
+RGB_MAGENTA = RGB_BLUE + RGB_RED
+RGB_YELLOW = RGB_RED + RGB_GREEN
+# Black and White
+RGB_WHITE = RGB_RED + RGB_GREEN + RGB_BLUE
+RGB_BLACK = RGB(*((0,) * 3))
+# The "ideal" palette is one that contains the full range at full strength
+IDEAL_RGB_COLOURS = [RGB_WHITE, RGB_MAGENTA, RGB_RED, RGB_YELLOW, RGB_GREEN, RGB_CYAN, RGB_BLUE, RGB_BLACK]
+IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLUE', 'BLACK']
+
+def map_rgbs(rgbs, maxcv):
+    if isinstance(maxcv, int):
+        mapf = lambda x: int(round(x * maxcv))
+    else:
+        mapf = lambda x: type(maxcv)(x * maxcv)
+    return [rgb.mapped(mapf) for rgb in rgbs]
+# END_DEF: map_rgbs
+
+class HCVW(object):
+    BITS_PER_CHANNEL = 16
+    ONE = (1 << BITS_PER_CHANNEL) - 1
+    TWO = ONE * 2
+    THREE = ONE * 3
+
+    IDEAL_COLOURS = map_rgbs(IDEAL_RGB_COLOURS, ONE)
+    WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK = IDEAL_COLOURS
+
+    @classmethod
+    def mapf(cls, x):
+         return int(round(x * cls.ONE))
+    # END_DEF: mapf
+
+    @classmethod
+    def rgb_for_hue(cls, hue, value=None):
+        # value is None return the RGB for the max chroma for the hue
+        # else return the RGB for our hue with the specified value
+        # NB if requested value is too big for the hue the returned value
+        # will deviate towards the weakest component on its way to white.
+        # Zero chroma has a hue of WHITE (allow for inaccuracies of real maths)
+        if hue is None:
+            return cls.WHITE if value is None else (cls.WHITE * value)
+        return Hue(hue).get_rgb(value).mapped(cls.mapf)
+    # END_DEF: rgb_for_hue
+
+    def __init__(self, rgb):
+        self.rgb = RGB(*rgb)
+        self.value = self.rgb.get_avg_value() / self.ONE
+        if self.rgb[0] == self.rgb[1] and self.rgb[0] == self.rgb[2]:
+            # Avoid problems with rounding errors for shades of white
+            self.hue = None
+            self.chroma = 0.0
+            self.hue_rgb = self.WHITE * self.value
+            self.warmth = fractions.Fraction(0) # neither hot nor cold
+            return
+        xy = XY.from_rgb(self.rgb)
+        self.warmth = fractions.Fraction(xy.x, self.ONE)
+        self.hue = xy.get_hue()
+        if self.hue is None:
+            self.hue_rgb = self.WHITE * self.value
+            self.chroma = fractions.Fraction(0)
+        else:
+            self.hue_rgb = self.hue.get_rgb().mapped(self.mapf)
+            self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
+    # END_DEF: __init__
+
+    def hue_rgb_for_value(self, value=None):
+        if value is None:
+            # i.e. same hue and value but without any unnecessary grey
+            value = self.value
+        if self.hue is None:
+            return self.WHITE * value
+        return self.hue.get_rgb(value).mapped(self.mapf)
+    # END_DEF: hue_rgb_for_value
+
+    def chroma_side(self):
+        # Is it darker or lighter than max chroma for the hue?
+        if self.hue is None or self.value * self.ONE > sum(self.hue_rgb) / 3:
+            return self.WHITE
+        else:
+            return self.BLACK
+    # END_DEF: chroma_side
+
+    def get_rotated_rgb(self, delta_hue):
+        '''
+        Return a copy of our rgb rotated by the given amount but with
+        the same value and without unavoidable chroma change.
+        >>> HCVW((10, 10, 0)).get_rotated_rgb(-PI_60)
+        RGB(red=20, green=0, blue=0)
+        '''
+        if self.rgb.ncomps() == 2:
+            # we have no grey so only add grey if necessary to maintain value
+            return (self.hue + delta_hue).get_rgb(self.value).mapped(self.mapf)
+        else:
+            # Simple rotation is the correct solution for 1 or 3 components
+            return self.rgb.rotated(delta_hue)
+    # END_DEF: get_rotated_rgb
+
+    def __str__(self):
+        string = '(HUE = {0}, '.format(round(math.degrees(self.hue), 2) if self.hue is not None else None)
+        string += 'VALUE = {0}, '.format(round(self.value, 2))
+        string += 'CHROMA = {0}, '.format(round(self.chroma, 2))
+        string += 'WARMTH = {0})'.format(round(self.warmth, 2))
+        return string
+    # END_DEF: __str__()
+# END_CLASS: HCVW
+
+RATING = collections.namedtuple('RATING', ['abbrev', 'descr', 'rval'])
+
+class MappedFloat(object):
+    class BadValue(Exception): pass
+    MAP = None
+
+    def __init__(self, ival=0.0):
+        if isinstance(ival, (str, unicode)):
+            self.val = None
+            for mapi in self.MAP:
+                if ival == mapi.abbrev or ival == mapi.descr:
+                    self.val = mapi.rval
+                    break
+            if self.val is None:
+                try:
+                    self.val = float(ival)
+                except ValueError:
+                    raise self.BadValue(_('Unrecognized rating value: {0}').format(ival))
+        else: # assume it's a real value in the mapped range
+            self.val = ival
+    # END_DEF: __init__
+
+    def __str__(self):
+        rval = round(self.val, 0)
+        for mapi in self.MAP:
+            if rval == mapi.rval:
+                return mapi.abbrev
+        raise  self.BadValue(_('Invalid rating: {0}').format(self.val))
+    # END_DEF: __str__
+
+    # Enough operators to facilitate weighted averaging
+    def __mul__(self, multiplier):
+        return self.__class__(self.val * multiplier)
+    # END_DEF: __mul__
+
+    def __iadd__(self, other):
+        self.val += other.val
+        return self
+    # END_DEF: __iadd__
+
+    def __idiv__(self, divisor):
+        self.val /= divisor
+        return self
+    # END_DEF: __idiv__
+
+    # And sorting (Python 3.0 compatible)
+    def __lt__(self, other):
+        return self.val < other.val
+    # END_DEF: __lt__
+
+    def __le__(self, other):
+        return self.val <= other.val
+    # END_DEF: __le__
+
+    def __gt__(self, other):
+        return self.val > other.val
+    # END_DEF: __gt__
+
+    def __ge__(self, other):
+        return self.val >= other.val
+    # END_DEF: __ge__
+
+    def __eq__(self, other):
+        return self.val == other.val
+    # END_DEF: __eq__
+
+    def __ne__(self, other):
+        return self.val != other.val
+    # END_DEF: __ne__
+# END_CLASS: MappedFloat
+
+class Permanence(MappedFloat):
+    MAP = (
+            RATING('AA', _('Extremely Permanent'), 4.0),
+            RATING('A', _('Permanent'), 3.0),
+            RATING('B', _('Moderately Durable'), 2.0),
+            RATING('C', _('Fugitive'), 1.0),
+        )
+
+    def __repr__(self):
+        return 'Permanence({0})'.format(self.val)
+    # END_DEF: __repr__
+# END_CLASS: Permanence
+
+class Transparency(MappedFloat):
+    MAP = (
+            RATING('O', _('Opaque'), 1.0),
+            RATING('SO', _('Semi-opaque'), 2.0),
+            RATING('ST', _('Semi-transparent'), 3.0),
+            RATING('T', _('Transparent'), 4.0),
+        )
+
+    def __repr__(self):
+        return 'Transparency({0})'.format(self.val)
+    # END_DEF: __repr__
+# END_CLASS: Transparency
+
+class Colour(object):
+    def __init__(self, rgb, transparency=None, permanence=None):
+        self.hcvw = HCVW(rgb)
+        if transparency is None:
+            transparency = Transparency('O')
+        if permanence is None:
+            permanence = Permanence('B')
+        self.transparency = transparency if isinstance(transparency, Transparency) else Transparency(transparency)
+        self.permanence = permanence if isinstance(permanence, Permanence) else Permanence(permanence)
+    # END_DEF: __init
+
+    def __str__(self):
+        string = 'RGB: {0} Transparency: {1} Permanence: {2} '.format(self.rgb, self.transparency, self.permanence)
+        return string + str(self.hcvw)
+    # END_DEF: __str__
+
+    def __repr__(self):
+        fmt_str = 'Colour(rgb={0}, transparency={1}, permanence={2})'
+        return fmt_str.format(self.rgb, self.transparency, self.permanence)
+    # END_DEF: __repr__
+
+    def __getitem__(self, i):
+        return self.hcvw.rgb[i]
+    # END_DEF: __getitem__
+
+    def __iter__(self):
+        """
+        Iterate over colour's rgb values
+        """
+        for i in range(3):
+            yield self.hcvw.rgb[i]
+    # END_DEF: __iter__
+
+    @property
+    def rgb(self):
+        return self.hcvw.rgb
+    # END_DEF: rgb
+
+    @property
+    def hue(self):
+        return self.hcvw.hue
+    # END_DEF: hue
+
+    @property
+    def hue_rgb(self):
+        return self.hcvw.hue_rgb
+    # END_DEF: hue_rgb
+
+    @property
+    def value(self):
+        return self.hcvw.value
+    # END_DEF: value
+
+    def value_rgb(self):
+        return HCVW.WHITE * self.hcvw.value
+    # END_DEF: value_rgb
+
+    @property
+    def chroma(self):
+        return self.hcvw.chroma
+    # END_DEF: chroma
+
+    @property
+    def warmth(self):
+        return self.hcvw.warmth
+    # END_DEF: warmth
+
+    def warmth_rgb(self):
+        return (HCVW.CYAN * (1 - self.hcvw.warmth) + HCVW.RED * (1 + self.hcvw.warmth)) / 2
+    # END_DEF: warmth_rgb
+
+    def set_rgb(self, rgb):
+        """
+        Change this colours RGB values
+        """
+        self.hcvw = HCVW(rgb)
+    # END_DEF: set_rgb
+
+    def set_permanence(self, permanence):
+        """
+        Change this colours permanence value
+        """
+        self.permanence = permanence if isinstance(permanence, Permanence) else Permanence(permanence)
+    # END_DEF: set_permanence
+
+    def set_transparency(self, transparency):
+        """
+        Change this colours transparency value
+        """
+        self.transparency = transparency if isinstance(transparency, Transparency) else Transparency(transparency)
+    # END_DEF: set_transparency
+# END_CLASS: Colour
+
+class NamedColour(Colour):
+    def __init__(self, name, rgb, transparency=None, permanence=None):
+        Colour.__init__(self, rgb, transparency=transparency, permanence=permanence)
+        self.name = name
+    # END_DEF: __init__
+
+    def __repr__(self):
+        fmt_str = 'NamedColour(name="{0}", rgb={1}, transparency="{2}", permanence="{3}")'
+        return fmt_str.format(self.name, self.rgb, self.transparency, self.permanence)
+    # END_DEF: __repr__
+
+    def __str__(self):
+        return self.name
+    # END_DEF: __str__
+
+    def __len__(self):
+        return len(self.name)
+    # END_DEF: __len__
+# END_CLASS: NamedColour
+
+WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK = [NamedColour(name, rgb) for name, rgb in zip(IDEAl_COLOUR_NAMES, HCVW.IDEAL_COLOURS)]
+IDEAL_COLOURS = [WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK]
+
+SERIES_ID = collections.namedtuple('SERIES_ID', ['maker', 'name'])
+
+class TubeColour(NamedColour):
+    def __init__(self, series, name, rgb, transparency=None, permanence=None):
+        NamedColour.__init__(self, name, rgb, transparency=transparency, permanence=permanence)
+        self.series = series
+    # END_DEF: __init__
+
+    def __str__(self):
+        return self.name + ' ({0}: {1})'.format(*self.series.series_id)
+    # END_DEF: __str__
+
+    def __len__(self):
+        return len(str(self))
+    # END_DEF: __len__
+# END_CLASS: TubeColour
+
+class Series(object):
+    class ParseError(Exception):
+        pass
+    # END_CLASS: ParseError
+
+    def __init__(self, maker, name, colours=None):
+        self.series_id = SERIES_ID(maker=maker, name=name)
+        self.tube_colours = {}
+        for colour in colours:
+            self.add_colour(colour)
+    # END_DEF: __init__
+
+    def add_colour(self, colour):
+        tube_colour = TubeColour(self, name=colour.name, rgb=colour.rgb, transparency=colour.transparency, permanence=colour.permanence)
+        self.tube_colours[tube_colour.name] = tube_colour
+    # END_DEF: add_colour
+
+    def definition_text(self):
+        # No i18n for these strings
+        string = 'Manufacturer: {0}\n'.format(self.series_id.maker)
+        string += 'Series: {0}\n'.format(self.series_id.name)
+        for colour in self.tube_colours.values():
+            string += '{0}\n'.format(repr(colour))
+        return string
+    # END_DEF: definition_text
+
+    @staticmethod
+    def fm_definition(definition_text):
+        lines = definition_text.splitlines()
+        if len(lines) < 2:
+            raise Series.ParseError(_('Too few lines: {0}.'.format(len(lines))))
+        match = re.match('^Manufacturer:\s+(\S.*)\s*$', lines[0])
+        if not match:
+            raise Series.ParseError(_('Manufacturer not found.'))
+        mfkr_name = match.group(1)
+        match = re.match('^Series:\s+(\S.*)\s*$', lines[1])
+        if not match:
+            raise Series.ParseError(_('Series name not found.'))
+        series_name = match.group(1)
+        matcher = re.compile('(^[^:]+):\s+(RGB\([^)]+\)), (Transparency\([^)]+\)), (Permanence\([^)]+\))$')
+        if len(lines) > 2 and matcher.match(lines[2]):
+            # Old format
+            # TODO: remove support for old tube series format
+            colours = []
+            for line in lines[2:]:
+                match = matcher.match(line)
+                if not match:
+                    raise Series.ParseError(_('Badly formed definition: {0}.').format(line))
+                # Old data files were wx and hence 8 bits per channel
+                # so we need to convert them to 16 bist per channel
+                rgb = [channel << 8 for channel in eval(match.group(2))]
+                colours.append(NamedColour(match.group(1), rgb, eval(match.group(3)), eval(match.group(4))))
+        else:
+            colours = [eval(line) for line in lines[2:]]
+        return Series(maker=mfkr_name, name=series_name, colours=colours)
+    # END_DEF: fm_definition
+# END_CLASS: Series
+
+BLOB = collections.namedtuple('BLOB', ['colour', 'parts'])
+
+class MixedColour(Colour):
+    def __init__(self, blobs):
+        rgb = HCVW.BLACK
+        transparency = Transparency(0.0)
+        permanence = Permanence(0.0)
+        parts = 0
+        for blob in blobs:
+            parts += blob.parts
+            rgb += blob.colour.rgb * blob.parts
+            transparency += blob.colour.transparency * blob.parts
+            permanence += blob.colour.permanence * blob.parts
+        if parts > 0:
+            rgb /= parts
+            transparency /= parts
+            permanence /= parts
+        Colour.__init__(self, rgb=rgb, transparency=transparency, permanence=permanence)
+        self.blobs = sorted(blobs, key=lambda x: x.parts, reverse=True)
+    # END_DEF: __init__
+
+    def _components_str(self):
+        string = _('\nComponents:\n')
+        for blob in self.blobs:
+            string += _('\t{0} Part(s): {1}\n').format(blob.parts, blob.colour)
+        return string
+    # END_DEF: _components_str
+
+    def __str__(self):
+        return _('Mixed Colour: ') + Colour.__str__(self) + self._components_str()
+    # END_DEF: __str__
+
+    def contains_colour(self, colour):
+        for blob in self.blobs:
+            if blob.colour == colour:
+                return True
+        return False
+    # END_DEF: contains_colour
+# END_CLASS: MixedColour
+
+class NamedMixedColour(MixedColour):
+    def __init__(self, blobs, name, notes=''):
+        MixedColour.__init__(self, blobs)
+        self.name = name
+        self.notes = notes
+    # END_DEF: __init__
+
+    def __str__(self):
+        return ('Name: "{0}" Notes: "{1}"').format(self.name, self.notes) + Colour.__str__(self) + self._components_str()
+    # END_DEF: __str__
+
+if __name__ == '__main__':
+    doctest.testmod()
