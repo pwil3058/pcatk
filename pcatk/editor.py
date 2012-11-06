@@ -406,6 +406,15 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             return
         self.get_toplevel().destroy()
     # END_DEF: _close_colour_editor_cb
+
+    def _exit_colour_editor_cb(self, _action):
+        """
+        Exit the Tube Series Editor
+        """
+        if not self.unsaved_changes_ok():
+            return
+        gtk.main_quit()
+    # END_DEF: _close_colour_editor_cb
 # END_CLASS: TubeSeriesEditor
 
 class TubeEditor(gtk.VBox):
@@ -870,3 +879,23 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
         return self.tube_list.get_model().get_colours()
     # END_DEF: get_colour_with_name
 # END_CLASS: TubeColourNotebook
+
+class TopLevelWindow(gtk.Window):
+    """
+    A top level window wrapper around a palette
+    """
+
+    def __init__(self):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.set_title('pcatk: Tube Series Editor')
+        self.editor = TubeSeriesEditor()
+        self.editor.action_groups.get_action('close_colour_editor').set_visible(False)
+        self._menubar = self.editor.ui_manager.get_widget('/tube_series_editor_menubar')
+        self.connect("destroy", self.editor._exit_colour_editor_cb)
+        vbox = gtk.VBox()
+        vbox.pack_start(self._menubar)
+        vbox.pack_start(self.editor, expand=True, fill=True)
+        self.add(vbox)
+        self.show_all()
+    # END_DEF: __init__()
+# END_CLASS: TopLevelWindow
