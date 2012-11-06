@@ -719,3 +719,18 @@ class TubeColourSelector(gtk.VBox):
     # END_DEF: _add_colours_to_palette_cb
 gobject.signal_new('add-tube-colours', TubeColourSelector, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 # END_CLASS: TubeColourSelector
+
+class TopLevelWindow(gtk.Window):
+    """
+    A top level window wrapper around a palette
+    """
+
+    def __init__(self):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.set_title('pcatk: Palette')
+        self.palette = Palette()
+        self.connect("destroy", self.palette._quit_palette_cb)
+        self.add(self.palette)
+        self.show_all()
+    # END_DEF: __init__()
+# END_CLASS: TopLevelWindow
