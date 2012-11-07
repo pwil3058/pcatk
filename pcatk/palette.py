@@ -526,6 +526,7 @@ class PartsColourListStore(gpaint.ColourListStore):
         while model_iter is not None:
             self.set_value_named(model_iter, 'parts', 0)
             model_iter = self.iter_next(model_iter)
+        self.emit('contributions-changed', [])
     # END_DEF: reset_parts
 
     def get_contributions(self):
