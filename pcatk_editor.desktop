@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=pcatk: Tube Series Editor
+Name[en_AU]=pcatk: Tube Series Editor
+Exec=/home/peter/SF/SRC/PCATK/pcatk-code/pcatk_editor.py
+Comment=Painter's Colour Assistant Tube Series Editor
+Comment[en_AU]=Painter's Colour Assistant Tube Series Editor
+Icon=/home/peter/SF/SRC/PCATK/pcatk-code/pcatk.png
+Categories=GNOME;GTK;Graphics;X-Painting;

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Name=pcatk: Palette Planner
+Name[en_AU]=pcatk: Palette Planner
+Exec=/home/peter/SF/SRC/PCATK/pcatk-code/pcatk_palette.py
+Comment=Painter's Colour Assistant Palette Planner
+Comment[en_AU]=Painter's Colour Assistant Palette Planner
+Icon=/home/peter/SF/SRC/PCATK/pcatk-code/pcatk.png
+Categories=GNOME;GTK;Graphics;X-Painting;
