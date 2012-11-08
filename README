@@ -1,0 +1,87 @@
+DESCRIPTION:
+
+This software is intended for use by painters who wish to experiment
+with mixing paint (virtually) and plan palettes.  See section USAGE
+below for more details.
+
+STATUS:
+
+This software is still under development and is only Alpha standard at
+this time.
+
+REQUIREMENTS:
+
+This software requires:
+ - Python 2.7 or later
+ - PyGTK2 2.24 or later
+ - PyCairo 1.8.10 or later
+ 
+INSTALLATION:
+
+It is NOT necessary to install this software in order to use it.  All
+that is necessary for the applications to be usable is for the base
+directory to be in the usere PATH environment variable.
+
+USAGE:
+
+This software has a number of components:
+
+1. The Palette Planner (pcatk_palette.py) is a GUI that (once the user
+has slected some tube colours for use) enables the painter to mix new
+colours by specifying the number of "parts" of tube (or earlier mixed)
+colours to be used in a mixed colour.  This mixed colour can then be
+saved to a list of mixed colours (along with notes about its intended
+use) and used in the mixing of further colours.  When the painter has
+finished planning their palette they may print out a report to be used
+as a reference while completing the painting for which the palette was
+planned.
+
+2. The Tube Series Editor (pcatk_editor.py) is a GUI that enables the
+painter create sets of tube colours for use in the palette planner.
+The recommended method is to produce a "sampler" of the actual paints
+to be used on a suitable medium, take a digital photograph and then
+cut and paste from that photograph into the tube series editor where
+its buttons can be used to match the colour.
+
+INTERNATIONALIZATION:
+
+The code is extensively hooked for i18n but (at the moment) there is no
+localization available for languages other than English.
+
+BUGS:
+
+It would be greatly appreciated if any bugs encountered by users are
+reported by creating an issue at:
+
+<http://sourceforge.net/p/pcatk/tickets/>
+
+or emailing:
+
+<pcatk-discussion@lists.sourceforge.net>
+
+FEATURE REQUESTS:
+
+Feature requests can be made by creating an issue at:
+
+<http://sourceforge.net/p/pcatk/tickets/>
+
+or emailing:
+
+<pcatk-discussion@lists.sourceforge.net>
+
+<https://sourceforge.net/tracker/?group_id=386122&atid=1604800>
+
+or emailing:
+
+<darning-discussion@lists.sourceforge.net>
+
+FEATURE REQUESTS:
+
+Feature requests can be made by creating an issue at:
+
+<https://sourceforge.net/tracker/?group_id=386122&atid=1604803>
+
+or emailing:
+
+<darning-discussion@lists.sourceforge.net>
+

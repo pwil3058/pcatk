@@ -1,0 +1,2 @@
+desktop-file-install --dir $RPM_BUILD_ROOT/share/applications $RPM_BUILD_ROOT/share/applications/pcatk_editor.desktop
+desktop-file-install --dir $RPM_BUILD_ROOT/share/applications $RPM_BUILD_ROOT/share/applications/pcatk_palette.desktop
