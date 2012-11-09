@@ -29,6 +29,7 @@ from pcatk import gtkpwx
 from pcatk import gpaint
 from pcatk import paint
 from pcatk import printer
+from pcatk import icons
 
 def pango_rgb_str(rgb, bits_per_channel=16):
     """
@@ -315,6 +316,7 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         selector = TubeColourSelector(series)
         selector.connect('add-tube-colours', self._add_colours_to_palette_cb)
         window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        window.set_icon_from_file(icons.APP_ICON_FILE)
         window.set_title(_('Tube Series: {}').format(os.path.relpath(filepath)))
         window.connect('destroy', lambda w: w.destroy())
         window.add(selector)
@@ -728,6 +730,7 @@ class TopLevelWindow(gtk.Window):
 
     def __init__(self):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_title('pcatk: Palette')
         self.palette = Palette()
         self.connect("destroy", self.palette._quit_palette_cb)

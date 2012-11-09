@@ -30,6 +30,7 @@ from pcatk import gtkpwx
 from pcatk import paint
 from pcatk import gpaint
 from pcatk import data
+from pcatk import icons
 
 class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
     UI_DESCR = '''
@@ -887,6 +888,7 @@ class TopLevelWindow(gtk.Window):
 
     def __init__(self):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_title('pcatk: Tube Series Editor')
         self.editor = TubeSeriesEditor()
         self.editor.action_groups.get_action('close_colour_editor').set_visible(False)

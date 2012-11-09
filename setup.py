@@ -14,6 +14,7 @@
 ### along with this program; if not, write to the Free Software
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+import glob
 from distutils.core import setup
 
 NAME = 'PaintersColourAssistant'
@@ -54,6 +55,8 @@ PACKAGES = ['pcatk']
 
 DESKTOP = [('share/applications', ['pcatk_editor.desktop', 'pcatk_palette.desktop'])]
 
+PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png'])]
+
 setup(
     name = NAME,
     version = VERSION,
@@ -66,5 +69,5 @@ setup(
     url = URL,
     scripts = SCRIPTS,
     packages = PACKAGES,
-    data_files = DESKTOP
+    data_files = DESKTOP + PIXMAPS
 )
