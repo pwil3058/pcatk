@@ -15,6 +15,7 @@
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import glob
+import os
 from distutils.core import setup
 
 NAME = 'PaintersColourAssistant'
@@ -57,6 +58,10 @@ DESKTOP = [('share/applications', ['pcatk_editor.desktop', 'pcatk_palette.deskto
 
 PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png'])]
 
+tubes = glob.glob('data/*.tsd')
+
+TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
+
 setup(
     name = NAME,
     version = VERSION,
@@ -69,5 +74,5 @@ setup(
     url = URL,
     scripts = SCRIPTS,
     packages = PACKAGES,
-    data_files = DESKTOP + PIXMAPS
+    data_files = DESKTOP + PIXMAPS + TUBES
 )
