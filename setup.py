@@ -16,7 +16,11 @@
 
 import glob
 import os
+import sys
+
 from distutils.core import setup
+
+for_windows = sys.platform in ['win32', 'cygwin'] or 'bdist_wininst' in sys.argv or 'bdist_msi' in sys.argv
 
 NAME = 'PaintersColourAssistant'
 
@@ -54,13 +58,17 @@ SCRIPTS = ['pcatk_palette.py', 'pcatk_editor.py']
 
 PACKAGES = ['pcatk']
 
-DESKTOP = [('share/applications', ['pcatk_editor.desktop', 'pcatk_palette.desktop'])]
-
 PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png'])]
 
 tubes = glob.glob('data/*.tsd')
 
 TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
+
+if for_windows:
+    SCRIPTS.append('win_post_install.py')
+    DESKTOP = []
+else:
+    DESKTOP = [('share/applications', ['pcatk_editor.desktop', 'pcatk_palette.desktop'])]
 
 setup(
     name = NAME,
