@@ -58,8 +58,6 @@ SCRIPTS = ['pcatk_palette.py', 'pcatk_editor.py']
 
 PACKAGES = ['pcatk']
 
-PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png'])]
-
 tubes = glob.glob('data/*.tsd')
 
 TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
@@ -67,8 +65,10 @@ TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
 if for_windows:
     SCRIPTS.append('win_post_install.py')
     DESKTOP = []
+    PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png', 'pixmaps/pcatk.ico'])]
 else:
     DESKTOP = [('share/applications', ['pcatk_editor.desktop', 'pcatk_palette.desktop'])]
+    PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png'])]
 
 setup(
     name = NAME,
