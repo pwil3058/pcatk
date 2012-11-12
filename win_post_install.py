@@ -5,9 +5,9 @@ import distutils.sysconfig
 
 NAME = 'PaintersColourAssistant'
 
-desktop_dir = get_special_folder_path('CSIDL_COMMON_DESKTOPDIRECTORY')
+desktop_dir = get_special_folder_path('CSIDL_DESKTOPDIRECTORY')
 icon_file = os.path.join(distutils.sysconfig.PREFIX, 'share', 'pixmaps', 'pcatk.ico')
-start_menu = get_special_folder_path('CSIDL_COMMON_STARTMENU')
+start_menu = get_special_folder_path('CSIDL_STARTMENU')
 start_menu_dir = os.path.join(start_menu, NAME)
 data_dir = os.path.join(distutils.sysconfig.PREFIX, 'share', NAME, 'data')
 
