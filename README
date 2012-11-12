@@ -53,7 +53,7 @@ in the "data" subdirectory of the source distribution and in the directory
 "$ROOT/share/PaintersColourAssistant/data" in installed distributions. On Linux
 $ROOT should be "/usr" and to facilitate finding the file on Windows the file
 selector should open in that directory when the "Tube Colour Series/Open" menu
-option is invoked.
+option in the Palette Planner is invoked.
 
 INTERNATIONALIZATION:
 
