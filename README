@@ -43,6 +43,18 @@ to be used on a suitable medium, take a digital photograph and then
 cut and paste from that photograph into the tube series editor where
 its buttons can be used to match the colour.
 
+TUBE SERIES:
+
+At this time, the only tube series data included in the distribution is for an
+imaginary set of paints known as the "Ideal Paint Colours Series" which
+features six colours equally spaced around the colour circle (at maximim chroma)
+together with black and white. This series can be found in the file "ideal.tsd"
+in the "data" subdirectory of the source distribution and in the directory
+"$ROOT/share/PaintersColourAssistant/data" in installed distributions. On Linux
+$ROOT should be "/usr" and to facilitate finding the file on Windows the file
+selector should open in that directory when the "Tube Colour Series/Open" menu
+option is invoked.
+
 INTERNATIONALIZATION:
 
 The code is extensively hooked for i18n but (at the moment) there is no
