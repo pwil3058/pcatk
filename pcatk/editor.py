@@ -69,8 +69,8 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         self.tube_colours = TubeColourNotebook()
         self.tube_colours.set_size_request(480, 480)
         self.tube_colours.tube_list.action_groups.connect_activate('edit_selected_colour', self._edit_selected_colour_cb)
-        # TODO: make this one single string as it's names
-        self.manufacturer_name = gtkpwx.TextEntryAutoComplete(gtk.ListStore(str))
+        # as these are company names don't split them up for autocompletion
+        self.manufacturer_name = gtkpwx.TextEntryAutoComplete(gtk.ListStore(str), multiword=False)
         self.manufacturer_name.connect('changed', self._id_changed_cb)
         mnlabel = gtk.Label(_('Manufacturer:'))
         self.series_name = gtkpwx.TextEntryAutoComplete(gtk.ListStore(str))

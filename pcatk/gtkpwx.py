@@ -423,9 +423,16 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
 # END_CLASS EntryCompletionMultiword
 
 class TextEntryAutoComplete(gtk.Entry):
-    def __init__(self, lexicon=None, learn=True, **kwargs):
+    def __init__(self, lexicon=None, learn=True, multiword=True, **kwargs):
+        '''
+        multiword: if True use individual words in entry as the target of autocompletion
+        '''
         gtk.Entry.__init__(self, **kwargs)
-        completion = EntryCompletionMultiWord()
+        self.__multiword = multiword
+        if self.__multiword:
+            completion = EntryCompletionMultiWord()
+        else:
+            completion = gtk.EntryCompletion()
         self.set_completion(completion)
         cell = gtk.CellRendererText()
         completion.pack_start(cell)
@@ -454,12 +461,17 @@ class TextEntryAutoComplete(gtk.Entry):
             text_col = completion.get_text_column()
             lexicon = [row[text_col] for row in model]
             lexicon.sort()
-            new_words = []
-            for word in utils.extract_words(text):
-                if not utils.contains(lexicon, word):
-                    new_words.append(word)
-            for word in new_words:
-                model.append([word])
+            if self.__multiword:
+                new_words = []
+                for word in utils.extract_words(text):
+                    if not utils.contains(lexicon, word):
+                        new_words.append(word)
+                for word in new_words:
+                    model.append([word])
+            else:
+                text = text.strip()
+                if text not in lexicon:
+                    model.append([text])
         return text
     # END_DEF: get_text
 # END_CLASS: TextEntryAutoComplete
