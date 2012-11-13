@@ -486,6 +486,30 @@ class Choice(gtk.ComboBox):
     # END_DEF: set_selection
 # END_CLASS: Choice
 
+class ColouredLabel(gtk.EventBox):
+    def __init__(self, label=''):
+        gtk.EventBox.__init__(self)
+        self.label = gtk.Label(label)
+        self.add(self.label)
+        self.show_all()
+    # END_DEF: __init__()
+
+    def modify_base(self, state, colour):
+        gtk.EventBox.modify_base(self, state, colour)
+        self.label.modify_base(state, colour)
+    # END_DEF: modify_base
+
+    def modify_text(self, state, colour):
+        gtk.EventBox.modify_text(self, state, colour)
+        self.label.modify_text(state, colour)
+    # END_DEF: modify_text
+
+    def modify_fg(self, state, colour):
+        gtk.EventBox.modify_fg(self, state, colour)
+        self.label.modify_fg(state, colour)
+    # END_DEF: modify_fg
+# END_CLASS: ColouredLabel
+
 class ColouredButton(gtk.Button):
     def __init__(self, *args, **kwargs):
         if 'label' not in kwargs:
@@ -497,6 +521,12 @@ class ColouredButton(gtk.Button):
         else:
             colour = None
         gtk.Button.__init__(self, *args, **kwargs)
+        if sys.platform[:3] == 'win':
+            # Crude workaround for Windows 7
+            label = self.get_children()[0]
+            clabel = ColouredLabel(label.get_text())
+            self.remove(label)
+            self.add(clabel)
         self.label =  self.get_children()[0]
         style = self.get_style()
         self._ratio = {}
