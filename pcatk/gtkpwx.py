@@ -488,6 +488,9 @@ class Choice(gtk.ComboBox):
 
 class ColouredButton(gtk.Button):
     def __init__(self, *args, **kwargs):
+        if 'label' not in kwargs:
+            # The label child won't be created until the label is set
+            kwargs['label'] = ''
         if 'colour' in kwargs:
             colour = kwargs['colour']
             del kwargs['colour']
@@ -497,7 +500,7 @@ class ColouredButton(gtk.Button):
         self.label =  self.get_children()[0]
         style = self.get_style()
         self._ratio = {}
-        self._ratio[gtk.STATE_NORMAL] = 1
+        self._ratio[gtk.STATE_NORMAL] = fractions.Fraction(1)
         nbg = sum(gdk_color_to_rgb(style.bg[gtk.STATE_NORMAL]))
         for state in [gtk.STATE_ACTIVE, gtk.STATE_PRELIGHT]:
             sbg = sum(gdk_color_to_rgb(style.bg[state]))
@@ -509,13 +512,15 @@ class ColouredButton(gtk.Button):
     def set_colour(self, colour):
         for state in [gtk.STATE_NORMAL, gtk.STATE_PRELIGHT, gtk.STATE_ACTIVE]:
             rgb = [min(int(colour[i] * self._ratio[state]), 65535) for i in range(3)]
-            bg_colour = self.get_colormap().alloc_color(gtk.gdk.Color(*rgb))
-            fg_colour = self.get_colormap().alloc_color(best_foreground(rgb))
-            self.modify_base(state, bg_colour)
-            self.modify_bg(state, bg_colour)
-            self.modify_fg(state, fg_colour)
-            self.modify_text(state, fg_colour)
-            self.label.modify_fg(state, fg_colour)
+            bg_gcolour = gtk.gdk.Color(*rgb)
+            fg_gcolour = best_foreground(rgb)
+            for widget in [self, self.label]:
+                bg_colour = widget.get_colormap().alloc_color(bg_gcolour)
+                fg_colour = widget.get_colormap().alloc_color(fg_gcolour)
+                widget.modify_base(state, bg_colour)
+                widget.modify_bg(state, bg_colour)
+                widget.modify_fg(state, fg_colour)
+                widget.modify_text(state, fg_colour)
     # END_DEF: set_colour
 # END_CLASS: ColouredButton
 
