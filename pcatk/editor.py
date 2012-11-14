@@ -240,9 +240,28 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         self.set_current_colour(colour)
     # END_DEF: _tube_editor_change_cb
 
+    def _ask_overwrite_ok(self, name):
+        title = _('Duplicate Colour Name')
+        msg = _('A colour with the name "{0}" already exists.\n Overwrite?').format(name)
+        dlg = gtkpwx.CancelOKDialog(title=title, parent=self.get_toplevel())
+        dlg.get_content_area().pack_start(gtk.Label(msg))
+        dlg.show_all()
+        response = dlg.run()
+        dlg.destroy()
+        return response == gtk.RESPONSE_OK
+    # END_DEF: _ask_overwrite_ok
+
     def _accept_colour_changes_cb(self, _widget):
-        # TODO: handle case where name changes to one already in the list
         edited_colour = self.tube_editor.get_colour()
+        print edited_colour, self.current_colour
+        if edited_colour.name != self.current_colour.name:
+            # there's a name change so check for duplicate names
+            other_colour = self.tube_colours.get_colour_with_name(edited_colour.name)
+            if other_colour is not None:
+                if self._ask_overwrite_ok(edited_colour.name):
+                    self.tube_colours.remove_colour(other_colour)
+                else:
+                    return
         self.current_colour.name = edited_colour.name
         self.current_colour.set_rgb(edited_colour.rgb)
         self.current_colour.set_permanence(edited_colour.permanence)
@@ -274,6 +293,8 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         new_colour = self.tube_editor.get_colour()
         old_colour = self.tube_colours.get_colour_with_name(new_colour.name)
         if old_colour is not None:
+            if not self._ask_overwrite_ok(new_colour.name):
+                return
             old_colour.set_rgb(new_colour.rgb)
             old_colour.set_permanence(new_colour.permanence)
             old_colour.set_transparency(new_colour.transparency)
@@ -282,7 +303,6 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         else:
             self.tube_colours.add_colour(new_colour)
             self.set_current_colour(new_colour)
-        # TODO: cause conditions to be updated
     # END_DEF: _add_colour_into_series_cb
 
     def _automatch_sample_images_cb(self, _widget):
