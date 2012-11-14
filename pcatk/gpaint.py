@@ -134,8 +134,16 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
     # END_DEF: _remove_selection_cb
 
     def _image_from_clipboard_cb(self, cbd, img, posn):
-        # TODO: inform user nothing found on the clipboard
-        if img is not None:
+        if img is None:
+            dlg = gtk.MessageDialog(
+                parent=self.get_toplevel(),
+                flags=gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                buttons=gtk.BUTTONS_OK,
+                message_format=_('No image data on clipboard.')
+            )
+            dlg.run()
+            dlg.destroy()
+        else:
             if self._single_sample and len(self._sample_images) == 1:
                 self._sample_images[0] = (int(posn[0]), int(posn[1]), img)
             else:
