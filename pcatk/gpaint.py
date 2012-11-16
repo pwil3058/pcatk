@@ -534,7 +534,7 @@ class ColourWheel(gtk.DrawingArea):
     # END_DEF: get_colour_at_xy
 
     def query_tooltip_cb(self, widget, x, y, keyboard_mode, tooltip):
-        # TODO: move location of tootip as mose moves
+        # TODO: move location of tootip as mouse moves
         colour, rng = self.get_colour_nearest_to_xy(x, y)
         tooltip.set_text(colour.name if colour is not None else '')
         return True
