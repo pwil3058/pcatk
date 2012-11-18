@@ -276,11 +276,7 @@ class RGBHImage(gobject.GObject):
         self.__size = gtkpwx.WH(width=w, height=h)
     # END_DEF: set_from_pixbuf
 
-    def get_mapped_pixbuf(self, map_to_rgb=lambda pxl: pxl):
-        def pr_iter(pr):
-            for p in pr:
-                for component in map_to_rgb(p):
-                    yield component
+    def get_mapped_pixbuf(self, map_to_flat_row):
         if self.__pixel_rows is None:
             return None
         bytes_per_row = self.__size.width * 3
@@ -288,7 +284,7 @@ class RGBHImage(gobject.GObject):
         padding = '\000' * (rowstride - bytes_per_row)
         data = ''
         for row_n, pixel_row in enumerate(self.__pixel_rows):
-            data += array.array('B', pr_iter(pixel_row)).tostring()
+            data += array.array('B', map_to_flat_row(pixel_row)).tostring()
             data += padding
             self.emit('progress-made', fractions.Fraction(row_n + 1, self.__size.height))
         return gtk.gdk.pixbuf_new_from_data(
@@ -306,7 +302,11 @@ class RGBHImage(gobject.GObject):
         """
         Return a gtk.gdk.Pixbuf representation of the image
         """
-        return self.get_mapped_pixbuf()
+        def map_to_flat_row(row):
+            for pixel in row:
+                for component in pixel.rgb:
+                    yield component
+        return self.get_mapped_pixbuf(map_to_flat_row)
     # END_DEF: get_pixbuf
 gobject.type_register(RGBHImage)
 gobject.signal_new('progress-made', RGBHImage, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
