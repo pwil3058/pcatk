@@ -529,7 +529,7 @@ class Analysis(object):
     # END_DEF: initialize_parameters
 
     def update_pixbuf(self):
-        self.pixbuf_view.set_pixbuf(self.__image.get_mapped_pixbuf(self.map_to_rgb))
+        self.pixbuf_view.set_pixbuf(self.__image.get_mapped_pixbuf(self.map_to_flat_row))
     # END_DEF: update_pixbuf
 # END_CLASS: Analysis
 
@@ -538,9 +538,11 @@ ANALYSES = []
 class AnalysisRaw(Analysis):
     LABEL = _('Raw')
 
-    def map_to_rgb(self, pixel):
-        return pixel.rgb
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            for component in pixel.rgb:
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRaw)
 # END_CLASS: AnalysisRaw
 
@@ -551,21 +553,27 @@ class AnalysisNotan(Analysis):
         self._threshold = fractions.Fraction(2, 10)
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        if pixel.get_value() > self._threshold:
-            return pixbuf.WHITE
-        else:
-            return pixbuf.BLACK
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            if pixel.get_value() > self._threshold:
+                val = pixbuf.ONE
+            else:
+                val = pixbuf.ZERO
+            for i in xrange(3):
+                yield val
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisNotan)
 # END_CLASS: AnalysisNotan
 
 class AnalysisValue(Analysis):
     LABEL = _('Value')
 
-    def map_to_rgb(self, pixel):
-        return pixel.get_value_rgb()
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            val = (sum(pixel.rgb) + 1) / 3
+            for i in xrange(3):
+                yield val
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisValue)
 # END_CLASS: AnalysisValue
 
@@ -576,9 +584,11 @@ class AnalysisRestrictedValue(Analysis):
         self.__vlc = pixbuf.RGBH.create_value_level_criteria(11)
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        return pixel.transform_limited_value(self.__vlc).get_value_rgb()
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            for component in pixel.transform_limited_value(self.__vlc).get_value_rgb():
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedValue)
 # END_CLASS: AnalysisRestrictedValue
 
@@ -589,9 +599,11 @@ class AnalysisColourRestrictedValue(Analysis):
         self.__vlc = pixbuf.RGBH.create_value_level_criteria(11)
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        return pixel.transform_limited_value(self.__vlc).rgb
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            for component in pixel.transform_limited_value(self.__vlc).rgb:
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisColourRestrictedValue)
 # END_CLASS: AnalysisColourRestrictedValue
 
@@ -602,9 +614,11 @@ class AnalysisRestrictedHue(Analysis):
         self.__hlc = pixbuf.RGBH.create_hue_limit_criteria(6)
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        return pixel.transform_limited_hue(self.__hlc).rgb
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            for component in pixel.transform_limited_hue(self.__hlc).rgb:
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedHue)
 # END_CLASS: AnalysisRestrictedHue
 
@@ -616,10 +630,12 @@ class AnalysisRestrictedHueValue(Analysis):
         self.__vlc = pixbuf.RGBH.create_value_level_criteria(11)
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        pixel = pixel.transform_limited_value(self.__vlc)
-        return pixel.transform_limited_hue(self.__hlc).rgb
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            pixel = pixel.transform_limited_value(self.__vlc)
+            for component in pixel.transform_limited_hue(self.__hlc).rgb:
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedHueValue)
 # END_CLASS: AnalysisRestrictedHueValue
 
@@ -630,9 +646,11 @@ class AnalysisHighChroma(Analysis):
         pass
     # END_DEF: initialize_parameters
 
-    def map_to_rgb(self, pixel):
-        return pixel.get_hue_rgb()
-    # END_DEF: map_to_rgb
+    def map_to_flat_row(self, row):
+        for pixel in row:
+            for component in pixel.get_hue_rgb():
+                yield component
+    # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisHighChroma)
 # END_CLASS: AnalysisHighChroma
 
