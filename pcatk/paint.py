@@ -83,12 +83,12 @@ class HCVW(object):
         # Zero chroma has a hue of WHITE (allow for inaccuracies of real maths)
         if hue is None:
             return cls.WHITE if value is None else (cls.WHITE * value)
-        return Hue(hue).get_rgb(value).mapped(cls.mapf)
+        return Hue.get_rgb(hue, value).mapped(cls.mapf)
     # END_DEF: rgb_for_hue
 
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
-        self.value = self.rgb.get_avg_value() / self.ONE
+        self.value = RGB.get_avg_value(rgb) / self.ONE
         if self.rgb[0] == self.rgb[1] and self.rgb[0] == self.rgb[2]:
             # Avoid problems with rounding errors for shades of white
             self.hue = None
@@ -103,7 +103,7 @@ class HCVW(object):
             self.hue_rgb = self.WHITE * self.value
             self.chroma = fractions.Fraction(0)
         else:
-            self.hue_rgb = self.hue.get_rgb().mapped(self.mapf)
+            self.hue_rgb = Hue.get_rgb(self.hue).mapped(self.mapf)
             self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
     # END_DEF: __init__
 
@@ -113,7 +113,7 @@ class HCVW(object):
             value = self.value
         if self.hue is None:
             return self.WHITE * value
-        return self.hue.get_rgb(value).mapped(self.mapf)
+        return Hue.get_rgb(self.hue, value).mapped(self.mapf)
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
@@ -131,12 +131,12 @@ class HCVW(object):
         >>> HCVW((10, 10, 0)).get_rotated_rgb(-PI_60)
         RGB(red=20, green=0, blue=0)
         '''
-        if self.rgb.ncomps() == 2:
+        if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            return (self.hue + delta_hue).get_rgb(self.value).mapped(self.mapf)
+            return Hue.get_rgb(self.hue + delta_hue, self.value).mapped(self.mapf)
         else:
             # Simple rotation is the correct solution for 1 or 3 components
-            return self.rgb.rotated(delta_hue)
+            return RGB.rotated(self.rgb, delta_hue)
     # END_DEF: get_rotated_rgb
 
     def __str__(self):
