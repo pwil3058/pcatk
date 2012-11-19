@@ -113,9 +113,9 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         True
         >>> hlc.hues[0]
         Hue(0.0)
-        >>> hlc.hues[1].get_rgb()
+        >>> Hue.get_rgb(hlc.hues[1])
         RGB(red=255, green=255, blue=0)
-        >>> hlc.hues[3].get_rgb()
+        >>> Hue.get_rgb(hlc.hues[3])
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
@@ -146,7 +146,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         >>> RGBH.from_red_green_blue(ONE, 0, 0).get_value_rgb()
         RGB(red=85, green=85, blue=85)
         """
-        comp = int(round(self.rgb.get_avg_value()))
+        comp = int(round(rgbh.RGB.get_avg_value(self.rgb)))
         return rgbh.RGB(comp, comp, comp)
     # END_DEF: get_value_rgb
 
@@ -195,7 +195,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
                 return WHITE * value
         if value is None:
             value = self.get_value()
-        return self.hue.get_rgb(value)
+        return Hue.get_rgb(self.hue, value)
     # END_DEF: get_hue_rgb
 
     def transform_limited_value(self, vlc):
@@ -219,11 +219,11 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         if self.hue is None:
             return self
         index = self.get_hue_index(hlc)
-        if self.rgb.ncomps() == 2:
+        if rgbh.RGB.ncomps(self.rgb) == 2:
             value = self.get_value()
-            rgb = hlc.hues[index].get_rgb(value)
+            rgb = Hue.get_rgb(hlc.hues[index], value)
         else:
-            rgb = self.rgb.rotated(hlc.hues[index] - self.hue)
+            rgb = rgbh.RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
         return RGBH(rgb, hlc.hues[index])
     # END_DEF: transform_limited_hue
 # END_CLASS: RGBH

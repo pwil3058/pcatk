@@ -720,7 +720,7 @@ class ColourSampleMatcher(gtk.VBox):
         if self.colour.hue is None:
             gtk.gdk.beep()
             return # we're already gray so nothing to do
-        ncomps, io = self.colour.rgb.ncomps_and_indices_value_order()
+        ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
         new_colour = list(self.colour.rgb)
         if ncomps == 1 or new_colour[io[1]] == new_colour[io[2]]:
             if (new_colour[io[0]] - new_colour[io[2]]) > 1:
@@ -749,7 +749,7 @@ class ColourSampleMatcher(gtk.VBox):
             else:
                 self._decr_channel(new_colour, 0)
         else:
-            ncomps, io = self.colour.rgb.ncomps_and_indices_value_order()
+            ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
             if ncomps != 3:
                 # if we have less than 3 comps then we have no grayness
                 gtk.gdk.beep()
@@ -773,7 +773,7 @@ class ColourSampleMatcher(gtk.VBox):
             # we're white and can't go any further
             gtk.gdk.beep()
             return
-        ncomps, io = self.colour.rgb.ncomps_and_indices_value_order()
+        ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
         # try to maintain the same grayness and hue
         if self.colour.rgb[io[0]] == paint.HCVW.ONE:
             # rgb_for_hue() can onl be used in this situation as

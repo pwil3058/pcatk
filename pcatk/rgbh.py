@@ -84,37 +84,43 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         return 'RGB({0}, {1}, {2})'.format(*self)
     # END_DEF: __str__
 
-    def get_avg_value(self):
+    @staticmethod
+    def get_avg_value(rgb):
         '''
         Return the average value of the components as a fraction
-        >>> RGB(0, 1, 2).get_avg_value()
+        >>> RGB.get_avg_value(RGB(0, 1, 2))
         Fraction(1, 1)
-        >>> RGB(7, 6, 5).get_avg_value()
+        >>> RGB.get_avg_value(RGB(7, 6, 5))
         Fraction(6, 1)
+        >>> RGB.get_avg_value(RGB(7, 6, 6))
+        Fraction(19, 3)
+        >>> RGB.get_avg_value((7, 6, 6, 56))
+        Fraction(19, 3)
         '''
-        return fractions.Fraction(sum(self), 3)
+        return fractions.Fraction(sum(rgb[:3]), 3)
     # END_DEF: get_avg_value
 
-    def indices_value_order(self):
+    @staticmethod
+    def indices_value_order(rgb):
         '''
         Return the indices in descending order by value
-        >>> RGB(1, 2, 3).indices_value_order()
+        >>> RGB.indices_value_order((1, 2, 3))
         (2, 1, 0)
-        >>> RGB(3, 2, 1).indices_value_order()
+        >>> RGB.indices_value_order((3, 2, 1))
         (0, 1, 2)
-        >>> RGB(3, 1, 2).indices_value_order()
+        >>> RGB.indices_value_order((3, 1, 2))
         (0, 2, 1)
         '''
-        if self[0] > self[1]:
-            if self[0] > self[2]:
-                if self[1] > self[2]:
+        if rgb[0] > rgb[1]:
+            if rgb[0] > rgb[2]:
+                if rgb[1] > rgb[2]:
                     return (0, 1, 2)
                 else:
                     return (0, 2, 1)
             else:
                 return (2, 0, 1)
-        elif self[1] > self[2]:
-            if self[0] > self[2]:
+        elif rgb[1] > rgb[2]:
+            if rgb[0] > rgb[2]:
                 return (1, 0, 2)
             else:
                 return (1, 2, 0)
@@ -122,38 +128,40 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
             return (2, 1, 0)
     # END_DEF: indices_value_order
 
-    def ncomps(self):
+    @staticmethod
+    def ncomps(rgb):
         '''
         Return the number of non zero components
-        >>> RGB(0, 0, 0).ncomps()
+        >>> RGB.ncomps((0, 0, 0))
         0
-        >>> RGB(1, 2, 3).ncomps()
+        >>> RGB.ncomps((1, 2, 3))
         3
-        >>> RGB(10, 0, 3).ncomps()
+        >>> RGB.ncomps((10, 0, 3))
         2
-        >>> RGB(0, 10, 3).ncomps()
+        >>> RGB.ncomps((0, 10, 3))
         2
-        >>> RGB(0, 10, 0).ncomps()
+        >>> RGB.ncomps((0, 10, 0))
         1
         '''
-        return sum((1 if comp else 0) for comp in self)
+        return sum((1 if comp else 0) for comp in rgb)
     # END_DEF: ncomps
 
-    def ncomps_and_indices_value_order(self):
+    @staticmethod
+    def ncomps_and_indices_value_order(rgb):
         '''
         Return the number of non zero components and indices in value order
-        >>> RGB(0, 0, 0).ncomps_and_indices_value_order()
+        >>> RGB.ncomps_and_indices_value_order((0, 0, 0))
         (0, (2, 1, 0))
-        >>> RGB(1, 2, 3).ncomps_and_indices_value_order()
+        >>> RGB.ncomps_and_indices_value_order((1, 2, 3))
         (3, (2, 1, 0))
-        >>> RGB(10, 0, 3).ncomps_and_indices_value_order()
+        >>> RGB.ncomps_and_indices_value_order((10, 0, 3))
         (2, (0, 2, 1))
-        >>> RGB(0, 10, 3).ncomps_and_indices_value_order()
+        >>> RGB.ncomps_and_indices_value_order((0, 10, 3))
         (2, (1, 2, 0))
-        >>> RGB(0, 10, 0).ncomps_and_indices_value_order()
+        >>> RGB.ncomps_and_indices_value_order((0, 10, 0))
         (1, (1, 2, 0))
         '''
-        return (self.ncomps(), self.indices_value_order())
+        return (RGB.ncomps(rgb), RGB.indices_value_order(rgb))
     # END_DEF: ncomps_and_indices_value_order
 
     def mapped(self, map_func):
@@ -165,7 +173,8 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         return RGB(*tuple(map_func(comp) for comp in self))
     # END_DEF: mapped
 
-    def rotated(self, delta_hue):
+    @staticmethod
+    def rotated(rgb, delta_hue):
         """
         Return a copy of the RGB with the same value but the hue rotated
         by the specified amount and with the item types unchanged.
@@ -173,25 +182,25 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         case of 2 non zero components this change is undesirable and
         needs to be avoided by using a higher level wrapper function
         that is aware of item types and maximum allowed value per component.
-        >>> RGB(1, 2, 3).rotated(Hue(0))
+        >>> RGB.rotated((1, 2, 3), Hue(0))
         RGB(red=1, green=2, blue=3)
-        >>> RGB(1, 2, 3).rotated(PI_120)
+        >>> RGB.rotated((1, 2, 3), PI_120)
         RGB(red=3, green=1, blue=2)
-        >>> RGB(1, 2, 3).rotated(-PI_120)
+        >>> RGB.rotated((1, 2, 3), -PI_120)
         RGB(red=2, green=3, blue=1)
-        >>> RGB(2, 0, 0).rotated(PI_60)
+        >>> RGB.rotated((2, 0, 0), PI_60)
         RGB(red=1, green=1, blue=0)
-        >>> RGB(2, 0, 0).rotated(-PI_60)
+        >>> RGB.rotated((2, 0, 0), -PI_60)
         RGB(red=1, green=0, blue=1)
-        >>> RGB(1.0, 0.0, 0.0).rotated(PI_60)
+        >>> RGB.rotated((1.0, 0.0, 0.0), PI_60)
         RGB(red=0.5, green=0.5, blue=0.0)
-        >>> RGB(100, 0, 0).rotated(Hue(math.radians(150)))
+        >>> RGB.rotated((100, 0, 0), Hue(math.radians(150)))
         RGB(red=0, green=66, blue=33)
-        >>> RGB(100, 0, 0).rotated(Hue(math.radians(-150)))
+        >>> RGB.rotated((100, 0, 0), Hue(math.radians(-150)))
         RGB(red=0, green=33, blue=66)
-        >>> RGB(100, 100, 0).rotated(-PI_60)
+        >>> RGB.rotated((100, 100, 0), -PI_60)
         RGB(red=100, green=50, blue=50)
-        >>> RGB(100, 100, 10).rotated(-PI_60)
+        >>> RGB.rotated((100, 100, 10), -PI_60)
         RGB(red=100, green=55, blue=55)
         """
         def calc_ks(delta_hue):
@@ -203,7 +212,7 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
             return (k1, k2, c.numerator)
         # END_DEF: calc_ks
         fmul = lambda x, frac: x * frac.numerator / frac.denominator
-        f = lambda c1, c2: (fmul(self[c1], k1) + fmul(self[c2], k2)) / k3
+        f = lambda c1, c2: (fmul(rgb[c1], k1) + fmul(rgb[c2], k2)) / k3
         if delta_hue > 0:
             if delta_hue > PI_120:
                 k1, k2, k3 = calc_ks(delta_hue - PI_120)
@@ -219,8 +228,8 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
                 k1, k2, k3 = calc_ks(abs(delta_hue))
                 return RGB(red=f(0, 1), green=f(1, 2), blue=f(2, 0))
         else:
-            return RGB(*self)
-    # END_DEF: mapped
+            return RGB(*rgb)
+    # END_DEF: rotated
 # END_CLASS: RGB
 
 class Hue(float):
@@ -353,39 +362,45 @@ class Hue(float):
         return self.normalize(float.__mul__(self, other))
     # END_DEF: __mul__
 
-    def get_index_value_order(self):
+    @staticmethod
+    def get_index_value_order(hue):
         """
         Return the size order of channels for an rgb with my hue
         >>> import math
-        >>> Hue(math.radians(45)).get_index_value_order()
+        >>> Hue.get_index_value_order(math.radians(45))
         (0, 1, 2)
-        >>> Hue(math.radians(105)).get_index_value_order()
+        >>> Hue.get_index_value_order(math.radians(105))
         (1, 0, 2)
-        >>> Hue(math.radians(165)).get_index_value_order()
+        >>> Hue.get_index_value_order(math.radians(165))
         (1, 2, 0)
-        >>> Hue(-math.radians(45)).get_index_value_order()
+        >>> Hue.get_index_value_order(-math.radians(45))
         (0, 2, 1)
-        >>> Hue(-math.radians(105)).get_index_value_order()
+        >>> Hue.get_index_value_order(-math.radians(105))
         (2, 0, 1)
-        >>> Hue(-math.radians(165)).get_index_value_order()
+        >>> Hue.get_index_value_order(-math.radians(165))
         (2, 1, 0)
         """
-        if self >= 0:
-            if self <= PI_60:
+        if hue >= 0:
+            if hue <= PI_60:
                 return (IRED, IGREEN, IBLUE)
-            elif self <= PI_120:
+            elif hue <= PI_120:
                 return (IGREEN, IRED, IBLUE)
-            else:
+            elif hue <= PI_180:
                 return (IGREEN, IBLUE, IRED)
-        elif self >= -PI_60:
+            else:
+                raise  ValueError('Should be in range -pi to +p')
+        elif hue >= -PI_60:
             return (IRED, IBLUE, IGREEN)
-        elif self >= -PI_120:
+        elif hue >= -PI_120:
             return (IBLUE, IRED, IGREEN)
-        else:
+        elif hue >= -PI_180:
             return (IBLUE, IGREEN, IRED)
+        else:
+            raise ValueError('Should be in range -pi to +p')
     # END_DEF: get_index_value_order
 
-    def get_rgb(self, value=None):
+    @classmethod
+    def get_rgb(cls, hue, value=None):
         '''
         value is None return the RGB for the max chroma for this hue
         else return the RGB for our hue with the specified value
@@ -393,25 +408,25 @@ class Hue(float):
         will deviate towards the weakest component on its way to white.
         Return: an RGB() with proportion components of type Fraction()
         >>> import math
-        >>> Hue(0.0).get_rgb()
+        >>> Hue.get_rgb(0.0)
         RGB(red=Fraction(1, 1), green=Fraction(0, 1), blue=Fraction(0, 1))
-        >>> Hue(math.radians(120)).get_rgb()
+        >>> Hue.get_rgb(math.radians(120))
         RGB(red=Fraction(0, 1), green=Fraction(1, 1), blue=Fraction(0, 1))
-        >>> Hue(math.radians(-120)).get_rgb()
+        >>> Hue.get_rgb(math.radians(-120))
         RGB(red=Fraction(0, 1), green=Fraction(0, 1), blue=Fraction(1, 1))
-        >>> Hue(0.0).get_rgb()
+        >>> Hue.get_rgb(Hue(0.0))
         RGB(red=Fraction(1, 1), green=Fraction(0, 1), blue=Fraction(0, 1))
-        >>> Hue(math.radians(60)).get_rgb().mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(60)).mapped(lambda x: int(round(x * 100)))
         RGB(red=100, green=100, blue=0)
-        >>> Hue(math.radians(180)).get_rgb().mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(180)).mapped(lambda x: int(round(x * 100)))
         RGB(red=0, green=100, blue=100)
-        >>> Hue(math.radians(-60)).get_rgb().mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(-60)).mapped(lambda x: int(round(x * 100)))
         RGB(red=100, green=0, blue=100)
-        >>> Hue(math.radians(-125)).get_rgb().mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(-125)).mapped(lambda x: int(round(x * 100)))
         RGB(red=0, green=10, blue=100)
-        >>> Hue(math.radians(-125)).get_rgb(fractions.Fraction(8,10)).mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(-125), fractions.Fraction(8,10)).mapped(lambda x: int(round(x * 100)))
         RGB(red=68, green=72, blue=100)
-        >>> Hue(math.radians(-125)).get_rgb(fractions.Fraction(2,10)).mapped(lambda x: int(round(x * 100)))
+        >>> Hue.get_rgb(math.radians(-125), fractions.Fraction(2,10)).mapped(lambda x: int(round(x * 100)))
         RGB(red=0, green=5, blue=55)
         '''
         def second(rotated_hue):
@@ -419,34 +434,34 @@ class Hue(float):
             bottom = math.sin(PI_120 - rotated_hue)
             # This step is necessary part of type cohesion
             frac = fractions.Fraction.from_float(top / bottom)
-            return self.ONE * frac.numerator / frac.denominator
+            return cls.ONE * frac.numerator / frac.denominator
 
-        io = self.get_index_value_order()
+        io = cls.get_index_value_order(hue)
         if io == (IRED, IGREEN, IBLUE):
-            rgb = RGB(red=self.ONE, green=second(self), blue=self.ZERO)
+            rgb = RGB(red=cls.ONE, green=second(hue), blue=cls.ZERO)
         elif io == (IGREEN, IRED, IBLUE):
-            rgb = RGB(red=second(abs(self - PI_120)), green=self.ONE, blue=self.ZERO)
+            rgb = RGB(red=second(abs(hue - PI_120)), green=cls.ONE, blue=cls.ZERO)
         elif io == (IGREEN, IBLUE, IRED):
-            rgb = RGB(red=self.ZERO, green=self.ONE, blue=second(self - PI_120))
+            rgb = RGB(red=cls.ZERO, green=cls.ONE, blue=second(hue - PI_120))
         elif io == (IRED, IBLUE, IGREEN):
-            rgb = RGB(red=self.ONE, green=self.ZERO, blue=second(abs(self)))
+            rgb = RGB(red=cls.ONE, green=cls.ZERO, blue=second(abs(hue)))
         elif io == (IBLUE, IRED, IGREEN):
-            rgb = RGB(red=second(self + PI_120), green=self.ZERO, blue=self.ONE)
+            rgb = RGB(red=second(hue + PI_120), green=cls.ZERO, blue=cls.ONE)
         else: # io == (IBLUE, IGREEN, IRED)
-            rgb = RGB(red=self.ZERO, green=second(abs(self + PI_120)), blue=self.ONE)
+            rgb = RGB(red=cls.ZERO, green=second(abs(hue + PI_120)), blue=cls.ONE)
         if value is None:
             return rgb
 
         # Use fractions for performance
-        ireq_value = 3 * self.ONE * value.numerator / value.denominator
+        ireq_value = 3 * cls.ONE * value.numerator / value.denominator
         iach_value = sum(rgb)
         shortfall = ireq_value - iach_value
         if shortfall <= 0:
             return RGB(*tuple(rgb[i] * ireq_value / iach_value for i in range(3)))
         else:
-            result = {io[0] : self.ONE}
+            result = {io[0] : cls.ONE}
             # it's simpler two work out the weakest component first
-            result[io[2]] = (shortfall * self.ONE) / (2 * self.ONE - rgb[io[1]])
+            result[io[2]] = (shortfall * cls.ONE) / (2 * cls.ONE - rgb[io[1]])
             result[io[1]] = rgb[io[1]] + shortfall - result[io[2]]
             return RGB(*tuple(result[i] for i in range(3)))
     # END_DEF: get_rgb
@@ -469,7 +484,7 @@ class Hue(float):
         def func(rotated_hue):
             top = fractions.Fraction.from_float(math.sin(PI_120 - rotated_hue))
             return fractions.Fraction(top, SIN_60)
-        io = self.get_index_value_order()
+        io = self.get_index_value_order(self)
         if io == (IRED, IGREEN, IBLUE):
             return func(self)
         elif io == (IGREEN, IRED, IBLUE):
@@ -488,6 +503,7 @@ PI_60 = Hue(math.pi / 3)
 PI_90 = Hue(math.pi / 2)
 PI_120 = PI_60 * 2
 PI_150 = PI_30 * 5
+PI_180 = Hue(math.pi)
 # END_CLASS: Hue
 
 # Primary Colours

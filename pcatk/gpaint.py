@@ -224,7 +224,7 @@ def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     fraction_to_byte = lambda frac : chr(ONE * frac.numerator / frac.denominator)
     for i in range(width):
         hue = start_hue + delta_hue * i
-        rgb = hue.get_rgb().mapped(fraction_to_byte)
+        rgb = hue.get_rgb(hue).mapped(fraction_to_byte)
         row.extend(rgb)
     buf = row * height
     return buffer(buf)
