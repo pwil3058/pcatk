@@ -39,8 +39,28 @@ BITS_PER_CHANNEL = 8
 ONE = (1 << BITS_PER_CHANNEL) - 1
 THREE = ONE * 3
 SIX = ONE * 6
-WHITE = rgbh.RGB(ONE, ONE, ONE)
-BLACK = rgbh.RGB(0, 0, 0)
+
+class RGB(rgbh.RGB):
+    @staticmethod
+    def get_value(rgb):
+        return fractions.Fraction(sum(rgb), THREE)
+    # END_DEF: get_value
+
+    @staticmethod
+    def to_mono(rgb):
+        val = (sum(rgb) + 1) / 3
+        return RGB(val, val, val)
+    # END_DEF: to_mono
+WHITE = RGB(ONE, ONE, ONE)
+BLACK = RGB(0, 0, 0)
+# END_CLASS: RGB
+
+class Hue(rgbh.Hue):
+    ONE = ONE
+    ZERO = ZERO
+
+class XY(rgbh.XY):
+    HUE_CL = Hue
 
 def calc_rowstride(bytes_per_row):
     """
@@ -50,15 +70,80 @@ def calc_rowstride(bytes_per_row):
     return bytes_per_row + (0 if rem == 0 else 4 - rem)
 # END_DEF: calc_rowstride
 
-ValueLevelCriteria = collections.namedtuple('ValueLevelCriteria', ['n_levels', 'values'])
-HueLimitCriteria = collections.namedtuple('HueLimitCriteria', ['n_hues', 'hues', 'step'])
+class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_levels', 'values'])):
+    __slots__ = ()
 
-class Hue(rgbh.Hue):
-    ONE = ONE
-    ZERO = ZERO
+    @classmethod
+    def create(cls, n_levels):
+        """
+        Create an instance of ValueLimitCriteria for the specified number of
+        levels and rgbs associated with this class (i.e. cls.ONE).
+        >>> ValueLimitCriteria.create(6)
+        ValueLimitCriteria(n_levels=6, values=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
+        """
+        step = fractions.Fraction(1, n_levels - 1)
+        values = tuple([step * i for i in range(n_levels)])
+        return ValueLimitCriteria(n_levels, values)
+    # END_DEF: create
 
-class XY(rgbh.XY):
-    HUE_CL = Hue
+    def get_value_index(self, rgb):
+        """
+        Return the index of rgb value w.r.t. the specified ValueLimitCriteria
+        >>> vlc = ValueLimitCriteria.create(6)
+        >>> vlc.get_value_index(ONE, ONE, ONE)
+        5
+        >>> vlc.get_value_index(ONE, ONE, 0)
+        3
+        >>> vlc.get_value_index(ONE, 0, 0)
+        2
+        """
+        return (sum(rgb) * (self.n_levels - 1) * 2 + THREE) / SIX
+    # END_DEF: get_value_index
+# END_CLASS: ValueLimitCriteria
+
+class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hues', 'step'])):
+    __slots__ = ()
+
+    @classmethod
+    def create(cls, n_hues):
+        '''
+        >>> import math
+        >>> hlc = HueLimitCriteria.create(6)
+        >>> hlc.n_hues
+        6
+        >>> hlc.n_hues == len(hlc.hues)
+        True
+        >>> hlc.hues[0]
+        Hue(0.0)
+        >>> Hue.get_rgb(hlc.hues[1])
+        RGB(red=255, green=255, blue=0)
+        >>> Hue.get_rgb(hlc.hues[3])
+        RGB(red=0, green=255, blue=255)
+        '''
+        step = 2 * math.pi / n_hues
+        hues = [Hue.normalize(step * i) for i in range(n_hues)]
+        return HueLimitCriteria(n_hues, hues, step)
+    # END_DEF: create
+
+    def get_hue_index(self, hue):
+        """
+        Return the index of hue w.r.t. the specified HueLevelCriteria
+        >>> import math
+        >>> hlc = HueLimitCriteria.create(6)
+        >>> hlc.get_hue_index(ONE, ONE, 0)
+        1
+        >>> hlc.get_hue_index(ONE, 0, ONE / 2)
+        0
+        """
+        if hue > 0.0:
+            index = int(round(float(hue) / self.step))
+        else:
+            index = int(round((float(hue) + 2 * math.pi) / self.step))
+            if index == self.n_hues:
+                index = 0
+        return index
+    # END_DEF: get_hue_index
+# END_CLASS: HueLimitCriteria
 
 class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     __slots__ = ()
@@ -68,7 +153,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         """
         Generate an instance from red, green and blue values
         """
-        rgb = rgbh.RGB(red, green, blue)
+        rgb = RGB(red, green, blue)
         hue = XY.from_rgb(rgb).get_hue()
         return cls(rgb, hue)
     # END_DEF: from_pixbuf_data
@@ -88,40 +173,6 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         """
         return cls.from_red_green_blue(data[offset], data[offset + 1], data[offset + 2])
     # END_DEF: from_pixbuf_data
-
-    @classmethod
-    def create_value_level_criteria(cls, n_levels):
-        """
-        Create an instance of ValueLevelCriteria for the specified number of
-        levels and rgbs associated with this class (i.e. cls.ONE).
-        >>> RGBH.create_value_level_criteria(6)
-        ValueLevelCriteria(n_levels=6, values=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
-        """
-        step = fractions.Fraction(1, n_levels - 1)
-        values = tuple([step * i for i in range(n_levels)])
-        return ValueLevelCriteria(n_levels, values)
-    # END_DEF: create_value_level_criteria
-
-    @classmethod
-    def create_hue_limit_criteria(cls, n_hues):
-        '''
-        >>> import math
-        >>> hlc = RGBH.create_hue_limit_criteria(6)
-        >>> hlc.n_hues
-        6
-        >>> hlc.n_hues == len(hlc.hues)
-        True
-        >>> hlc.hues[0]
-        Hue(0.0)
-        >>> Hue.get_rgb(hlc.hues[1])
-        RGB(red=255, green=255, blue=0)
-        >>> Hue.get_rgb(hlc.hues[3])
-        RGB(red=0, green=255, blue=255)
-        '''
-        step = 2 * math.pi / n_hues
-        hues = [Hue.normalize(step * i) for i in range(n_hues)]
-        return HueLimitCriteria(n_hues, hues, step)
-    # END_DEF: create_hue_limit_criteria
 
     def get_value(self):
         """
@@ -146,42 +197,9 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         >>> RGBH.from_red_green_blue(ONE, 0, 0).get_value_rgb()
         RGB(red=85, green=85, blue=85)
         """
-        comp = int(round(rgbh.RGB.get_avg_value(self.rgb)))
-        return rgbh.RGB(comp, comp, comp)
+        comp = int(round(RGB.get_avg_value(self.rgb)))
+        return RGB(comp, comp, comp)
     # END_DEF: get_value_rgb
-
-    def get_value_index(self, vlc):
-        """
-        Return the index of rgb value w.r.t. the specified ValueLevelCriteria
-        >>> vlc = RGBH.create_value_level_criteria(6)
-        >>> RGBH.from_red_green_blue(ONE, ONE, ONE).get_value_index(vlc)
-        5
-        >>> RGBH.from_red_green_blue(ONE, ONE, 0).get_value_index(vlc)
-        3
-        >>> RGBH.from_red_green_blue(ONE, 0, 0).get_value_index(vlc)
-        2
-        """
-        return (sum(self.rgb) * (vlc.n_levels - 1) * 2 + THREE) / SIX
-    # END_DEF: get_value_index
-
-    def get_hue_index(self, hlc):
-        """
-        Return the index of hue w.r.t. the specified HueLevelCriteria
-        >>> import math
-        >>> hlc = RGBH.create_hue_limit_criteria(6)
-        >>> RGBH.from_red_green_blue(ONE, ONE, 0).get_hue_index(hlc)
-        1
-        >>> RGBH.from_red_green_blue(ONE, 0, ONE / 2).get_hue_index(hlc)
-        0
-        """
-        if self.hue > 0.0:
-            index = int(round(float(self.hue) / hlc.step))
-        else:
-            index = int(round((float(self.hue) + 2 * math.pi) / hlc.step))
-            if index == hlc.n_hues:
-                index = 0
-        return index
-    # END_DEF: get_hue_index
 
     def get_hue_rgb(self, value=None):
         """
@@ -203,7 +221,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         # zero divided by zero is zero so no change
         if value == 0:
             return self
-        index = self.get_value_index(vlc)
+        index = vlc.get_value_index(self.rgb)
         if index == 0:
             return RGBH(BLACK, None)
         elif index == vlc.n_levels - 1:
@@ -218,15 +236,73 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     def transform_limited_hue(self, hlc):
         if self.hue is None:
             return self
-        index = self.get_hue_index(hlc)
-        if rgbh.RGB.ncomps(self.rgb) == 2:
+        index = hlc.get_hue_index(self.hue)
+        if RGB.ncomps(self.rgb) == 2:
             value = self.get_value()
             rgb = Hue.get_rgb(hlc.hues[index], value)
         else:
-            rgb = rgbh.RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
+            rgb = RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
         return RGBH(rgb, hlc.hues[index])
     # END_DEF: transform_limited_hue
 # END_CLASS: RGBH
+
+class PixBufRow:
+    def __init__(self, data, start, end, nc=3):
+        self.pixels = [RGBH.from_data(data, i) for i in xrange(start, end, nc)]
+    # END_DEF: __init__
+
+    def __iter__(self):
+        for pixel in self.pixels:
+            yield pixel
+    # END_DEF: __iter__
+
+    @property
+    def width(self):
+        return len(self.pixels)
+    # END_DEF: width
+
+    @property
+    def has_alpha(self):
+        return False
+    # END_DEF: has_alpha
+
+    def tostring(self):
+        assert False
+        return self.pixels.tostring()
+    # END_DEF: tostring
+# END_CLASS: PixBufRow
+
+def transform_row_raw(pbr):
+    return [pixel.rgb for pixel in pbr]
+# END_DEF: transform_row_raw
+
+def transform_row_mono(pbr):
+    return [RGB.to_mono(pixel.rgb) for pixel in pbr]
+# END_DEF: transform_row_mono
+
+def transform_row_notan(pbr, threshold):
+    return [BLACK if RGB.get_value(pixel.rgb) <= threshold else WHITE for pixel in pbr]
+# END_DEF: transform_row_notan
+
+def transform_row_high_chroma(pbr, *args):
+    return [pixel.get_hue_rgb() for pixel in pbr]
+# END_DEF: transform_row_notan
+
+def transform_row_limited_value(pbr, vlc):
+    return [pixel.transform_limited_value(vlc).rgb for pixel in pbr]
+# END_DEF: transform_row_high_chroma
+
+def transform_row_limited_value_mono(pbr, vlc):
+    return [RGB.to_mono(pixel.transform_limited_value(vlc).rgb) for pixel in pbr]
+# END_DEF: transform_row_limited_value_mono
+
+def transform_row_limited_hue(pbr, hlc):
+    return [pixel.transform_limited_hue(hlc).rgb for pixel in pbr]
+# END_DEF: transform_limited_hue
+
+def transform_row_limited_hue_value(pbr, hlc, vlc):
+    return [pixel.transform_limited_value(vlc).transform_limited_hue(hlc).rgb for pixel in pbr]
+# END_DEF: transform_limited_hue_value
 
 class RGBHImage(gobject.GObject):
     """
@@ -266,13 +342,10 @@ class RGBHImage(gobject.GObject):
         data = array.array('B', pixbuf.get_pixels()).tolist()
         self.__pixel_rows = []
         for j in range(h):
-            my_row_j = []
-            in_row_j_start = j * rs
-            in_row_j_end = in_row_j_start + w * nc
-            for i in range(in_row_j_start, in_row_j_end, nc):
-                my_row_j.append(RGBH.from_data(data, i))
-            self.__pixel_rows.append(my_row_j)
-            self.emit('progress-made', fractions.Fraction(j + 1, h))
+            self.emit('progress-made', fractions.Fraction(j, h))
+            start = j * rs
+            self.__pixel_rows.append(PixBufRow(data, start, start + w * nc, nc))
+        self.emit('progress-made', fractions.Fraction(1))
         self.__size = gtkpwx.WH(width=w, height=h)
     # END_DEF: set_from_pixbuf
 
