@@ -172,72 +172,20 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     __slots__ = ()
 
     @classmethod
-    def from_red_green_blue(cls, red, green, blue):
-        """
-        Generate an instance from red, green and blue values
-        """
-        rgb = RGB(red, green, blue)
-        hue = XY.from_rgb(rgb).get_hue()
-        return cls(rgb, hue)
-    # END_DEF: from_pixbuf_data
-
-    @classmethod
-    def from_chr_data(cls, data, offset):
-        """
-        Generate an instance from pixbuf data at the given offet
-        """
-        return cls.from_red_green_blue(ord(data[offset]), ord(data[offset + 1]), ord(data[offset + 2]))
-    # END_DEF: from_pixbuf_data
-
-    @classmethod
     def from_data(cls, data, offset):
         """
         Generate an instance from data at the given offet
         """
-        return cls.from_red_green_blue(data[offset], data[offset + 1], data[offset + 2])
+        rgb = RGB(data[offset], data[offset + 1], data[offset + 2])
+        hue = XY.from_rgb(rgb).get_hue()
+        return cls(rgb, hue)
     # END_DEF: from_pixbuf_data
 
-    def get_value(self):
-        """
-        Return the rgb value as a Fraction
-        >>> RGBH.from_red_green_blue(ONE, ONE, ONE).get_value()
-        Fraction(1, 1)
-        >>> RGBH.from_red_green_blue(ONE, ONE, 0).get_value()
-        Fraction(2, 3)
-        >>> RGBH.from_red_green_blue(ONE, 0, 0).get_value()
-        Fraction(1, 3)
-        """
-        return fractions.Fraction(sum(self.rgb), THREE)
-    # END_DEF: get_value
-
-    def get_value_rgb(self):
-        """
-        Return the rgb with no hue and same value as rgb
-        >>> RGBH.from_red_green_blue(ONE, ONE, ONE).get_value_rgb()
-        RGB(red=255, green=255, blue=255)
-        >>> RGBH.from_red_green_blue(ONE, ONE, 0).get_value_rgb()
-        RGB(red=170, green=170, blue=170)
-        >>> RGBH.from_red_green_blue(ONE, 0, 0).get_value_rgb()
-        RGB(red=85, green=85, blue=85)
-        """
-        comp = int(round(RGB.get_avg_value(self.rgb)))
-        return RGB(comp, comp, comp)
-    # END_DEF: get_value_rgb
-
-    def get_hue_rgb(self, value=None):
-        """
-        Return the rgb for our hue and the given value (or our value
-        if the given value is None)
-        """
+    def transform_high_chroma(self):
         if self.hue is None:
-            if value is None:
-                return self.rgb
-            else:
-                return WHITE * value
-        if value is None:
-            value = self.get_value()
-        return Hue.get_rgb(self.hue, value)
-    # END_DEF: get_hue_rgb
+            return self.rgb
+        return Hue.get_rgb(self.hue, RGB.get_value(self.rgb))
+    # END_DEF: transform_high_chroma
 
     def transform_limited_value(self, vlc):
         index = vlc.get_value_index(self.rgb)
@@ -245,11 +193,13 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             return BLACK
         elif index == vlc.n_values - 1:
             return WHITE
-        value = self.get_value()
+        value = RGB.get_value(self.rgb)
         rgb = self.rgb * fractions.Fraction(vlc.values[index], value)
         if max(rgb) > ONE:
-            rgb = self.get_hue_rgb(vlc.values[index])
-        # scaling the rgb values won't change the hue
+            if self.hue is None:
+                rgb = WHITE
+            else:
+                rgb = Hue.get_rgb(self.hue, vlc.values[index])
         return rgb
     # END_DEF: transform_limited_value
 
@@ -263,7 +213,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             return self.rgb
         index = hlc.get_hue_index(self.hue)
         if RGB.ncomps(self.rgb) == 2:
-            value = self.get_value()
+            value = RGB.get_value(self.rgb)
             rgb = Hue.get_rgb(hlc.hues[index], value)
         else:
             rgb = RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
@@ -287,7 +237,6 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             rgb = rgb * fractions.Fraction(target_value, RGB.get_value(rgb))
             if max(rgb) > ONE:
                 rgb = hvlc.hv_rgbs[h_index][v_index]
-                #rgb = self.get_hue_rgb(target_value)
         return rgb
     # END_DEF: transform_limited_hue
 # END_CLASS: RGBH
@@ -330,8 +279,8 @@ def transform_row_notan(pbr, threshold):
     return [BLACK if RGB.get_value(pixel.rgb) <= threshold else WHITE for pixel in pbr]
 # END_DEF: transform_row_notan
 
-def transform_row_high_chroma(pbr, *args):
-    return [pixel.get_hue_rgb() for pixel in pbr]
+def transform_row_high_chroma(pbr):
+    return [pixel.transform_high_chroma() for pixel in pbr]
 # END_DEF: transform_row_notan
 
 def transform_row_limited_value(pbr, vlc):
