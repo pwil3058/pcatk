@@ -621,12 +621,11 @@ class AnalysisRestrictedHueValue(Analysis):
     LABEL = _('Restricted Hue and Value')
 
     def initialize_parameters(self):
-        self.__hlc = pixbuf.HueLimitCriteria.create(6)
-        self.__vlc = pixbuf.ValueLimitCriteria.create(11)
+        self.__hvlc = pixbuf.HueValueLimitCriteria.create(6, 11)
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_limited_hue_value(row, self.__hlc, self.__vlc):
+        for rgb in pixbuf.transform_row_limited_hue_value(row, self.__hvlc):
             for component in rgb:
                 yield component
     # END_DEF: map_to_flat_row
