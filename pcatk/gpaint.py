@@ -202,12 +202,12 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
 gobject.signal_new('samples-changed', ColourSampleArea, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_INT,))
 # END_CLASS: ColourSampleArea
 
-def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
+def generate_spectral_rgb_buf(hue_angle, spread, width, height, backwards=False):
     # TODO: deprecate this function in favour of the one in pixbuf
     """
     Generate a rectangular RGB buffer filled with the specified spectrum
 
-    hue: the central hue in radians from red
+    hue_angle: the central hue_angle in radians from red
     spread: the total spread in radians (max. 2 * pi)
     width: the required width of the rectangle in pixels
     height: the required height of the rectangle in pixels
@@ -215,16 +215,16 @@ def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     """
     row = bytearray()
     if backwards:
-        start_hue = hue - spread / 2
-        delta_hue = spread / width
+        start_hue_angle = hue_angle - spread / 2
+        delta_hue_angle = spread / width
     else:
-        start_hue = hue + spread / 2
-        delta_hue = -spread / width
+        start_hue_angle = hue_angle + spread / 2
+        delta_hue_angle = -spread / width
     ONE = (1 << 8) - 1
     fraction_to_byte = lambda frac : chr(ONE * frac.numerator / frac.denominator)
     for i in range(width):
-        hue = start_hue + delta_hue * i
-        rgb = hue.get_rgb(hue).mapped(fraction_to_byte)
+        hue_angle = start_hue_angle + delta_hue_angle * i
+        rgb = hue_angle.get_rgb(hue_angle).mapped(fraction_to_byte)
         row.extend(rgb)
     buf = row * height
     return buffer(buf)
@@ -341,14 +341,14 @@ class HueDisplay(GenericAttrDisplay):
         gc = self.window.new_gc()
         gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
 
-        if self.colour.hue is None:
+        if self.colour.hue_angle is None:
             self.window.set_background(self.new_colour(self.colour.hue_rgb))
             self.draw_label(gc)
             return
 
         backwards = options.get('colour_wheel', 'red_to_yellow_clockwise')
         w, h = self.window.get_size()
-        spectral_buf = generate_spectral_rgb_buf(self.colour.hue, 2 * math.pi, w, h, backwards)
+        spectral_buf = generate_spectral_rgb_buf(self.colour.hue_angle, 2 * math.pi, w, h, backwards)
         self.window.draw_rgb_image(gc, x=0, y=0, width=w, height=h,
             dith=gtk.gdk.RGB_DITHER_NONE,
             rgb_buf=spectral_buf)
@@ -607,7 +607,7 @@ class ColourWheel(gtk.DrawingArea):
 
         self.gc.line_width = 2
         for angle in [paint.rgbh.PI_60 * i for i in range(6)]:
-            hue_rgb = paint.HCVW.rgb_for_hue(angle)
+            hue_rgb = paint.HCVW.rgb_for_hue_angle(angle)
             self.gc.set_foreground(self.new_colour(hue_rgb))
             self.window.draw_line(self.gc, self.cx, self.cy, *self.polar_to_cartesian(self.one * self.zoom, angle))
         for tube in self.tube_colours.values():
@@ -631,7 +631,7 @@ class ColourWheel(gtk.DrawingArea):
             """
             Set up colour values ready for drawing
             """
-            self.colour_angle = self.colour.hue if self.colour.hue is not None else paint.HueAngle(math.pi / 2)
+            self.colour_angle = self.colour.hue_angle if self.colour.hue_angle is not None else paint.HueAngle(math.pi / 2)
             self.fg_colour = self.parent.new_colour(self.colour.rgb)
             self.value_colour = self.parent.new_colour(paint.BLACK)
             self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())
@@ -787,7 +787,7 @@ def colour_attribute_column_spec(tns):
 COLOUR_ATTRS = [
     TNS(_('Colour Name'), 'name', {'resizable' : True}, lambda row: row.colour.name),
     TNS(_('Value'), 'value', {}, lambda row: row.colour.value),
-    TNS(_('Hue'), 'hue', {}, lambda row: row.colour.hue),
+    TNS(_('Hue'), 'hue', {}, lambda row: row.colour.hue_angle),
     TNS(_('Warmth'), 'warmth', {}, lambda row: row.colour.warmth),
     TNS(_('T.'), 'transparency', {}, lambda row: row.colour.transparency),
     TNS(_('P.'), 'permanence', {}, lambda row: row.colour.permanence),

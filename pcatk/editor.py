@@ -527,16 +527,16 @@ class ColourSampleMatcher(gtk.VBox):
         # END_DEF: __init__
 
         def set_colour(self, colour):
-            if colour.hcvw.hue is None:
-                hue = paint.HueAngle(0.0)
+            if colour.hcvw.hue_angle is None:
+                hue_angle = paint.HueAngle(0.0)
                 value = None
             else:
-                hue = colour.hcvw.hue
+                hue_angle = colour.hcvw.hue_angle
                 value = colour.hcvw.value
             if options.get('colour_wheel', 'red_to_yellow_clockwise'):
-                new_colour = paint.HCVW.rgb_for_hue(hue + ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
+                new_colour = paint.HCVW.rgb_for_hue_angle(hue_angle + ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
             else:
-                new_colour = paint.HCVW.rgb_for_hue(hue - ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
+                new_colour = paint.HCVW.rgb_for_hue_angle(hue_angle - ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
             gtkpwx.ColouredButton.set_colour(self, new_colour)
         # END_DEF: set_colour
     # END_CLASS: HueClockwiseButton
@@ -547,16 +547,16 @@ class ColourSampleMatcher(gtk.VBox):
         # END_DEF: __init__
 
         def set_colour(self, colour):
-            if colour.hcvw.hue is None:
-                hue = paint.HueAngle(0.0)
+            if colour.hcvw.hue_angle is None:
+                hue_angle = paint.HueAngle(0.0)
                 value = None
             else:
-                hue = colour.hcvw.hue
+                hue_angle = colour.hcvw.hue_angle
                 value = colour.hcvw.value
             if options.get('colour_wheel', 'red_to_yellow_clockwise'):
-                new_colour = paint.HCVW.rgb_for_hue(hue - ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
+                new_colour = paint.HCVW.rgb_for_hue_angle(hue_angle - ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
             else:
-                new_colour = paint.HCVW.rgb_for_hue(hue + ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
+                new_colour = paint.HCVW.rgb_for_hue_angle(hue_angle + ColourSampleMatcher.HUE_DISPLAY_SPAN, value)
             gtkpwx.ColouredButton.set_colour(self, new_colour)
         # END_DEF: set_colour
     # END_CLASS: HueAntiClockwiseButton
@@ -616,7 +616,7 @@ class ColourSampleMatcher(gtk.VBox):
         hbox.pack_start(self.incr_value_button, expand=True, fill=True)
         self.incr_value_button.connect('clicked', self.incr_value_cb)
         self.pack_start(hbox, expand=False)
-        # Add anti clockwise hue modification button
+        # Add anti clockwise hue_angle modification button
         hbox = gtk.HBox()
         self.hue_acw_button = self.HueAntiClockwiseButton()
         hbox.pack_start(self.hue_acw_button, expand=False)
@@ -624,7 +624,7 @@ class ColourSampleMatcher(gtk.VBox):
         # Add the sample display panel
         self.sample_display = gpaint.ColourSampleArea()
         hbox.pack_start(self.sample_display, expand=True, fill=True)
-        # Add anti clockwise hue modification button
+        # Add anti clockwise hue_angle modification button
         self.hue_cw_button = self.HueClockwiseButton()
         hbox.pack_start(self.hue_cw_button, expand=False)
         self.hue_cw_button.connect('clicked', self.modify_hue_cw_cb)
@@ -717,7 +717,7 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: _decr_channel
 
     def incr_grayness_cb(self, event):
-        if self.colour.hue is None:
+        if self.colour.hue_angle is None:
             gtk.gdk.beep()
             return # we're already gray so nothing to do
         ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
@@ -740,9 +740,9 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: incr_grayness_cb
 
     def decr_grayness_cb(self, event):
-        # TODO: investigate hue changes during decr greyness
+        # TODO: investigate hue_angle changes during decr greyness
         new_colour = list(self.colour.rgb)
-        if self.colour.hue is None:
+        if self.colour.hue_angle is None:
             # we're colourless so a change to any channel will do
             if new_colour[0] < paint.HCVW.ONE:
                 self._incr_channel(new_colour, 0)
@@ -774,12 +774,12 @@ class ColourSampleMatcher(gtk.VBox):
             gtk.gdk.beep()
             return
         ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
-        # try to maintain the same grayness and hue
+        # try to maintain the same grayness and hue_angle
         if self.colour.rgb[io[0]] == paint.HCVW.ONE:
-            # rgb_for_hue() can onl be used in this situation as
+            # rgb_for_hue_angle() can onl be used in this situation as
             # it could incorrectly modify greyness in other cases
             new_value = min(1.0, self.colour.value * (1 + fractions.Fraction(self._delta, paint.HCVW.TWO)))
-            new_colour = paint.HCVW.rgb_for_hue(self.colour.hue, new_value)
+            new_colour = paint.HCVW.rgb_for_hue_angle(self.colour.hue_angle, new_value)
         elif ncomps == 3:
             new_colour = [min(comp + self._delta * comp / denom, paint.HCVW.ONE) for comp in self.colour.rgb]
         else:
@@ -787,7 +787,7 @@ class ColourSampleMatcher(gtk.VBox):
             if ncomps == 1:
                 self._incr_channel(new_colour, io[0])
             else:
-                # denom should help maintain the hue
+                # denom should help maintain the hue_angle
                 for i in io[:2]:
                     self._incr_channel(new_colour, i, denom)
         self.set_colour(new_colour)
@@ -804,7 +804,7 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: decr_value_cb
 
     def modify_hue_acw_cb(self, button):
-        if self.colour.hue is None:
+        if self.colour.hue_angle is None:
             gtk.gdk.beep()
             return
         if not options.get('colour_wheel', 'red_to_yellow_clockwise'):
@@ -814,7 +814,7 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: modify_hue_acw_cb
 
     def modify_hue_cw_cb(self, button):
-        if self.colour.hue is None:
+        if self.colour.hue_angle is None:
             gtk.gdk.beep()
             return
         if not options.get('colour_wheel', 'red_to_yellow_clockwise'):
