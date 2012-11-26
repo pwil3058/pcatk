@@ -341,7 +341,7 @@ class HueDisplay(GenericAttrDisplay):
         gc = self.window.new_gc()
         gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
 
-        if self.colour.hue_angle is None:
+        if math.isnan(self.colour.hue_angle):
             self.window.set_background(self.new_colour(self.colour.hue_rgb))
             self.draw_label(gc)
             return
@@ -631,7 +631,7 @@ class ColourWheel(gtk.DrawingArea):
             """
             Set up colour values ready for drawing
             """
-            self.colour_angle = self.colour.hue_angle if self.colour.hue_angle is not None else paint.HueAngle(math.pi / 2)
+            self.colour_angle = self.colour.hue_angle if not math.isnan(self.colour.hue_angle) else paint.HueAngle(math.pi / 2)
             self.fg_colour = self.parent.new_colour(self.colour.rgb)
             self.value_colour = self.parent.new_colour(paint.BLACK)
             self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())
