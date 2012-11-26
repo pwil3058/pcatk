@@ -631,7 +631,7 @@ class ColourWheel(gtk.DrawingArea):
             """
             Set up colour values ready for drawing
             """
-            self.colour_angle = self.colour.hue if self.colour.hue is not None else paint.Hue(math.pi / 2)
+            self.colour_angle = self.colour.hue if self.colour.hue is not None else paint.HueAngle(math.pi / 2)
             self.fg_colour = self.parent.new_colour(self.colour.rgb)
             self.value_colour = self.parent.new_colour(paint.BLACK)
             self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())

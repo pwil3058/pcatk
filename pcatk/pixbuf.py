@@ -55,14 +55,12 @@ WHITE = RGB(ONE, ONE, ONE)
 BLACK = RGB(0, 0, 0)
 # END_CLASS: RGB
 
-class Hue(rgbh.Hue):
+class HueAngle(rgbh.HueAngle):
     ONE = ONE
     ZERO = ZERO
-    # this is necessary to avoid the retuen value being a "long"
-    #CAST = int
 
 class XY(rgbh.XY):
-    HUE_CL = Hue
+    HUE_CL = HueAngle
 
 def calc_rowstride(bytes_per_row):
     """
@@ -117,14 +115,14 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc.n_hues == len(hlc.hues)
         True
         >>> hlc.hues[0]
-        Hue(0.0)
-        >>> Hue.get_rgb(hlc.hues[1])
+        HueAngle(0.0)
+        >>> HueAngle.get_rgb(hlc.hues[1])
         RGB(red=255, green=255, blue=0)
-        >>> Hue.get_rgb(hlc.hues[3])
+        >>> HueAngle.get_rgb(hlc.hues[3])
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
-        hues = [Hue.normalize(step * i) for i in range(n_hues)]
+        hues = [HueAngle.normalize(step * i) for i in range(n_hues)]
         return HueLimitCriteria(n_hues, hues, step)
     # END_DEF: create
 
@@ -155,7 +153,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     def create(cls, n_hues, n_values):
         hlc = HueLimitCriteria.create(n_hues)
         vlc = ValueLimitCriteria.create(n_values)
-        hv_rgbs = [[Hue.get_rgb(hue, val) for val in vlc.values] for hue in hlc.hues]
+        hv_rgbs = [[HueAngle.get_rgb(hue, val) for val in vlc.values] for hue in hlc.hues]
         return HueValueLimitCriteria(hlc, vlc, hv_rgbs)
     # END_DEF: create
 
@@ -184,7 +182,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     def transform_high_chroma(self):
         if self.hue is None:
             return self.rgb
-        return Hue.get_rgb(self.hue, RGB.get_value(self.rgb))
+        return HueAngle.get_rgb(self.hue, RGB.get_value(self.rgb))
     # END_DEF: transform_high_chroma
 
     def transform_limited_value(self, vlc):
@@ -199,7 +197,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             if self.hue is None:
                 rgb = WHITE
             else:
-                rgb = Hue.get_rgb(self.hue, vlc.values[index])
+                rgb = HueAngle.get_rgb(self.hue, vlc.values[index])
         return rgb
     # END_DEF: transform_limited_value
 
@@ -214,7 +212,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         index = hlc.get_hue_index(self.hue)
         if RGB.ncomps(self.rgb) == 2:
             value = RGB.get_value(self.rgb)
-            rgb = Hue.get_rgb(hlc.hues[index], value)
+            rgb = HueAngle.get_rgb(hlc.hues[index], value)
         else:
             rgb = RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
         return rgb
@@ -231,7 +229,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         h_index = hvlc.get_hue_index(self.hue)
         target_value = hvlc.vlc.values[v_index]
         if RGB.ncomps(self.rgb) == 2:
-            rgb = Hue.get_rgb(hvlc.hlc.hues[h_index], target_value)
+            rgb = HueAngle.get_rgb(hvlc.hlc.hues[h_index], target_value)
         else:
             rgb = RGB.rotated(self.rgb, hvlc.hlc.hues[h_index] - self.hue)
             rgb = rgb * fractions.Fraction(target_value, RGB.get_value(rgb))
@@ -301,7 +299,7 @@ def transform_row_limited_hue_value(pbr, hvlc):
 
 class RGBHImage(gobject.GObject):
     """
-    An object containing a RGB and Hue array representing a Pixbuf
+    An object containing a RGB and HueAngle array representing a Pixbuf
     """
 
     def __init__(self, pixbuf=None):

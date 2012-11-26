@@ -519,7 +519,7 @@ class ColourSampleMatcher(gtk.VBox):
     HUE_DISPLAY_SPAN =  math.pi / 8
     VALUE_DISPLAY_INCR = fractions.Fraction(1, 10)
     DEFAULT_COLOUR = paint.Colour(paint.HCVW.WHITE / 2)
-    DELTA_HUE = paint.Hue(math.pi / 100)
+    DELTA_HUE = paint.HueAngle(math.pi / 100)
 
     class HueClockwiseButton(gtkpwx.ColouredButton):
         def __init__(self):
@@ -528,7 +528,7 @@ class ColourSampleMatcher(gtk.VBox):
 
         def set_colour(self, colour):
             if colour.hcvw.hue is None:
-                hue = paint.Hue(0.0)
+                hue = paint.HueAngle(0.0)
                 value = None
             else:
                 hue = colour.hcvw.hue
@@ -548,7 +548,7 @@ class ColourSampleMatcher(gtk.VBox):
 
         def set_colour(self, colour):
             if colour.hcvw.hue is None:
-                hue = paint.Hue(0.0)
+                hue = paint.HueAngle(0.0)
                 value = None
             else:
                 hue = colour.hcvw.hue
