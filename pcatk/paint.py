@@ -75,56 +75,56 @@ class HCVW(object):
     # END_DEF: mapf
 
     @classmethod
-    def rgb_for_hue(cls, hue, value=None):
-        # value is None return the RGB for the max chroma for the hue
-        # else return the RGB for our hue with the specified value
-        # NB if requested value is too big for the hue the returned value
+    def rgb_for_hue_angle(cls, hue_angle, value=None):
+        # value is None return the RGB for the max chroma for the hue_angle
+        # else return the RGB for our hue_angle with the specified value
+        # NB if requested value is too big for the hue_angle the returned value
         # will deviate towards the weakest component on its way to white.
-        # Zero chroma has a hue of WHITE (allow for inaccuracies of real maths)
-        if hue is None:
+        # Zero chroma has a hue_angle of WHITE (allow for inaccuracies of real maths)
+        if hue_angle is None:
             return cls.WHITE if value is None else (cls.WHITE * value)
-        return HueAngle.get_rgb(hue, value).mapped(cls.mapf)
-    # END_DEF: rgb_for_hue
+        return HueAngle.get_rgb(hue_angle, value).mapped(cls.mapf)
+    # END_DEF: rgb_for_hue_angle
 
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
         self.value = RGB.get_avg_value(rgb) / self.ONE
         if self.rgb[0] == self.rgb[1] and self.rgb[0] == self.rgb[2]:
             # Avoid problems with rounding errors for shades of white
-            self.hue = None
+            self.hue_angle = None
             self.chroma = 0.0
             self.hue_rgb = self.WHITE * self.value
             self.warmth = fractions.Fraction(0) # neither hot nor cold
             return
         xy = XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction(xy.x, self.ONE)
-        self.hue = xy.get_hue()
-        if self.hue is None:
+        self.hue_angle = xy.get_hue_angle()
+        if self.hue_angle is None:
             self.hue_rgb = self.WHITE * self.value
             self.chroma = fractions.Fraction(0)
         else:
-            self.hue_rgb = HueAngle.get_rgb(self.hue).mapped(self.mapf)
-            self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
+            self.hue_rgb = HueAngle.get_rgb(self.hue_angle).mapped(self.mapf)
+            self.chroma = xy.get_hypot() * self.hue_angle.get_chroma_correction() / self.ONE
     # END_DEF: __init__
 
     def hue_rgb_for_value(self, value=None):
         if value is None:
-            # i.e. same hue and value but without any unnecessary grey
+            # i.e. same hue_angle and value but without any unnecessary grey
             value = self.value
-        if self.hue is None:
+        if self.hue_angle is None:
             return self.WHITE * value
-        return HueAngle.get_rgb(self.hue, value).mapped(self.mapf)
+        return HueAngle.get_rgb(self.hue_angle, value).mapped(self.mapf)
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
-        # Is it darker or lighter than max chroma for the hue?
-        if self.hue is None or self.value * self.ONE > sum(self.hue_rgb) / 3:
+        # Is it darker or lighter than max chroma for the hue_angle?
+        if self.hue_angle is None or self.value * self.ONE > sum(self.hue_rgb) / 3:
             return self.WHITE
         else:
             return self.BLACK
     # END_DEF: chroma_side
 
-    def get_rotated_rgb(self, delta_hue):
+    def get_rotated_rgb(self, delta_hue_angle):
         '''
         Return a copy of our rgb rotated by the given amount but with
         the same value and without unavoidable chroma change.
@@ -133,14 +133,14 @@ class HCVW(object):
         '''
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            return HueAngle.get_rgb(self.hue + delta_hue, self.value).mapped(self.mapf)
+            return HueAngle.get_rgb(self.hue_angle + delta_hue_angle, self.value).mapped(self.mapf)
         else:
             # Simple rotation is the correct solution for 1 or 3 components
-            return RGB.rotated(self.rgb, delta_hue)
+            return RGB.rotated(self.rgb, delta_hue_angle)
     # END_DEF: get_rotated_rgb
 
     def __str__(self):
-        string = '(HUE = {0}, '.format(round(math.degrees(self.hue), 2) if self.hue is not None else None)
+        string = '(HUE = {0}, '.format(round(math.degrees(self.hue_angle), 2) if self.hue_angle is not None else None)
         string += 'VALUE = {0}, '.format(round(self.value, 2))
         string += 'CHROMA = {0}, '.format(round(self.chroma, 2))
         string += 'WARMTH = {0})'.format(round(self.warmth, 2))
@@ -284,9 +284,9 @@ class Colour(object):
     # END_DEF: rgb
 
     @property
-    def hue(self):
-        return self.hcvw.hue
-    # END_DEF: hue
+    def hue_angle(self):
+        return self.hcvw.hue_angle
+    # END_DEF: hue_angle
 
     @property
     def hue_rgb(self):

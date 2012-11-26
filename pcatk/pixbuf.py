@@ -102,7 +102,7 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
     # END_DEF: get_value_index
 # END_CLASS: ValueLimitCriteria
 
-class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hues', 'step'])):
+class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hue_angles', 'step'])):
     __slots__ = ()
 
     @classmethod
@@ -112,38 +112,38 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc = HueLimitCriteria.create(6)
         >>> hlc.n_hues
         6
-        >>> hlc.n_hues == len(hlc.hues)
+        >>> hlc.n_hues == len(hlc.hue_angles)
         True
-        >>> hlc.hues[0]
+        >>> hlc.hue_angles[0]
         HueAngle(0.0)
-        >>> HueAngle.get_rgb(hlc.hues[1])
+        >>> HueAngle.get_rgb(hlc.hue_angles[1])
         RGB(red=255, green=255, blue=0)
-        >>> HueAngle.get_rgb(hlc.hues[3])
+        >>> HueAngle.get_rgb(hlc.hue_angles[3])
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
-        hues = [HueAngle.normalize(step * i) for i in range(n_hues)]
-        return HueLimitCriteria(n_hues, hues, step)
+        hue_angles = [HueAngle.normalize(step * i) for i in range(n_hues)]
+        return HueLimitCriteria(n_hues, hue_angles, step)
     # END_DEF: create
 
-    def get_hue_index(self, hue):
+    def get_hue_angle_index(self, hue_angle):
         """
-        Return the index of hue w.r.t. the specified HueLevelCriteria
+        Return the index of hue_angle w.r.t. the specified HueLevelCriteria
         >>> import math
         >>> hlc = HueLimitCriteria.create(6)
-        >>> hlc.get_hue_index(ONE, ONE, 0)
+        >>> hlc.get_hue_angle_index((ONE, ONE, 0))
         1
-        >>> hlc.get_hue_index(ONE, 0, ONE / 2)
+        >>> hlc.get_hue_angle_index((ONE, 0, ONE / 2))
         0
         """
-        if hue > 0.0:
-            index = int(round(float(hue) / self.step))
+        if hue_angle > 0.0:
+            index = int(round(float(hue_angle) / self.step))
         else:
-            index = int(round((float(hue) + 2 * math.pi) / self.step))
+            index = int(round((float(hue_angle) + 2 * math.pi) / self.step))
             if index == self.n_hues:
                 index = 0
         return index
-    # END_DEF: get_hue_index
+    # END_DEF: get_hue_angle_index
 # END_CLASS: HueLimitCriteria
 
 class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hlc', 'vlc', 'hv_rgbs'])):
@@ -153,20 +153,20 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     def create(cls, n_hues, n_values):
         hlc = HueLimitCriteria.create(n_hues)
         vlc = ValueLimitCriteria.create(n_values)
-        hv_rgbs = [[HueAngle.get_rgb(hue, val) for val in vlc.values] for hue in hlc.hues]
+        hv_rgbs = [[HueAngle.get_rgb(hue_angle, val) for val in vlc.values] for hue_angle in hlc.hue_angles]
         return HueValueLimitCriteria(hlc, vlc, hv_rgbs)
     # END_DEF: create
 
-    def get_hue_index(self, hue):
-        return self.hlc.get_hue_index(hue)
-    # END_DEF: get_hue_index
+    def get_hue_angle_index(self, hue_angle):
+        return self.hlc.get_hue_angle_index(hue_angle)
+    # END_DEF: get_hue_angle_index
 
     def get_value_index(self, rgb):
         return self.vlc.get_value_index(rgb)
     # END_DEF: get_value_index
 # END_CLASS: HueValueLimitCriteria
 
-class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
+class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue_angle'])):
     __slots__ = ()
 
     @classmethod
@@ -175,14 +175,14 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         Generate an instance from data at the given offet
         """
         rgb = RGB(data[offset], data[offset + 1], data[offset + 2])
-        hue = XY.from_rgb(rgb).get_hue()
-        return cls(rgb, hue)
+        hue_angle = XY.from_rgb(rgb).get_hue_angle()
+        return cls(rgb, hue_angle)
     # END_DEF: from_pixbuf_data
 
     def transform_high_chroma(self):
-        if self.hue is None:
+        if self.hue_angle is None:
             return self.rgb
-        return HueAngle.get_rgb(self.hue, RGB.get_value(self.rgb))
+        return HueAngle.get_rgb(self.hue_angle, RGB.get_value(self.rgb))
     # END_DEF: transform_high_chroma
 
     def transform_limited_value(self, vlc):
@@ -194,10 +194,10 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         value = RGB.get_value(self.rgb)
         rgb = self.rgb * fractions.Fraction(vlc.values[index], value)
         if max(rgb) > ONE:
-            if self.hue is None:
+            if self.hue_angle is None:
                 rgb = WHITE
             else:
-                rgb = HueAngle.get_rgb(self.hue, vlc.values[index])
+                rgb = HueAngle.get_rgb(self.hue_angle, vlc.values[index])
         return rgb
     # END_DEF: transform_limited_value
 
@@ -207,14 +207,14 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     # END_DEF: transform_limited_value
 
     def transform_limited_hue(self, hlc):
-        if self.hue is None:
+        if self.hue_angle is None:
             return self.rgb
-        index = hlc.get_hue_index(self.hue)
+        index = hlc.get_hue_angle_index(self.hue_angle)
         if RGB.ncomps(self.rgb) == 2:
             value = RGB.get_value(self.rgb)
-            rgb = HueAngle.get_rgb(hlc.hues[index], value)
+            rgb = HueAngle.get_rgb(hlc.hue_angles[index], value)
         else:
-            rgb = RGB.rotated(self.rgb, hlc.hues[index] - self.hue)
+            rgb = RGB.rotated(self.rgb, hlc.hue_angles[index] - self.hue_angle)
         return rgb
     # END_DEF: transform_limited_hue
 
@@ -224,14 +224,14 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             return BLACK
         elif v_index == hvlc.vlc.n_values - 1:
             return WHITE
-        elif self.hue is None:
+        elif self.hue_angle is None:
             return self.rgb
-        h_index = hvlc.get_hue_index(self.hue)
+        h_index = hvlc.get_hue_angle_index(self.hue_angle)
         target_value = hvlc.vlc.values[v_index]
         if RGB.ncomps(self.rgb) == 2:
-            rgb = HueAngle.get_rgb(hvlc.hlc.hues[h_index], target_value)
+            rgb = HueAngle.get_rgb(hvlc.hlc.hue_angles[h_index], target_value)
         else:
-            rgb = RGB.rotated(self.rgb, hvlc.hlc.hues[h_index] - self.hue)
+            rgb = RGB.rotated(self.rgb, hvlc.hlc.hue_angles[h_index] - self.hue_angle)
             rgb = rgb * fractions.Fraction(target_value, RGB.get_value(rgb))
             if max(rgb) > ONE:
                 rgb = hvlc.hv_rgbs[h_index][v_index]
