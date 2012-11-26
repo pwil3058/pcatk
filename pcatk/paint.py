@@ -31,7 +31,7 @@ if __name__ == '__main__':
 class RGB(rgbh.RGB):
     pass
 
-class Hue(rgbh.Hue):
+class HueAngle(rgbh.HueAngle):
     pass
 
 class XY(rgbh.XY):
@@ -83,7 +83,7 @@ class HCVW(object):
         # Zero chroma has a hue of WHITE (allow for inaccuracies of real maths)
         if hue is None:
             return cls.WHITE if value is None else (cls.WHITE * value)
-        return Hue.get_rgb(hue, value).mapped(cls.mapf)
+        return HueAngle.get_rgb(hue, value).mapped(cls.mapf)
     # END_DEF: rgb_for_hue
 
     def __init__(self, rgb):
@@ -103,7 +103,7 @@ class HCVW(object):
             self.hue_rgb = self.WHITE * self.value
             self.chroma = fractions.Fraction(0)
         else:
-            self.hue_rgb = Hue.get_rgb(self.hue).mapped(self.mapf)
+            self.hue_rgb = HueAngle.get_rgb(self.hue).mapped(self.mapf)
             self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
     # END_DEF: __init__
 
@@ -113,7 +113,7 @@ class HCVW(object):
             value = self.value
         if self.hue is None:
             return self.WHITE * value
-        return Hue.get_rgb(self.hue, value).mapped(self.mapf)
+        return HueAngle.get_rgb(self.hue, value).mapped(self.mapf)
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
@@ -133,7 +133,7 @@ class HCVW(object):
         '''
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            return Hue.get_rgb(self.hue + delta_hue, self.value).mapped(self.mapf)
+            return HueAngle.get_rgb(self.hue + delta_hue, self.value).mapped(self.mapf)
         else:
             # Simple rotation is the correct solution for 1 or 3 components
             return RGB.rotated(self.rgb, delta_hue)
