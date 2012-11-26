@@ -557,7 +557,7 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         True
         """
         if self.x == 0 and self.y == 0:
-            return None
+            return float('nan')
         return self.HUE_CL(math.atan2(self.y, self.x))
     # END_DEF: get_hue_angle
 

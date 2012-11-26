@@ -81,7 +81,7 @@ class HCVW(object):
         # NB if requested value is too big for the hue_angle the returned value
         # will deviate towards the weakest component on its way to white.
         # Zero chroma has a hue_angle of WHITE (allow for inaccuracies of real maths)
-        if hue_angle is None:
+        if math.isnan(hue_angle):
             return cls.WHITE if value is None else (cls.WHITE * value)
         return HueAngle.get_rgb(hue_angle, value).mapped(cls.mapf)
     # END_DEF: rgb_for_hue_angle
@@ -91,7 +91,7 @@ class HCVW(object):
         self.value = RGB.get_avg_value(rgb) / self.ONE
         if self.rgb[0] == self.rgb[1] and self.rgb[0] == self.rgb[2]:
             # Avoid problems with rounding errors for shades of white
-            self.hue_angle = None
+            self.hue_angle = float('nan')
             self.chroma = 0.0
             self.hue_rgb = self.WHITE * self.value
             self.warmth = fractions.Fraction(0) # neither hot nor cold
@@ -99,7 +99,7 @@ class HCVW(object):
         xy = XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction(xy.x, self.ONE)
         self.hue_angle = xy.get_hue_angle()
-        if self.hue_angle is None:
+        if math.isnan(self.hue_angle):
             self.hue_rgb = self.WHITE * self.value
             self.chroma = fractions.Fraction(0)
         else:
@@ -111,14 +111,14 @@ class HCVW(object):
         if value is None:
             # i.e. same hue_angle and value but without any unnecessary grey
             value = self.value
-        if self.hue_angle is None:
+        if math.isnan(self.hue_angle):
             return self.WHITE * value
         return HueAngle.get_rgb(self.hue_angle, value).mapped(self.mapf)
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
         # Is it darker or lighter than max chroma for the hue_angle?
-        if self.hue_angle is None or self.value * self.ONE > sum(self.hue_rgb) / 3:
+        if math.isnan(self.hue_angle) or self.value * self.ONE > sum(self.hue_rgb) / 3:
             return self.WHITE
         else:
             return self.BLACK
@@ -140,7 +140,7 @@ class HCVW(object):
     # END_DEF: get_rotated_rgb
 
     def __str__(self):
-        string = '(HUE = {0}, '.format(round(math.degrees(self.hue_angle), 2) if self.hue_angle is not None else None)
+        string = '(HUE = {0}, '.format(round(math.degrees(self.hue_angle), 2) if not math.isnan(self.hue_angle) else self.hue_angle)
         string += 'VALUE = {0}, '.format(round(self.value, 2))
         string += 'CHROMA = {0}, '.format(round(self.chroma, 2))
         string += 'WARMTH = {0})'.format(round(self.warmth, 2))

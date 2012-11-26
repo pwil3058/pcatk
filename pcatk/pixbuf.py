@@ -180,7 +180,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue_angle'])):
     # END_DEF: from_pixbuf_data
 
     def transform_high_chroma(self):
-        if self.hue_angle is None:
+        if math.isnan(self.hue_angle):
             return self.rgb
         return HueAngle.get_rgb(self.hue_angle, RGB.get_value(self.rgb))
     # END_DEF: transform_high_chroma
@@ -194,7 +194,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue_angle'])):
         value = RGB.get_value(self.rgb)
         rgb = self.rgb * fractions.Fraction(vlc.values[index], value)
         if max(rgb) > ONE:
-            if self.hue_angle is None:
+            if math.isnan(self.hue_angle):
                 rgb = WHITE
             else:
                 rgb = HueAngle.get_rgb(self.hue_angle, vlc.values[index])
@@ -207,7 +207,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue_angle'])):
     # END_DEF: transform_limited_value
 
     def transform_limited_hue(self, hlc):
-        if self.hue_angle is None:
+        if math.isnan(self.hue_angle):
             return self.rgb
         index = hlc.get_hue_angle_index(self.hue_angle)
         if RGB.ncomps(self.rgb) == 2:
@@ -224,7 +224,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue_angle'])):
             return BLACK
         elif v_index == hvlc.vlc.n_values - 1:
             return WHITE
-        elif self.hue_angle is None:
+        elif math.isnan(self.hue_angle):
             return self.rgb
         h_index = hvlc.get_hue_angle_index(self.hue_angle)
         target_value = hvlc.vlc.values[v_index]
