@@ -506,6 +506,26 @@ PI_150 = PI_30 * 5
 PI_180 = HueAngle(math.pi)
 # END_CLASS: HueAngle
 
+class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
+    def rgb_with_value(self, value):
+        ONE = max(self.rgb)
+        io = RGB.indices_value_order(self.rgb)
+        # Using fractions for performance
+        ireq_value = 3 * ONE * value.numerator / value.denominator
+        iach_value = sum(self.rgb)
+        shortfall = ireq_value - iach_value
+        if shortfall <= 0:
+            scale = fractions.Fraction(ireq_value, iach_value)
+            return RGB(*tuple(self.rgb[i] * scale.numerator / scale.denominator for i in range(3)))
+        else:
+            result = {io[0] : ONE}
+            # it's simpler two work out the weakest component first
+            result[io[2]] = (shortfall * ONE) / (2 * ONE - self.rgb[io[1]])
+            result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
+            return RGB(*tuple(result[i] for i in range(3)))
+    # END_DEF: rgb_with_value
+# END_CLASS: Hue
+
 # Primary Colours
 RED = RGB(red=fractions.Fraction(1), green=fractions.Fraction(0), blue=fractions.Fraction(0))
 GREEN = RGB(red=fractions.Fraction(0), green=fractions.Fraction(1), blue=fractions.Fraction(0))
@@ -560,6 +580,45 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
             return float('nan')
         return self.HUE_CL(math.atan2(self.y, self.x))
     # END_DEF: get_hue_angle
+
+    def get_hue(self):
+        ONE = self.HUE_CL.ONE
+        ZERO = self.HUE_CL.ZERO
+        hue_angle = self.get_hue_angle()
+        if self.x == 0 and self.y == 0:
+            return Hue(rgb=(ONE, ONE, ONE), angle=float('nan'))
+        else:
+            hue_angle = math.atan2(self.y, self.x)
+            #a = self.x * SIN_120
+            #b = abs(self.y) * COS_120
+            calc_scale = lambda oa: fractions.Fraction.from_float(math.sin(oa) / math.sin(PI_120 - oa))
+            aha = abs(hue_angle)
+            if aha <= PI_60:
+                #scale = abs(self.y) / (a -b)
+                scale = calc_scale(aha)
+                other = ONE * scale.numerator / scale.denominator
+                if self.y >= 0:
+                    hue_rgb = RGB(ONE, other, ZERO)
+                else:
+                    hue_rgb = RGB(ONE, ZERO, other)
+            elif aha <= PI_120:
+                #scale = (a - b) / abs(self.y)
+                scale = calc_scale(PI_120 - aha)
+                other = ONE * scale.numerator / scale.denominator
+                if self.y >= 0:
+                    hue_rgb = RGB(other, ONE, ZERO)
+                else:
+                    hue_rgb = RGB(other, ZERO, ONE)
+            else:
+                #scale = (a - b) / (a + b)
+                scale = calc_scale(aha - PI_120)
+                other = ONE * scale.numerator / scale.denominator
+                if self.y >= 0:
+                    hue_rgb = RGB(ZERO, ONE, other)
+                else:
+                    hue_rgb = RGB(ZERO, other, ONE)
+        return Hue(rgb=hue_rgb, angle=self.HUE_CL(hue_angle))
+    # END_DEF: get_hue
 
     def get_hypot(self):
         """
