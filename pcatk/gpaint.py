@@ -606,7 +606,7 @@ class ColourWheel(gtk.DrawingArea):
 
         self.gc.line_width = 2
         for angle in [paint.rgbh.PI_60 * i for i in range(6)]:
-            hue = paint.Hue.from_angle(angle, paint.HCVW.ONE)
+            hue = paint.Hue.from_angle(angle, paint.ONE)
             self.gc.set_foreground(self.new_colour(hue.rgb))
             self.window.draw_line(self.gc, self.cx, self.cy, *self.polar_to_cartesian(self.one * self.zoom, angle))
         for tube in self.tube_colours.values():
@@ -630,7 +630,8 @@ class ColourWheel(gtk.DrawingArea):
             """
             Set up colour values ready for drawing
             """
-            self.colour_angle = self.colour.hue.angle if not self.colour.hue.is_grey() else paint.Angle(math.pi / 2)
+            
+            self.colour_angle = self.colour.hue.angle if not self.colour.hue.is_grey() else paint.rgbh.Angle(math.pi / 2)
             self.fg_colour = self.parent.new_colour(self.colour.rgb)
             self.value_colour = self.parent.new_colour(paint.BLACK)
             self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())

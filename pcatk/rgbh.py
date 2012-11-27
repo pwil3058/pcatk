@@ -237,9 +237,6 @@ class Angle(float):
     A wrapper around float type to represent hue_angles incorporating the
     restrictions that apply to hue_angles.
     """
-    # Both of these are needed in order to get type coherence
-    ONE = fractions.Fraction(1)
-    ZERO = fractions.Fraction(0)
 
     def __new__(cls, value):
         """
@@ -465,7 +462,7 @@ Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)
     Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
-    HUE_CL = Angle
+    ONE = fractions.Fraction(1)
 
     @classmethod
     def from_rgb(cls, rgb):
@@ -493,15 +490,14 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         """
         if self.x == 0 and self.y == 0:
             return float('nan')
-        return self.HUE_CL(math.atan2(self.y, self.x))
+        return Angle(math.atan2(self.y, self.x))
     # END_DEF: get_angle
 
     def get_hue(self):
-        ONE = self.HUE_CL.ONE
         if self.x == 0 and self.y == 0:
-            return Hue(rgb=(ONE, ONE, ONE), angle=float('nan'))
+            return Hue(rgb=(self.ONE, self.ONE, self.ONE), angle=float('nan'))
         else:
-            return Hue.from_angle(math.atan2(self.y, self.x), ONE)
+            return Hue.from_angle(math.atan2(self.y, self.x), self.ONE)
     # END_DEF: get_hue
 
     def get_hypot(self):
