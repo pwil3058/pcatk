@@ -28,25 +28,25 @@ if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
+ZERO = 0
+BITS_PER_CHANNEL = 16
+ONE = (1 << BITS_PER_CHANNEL) - 1
+TWO = ONE * 2
+THREE = ONE * 3
+
 class RGB(rgbh.RGB):
     pass
-
-class Angle(rgbh.Angle):
-    BITS_PER_CHANNEL = 16
-    ONE = (1 << BITS_PER_CHANNEL) - 1
-    ZERO = 0
 
 class Hue(rgbh.Hue):
     pass
 
 class XY(rgbh.XY):
-    HUE_CL = Angle
-    pass
+    ONE = ONE
 
 # Primary Colours
-RGB_RED = RGB(red=Angle.ONE, green=Angle.ZERO, blue=Angle.ZERO)
-RGB_GREEN = RGB(red=Angle.ZERO, green=Angle.ONE, blue=Angle.ZERO)
-RGB_BLUE = RGB(red=Angle.ZERO, green=Angle.ZERO, blue=Angle.ONE)
+RGB_RED = RGB(red=ONE, green=ZERO, blue=ZERO)
+RGB_GREEN = RGB(red=ZERO, green=ONE, blue=ZERO)
+RGB_BLUE = RGB(red=ZERO, green=ZERO, blue=ONE)
 # Secondary Colours
 RGB_CYAN = RGB_BLUE + RGB_GREEN
 RGB_MAGENTA = RGB_BLUE + RGB_RED
@@ -59,17 +59,13 @@ IDEAL_RGB_COLOURS = [RGB_WHITE, RGB_MAGENTA, RGB_RED, RGB_YELLOW, RGB_GREEN, RGB
 IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLUE', 'BLACK']
 
 class HCVW(object):
-    ONE = Angle.ONE
-    TWO = ONE * 2
-    THREE = ONE * 3
-
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
-        self.value = RGB.get_avg_value(rgb) / self.ONE
+        self.value = RGB.get_avg_value(rgb) / ONE
         xy = XY.from_rgb(self.rgb)
-        self.warmth = fractions.Fraction(xy.x, self.ONE)
+        self.warmth = fractions.Fraction(xy.x, ONE)
         self.hue = xy.get_hue()
-        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
+        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / ONE
     # END_DEF: __init__
 
     def hue_rgb_for_value(self, value=None):
@@ -96,7 +92,7 @@ class HCVW(object):
         '''
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            hue = Hue.from_angle(self.hue.angle + delta_hue_angle, self.ONE)
+            hue = rgbh.Hue.from_angle(self.hue.angle + delta_hue_angle, ONE)
             return hue.rgb_with_value(self.value)
         else:
             # Simple rotation is the correct solution for 1 or 3 components

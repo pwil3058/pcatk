@@ -55,12 +55,8 @@ WHITE = RGB(ONE, ONE, ONE)
 BLACK = RGB(0, 0, 0)
 # END_CLASS: RGB
 
-class Angle(rgbh.Angle):
-    ONE = ONE
-    ZERO = ZERO
-
 class XY(rgbh.XY):
-    HUE_CL = Angle
+    ONE = ONE
 
 def calc_rowstride(bytes_per_row):
     """
@@ -122,7 +118,7 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
-        angles = [Angle.normalize(step * i) for i in range(n_hues)]
+        angles = [rgbh.Angle.normalize(step * i) for i in range(n_hues)]
         hues = [rgbh.Hue.from_angle(angle, ONE) for angle in angles]
         return HueLimitCriteria(n_hues, hues, step)
     # END_DEF: create
