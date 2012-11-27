@@ -14,7 +14,7 @@
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 '''
-Implement types to represent red/green/blue data as a tuple and hue_angle as a float
+Implement types to represent red/green/blue data as a tuple and hue angle as a float
 '''
 
 import collections
@@ -176,13 +176,13 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
     @staticmethod
     def rotated(rgb, delta_hue_angle):
         """
-        Return a copy of the RGB with the same value but the hue_angle rotated
+        Return a copy of the RGB with the same value but the hue angle rotated
         by the specified amount and with the item types unchanged.
         NB chroma changes when less than 3 non zero components and in the
         case of 2 non zero components this change is undesirable and
         needs to be avoided by using a higher level wrapper function
         that is aware of item types and maximum allowed value per component.
-        >>> RGB.rotated((1, 2, 3), HueAngle(0))
+        >>> RGB.rotated((1, 2, 3), Angle(0))
         RGB(red=1, green=2, blue=3)
         >>> RGB.rotated((1, 2, 3), PI_120)
         RGB(red=3, green=1, blue=2)
@@ -194,9 +194,9 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         RGB(red=1, green=0, blue=1)
         >>> RGB.rotated((1.0, 0.0, 0.0), PI_60)
         RGB(red=0.5, green=0.5, blue=0.0)
-        >>> RGB.rotated((100, 0, 0), HueAngle(math.radians(150)))
+        >>> RGB.rotated((100, 0, 0), Angle(math.radians(150)))
         RGB(red=0, green=66, blue=33)
-        >>> RGB.rotated((100, 0, 0), HueAngle(math.radians(-150)))
+        >>> RGB.rotated((100, 0, 0), Angle(math.radians(-150)))
         RGB(red=0, green=33, blue=66)
         >>> RGB.rotated((100, 100, 0), -PI_60)
         RGB(red=100, green=50, blue=50)
@@ -232,7 +232,7 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
     # END_DEF: rotated
 # END_CLASS: RGB
 
-class HueAngle(float):
+class Angle(float):
     """
     A wrapper around float type to represent hue_angles incorporating the
     restrictions that apply to hue_angles.
@@ -243,9 +243,9 @@ class HueAngle(float):
 
     def __new__(cls, value):
         """
-        >>> HueAngle(2)
-        HueAngle(2.0)
-        >>> HueAngle(4)
+        >>> Angle(2)
+        Angle(2.0)
+        >>> Angle(4)
         Traceback (most recent call last):
         AssertionError
         """
@@ -256,40 +256,40 @@ class HueAngle(float):
 
     def __repr__(self):
         '''
-        >>> HueAngle(2).__repr__()
-        'HueAngle(2.0)'
+        >>> Angle(2).__repr__()
+        'Angle(2.0)'
         '''
         return '{0}({1})'.format(self.__class__.__name__, float.__repr__(self))
     # END_DEF: __repr__
 
     @classmethod
-    def normalize(cls, hue_angle):
+    def normalize(cls, angle):
         """
-        >>> HueAngle.normalize(2)
-        HueAngle(2.0)
-        >>> HueAngle.normalize(4)
-        HueAngle(-2.2831853071795862)
-        >>> HueAngle.normalize(-4)
-        HueAngle(2.2831853071795862)
-        >>> HueAngle.normalize(HueAngle(2))
+        >>> Angle.normalize(2)
+        Angle(2.0)
+        >>> Angle.normalize(4)
+        Angle(-2.2831853071795862)
+        >>> Angle.normalize(-4)
+        Angle(2.2831853071795862)
+        >>> Angle.normalize(Angle(2))
         Traceback (most recent call last):
         AssertionError
         """
-        assert not isinstance(hue_angle, HueAngle)
-        if hue_angle > math.pi:
-            return cls(hue_angle - 2 * math.pi)
-        elif hue_angle < -math.pi:
-            return cls(hue_angle + 2 * math.pi)
-        return cls(hue_angle)
+        assert not isinstance(angle, Angle)
+        if angle > math.pi:
+            return cls(angle - 2 * math.pi)
+        elif angle < -math.pi:
+            return cls(angle + 2 * math.pi)
+        return cls(angle)
     # END_DEF: normalize_hue
 
     def __neg__(self):
         """
         Change sign while maintaining type
-        >>> -HueAngle(2)
-        HueAngle(-2.0)
-        >>> -HueAngle(-2)
-        HueAngle(2.0)
+        >>> -Angle(2)
+        Angle(-2.0)
+        >>> -Angle(-2)
+        Angle(2.0)
         """
         return type(self)(float.__neg__(self))
     # END_DEF: __neg__
@@ -297,10 +297,10 @@ class HueAngle(float):
     def __abs__(self):
         """
         Get absolate value while maintaining type
-        >>> abs(-HueAngle(2))
-        HueAngle(2.0)
-        >>> abs(HueAngle(-2))
-        HueAngle(2.0)
+        >>> abs(-Angle(2))
+        Angle(2.0)
+        >>> abs(Angle(-2))
+        Angle(2.0)
         """
         return type(self)(float.__abs__(self))
     # END_DEF: __abs__
@@ -308,10 +308,10 @@ class HueAngle(float):
     def __add__(self, other):
         """
         Do addition and normalize the result
-        >>> HueAngle(2) + 2
-        HueAngle(-2.2831853071795862)
-        >>> HueAngle(2) + 1
-        HueAngle(3.0)
+        >>> Angle(2) + 2
+        Angle(-2.2831853071795862)
+        >>> Angle(2) + 1
+        Angle(3.0)
         """
         return self.normalize(float.__add__(self, other))
     # END_DEF: __add__
@@ -319,12 +319,12 @@ class HueAngle(float):
     def __radd__(self, other):
         """
         Do addition and normalize the result
-        >>> 2.0 + HueAngle(2)
-        HueAngle(-2.2831853071795862)
-        >>> 1.0 + HueAngle(2)
-        HueAngle(3.0)
-        >>> 1 + HueAngle(2)
-        HueAngle(3.0)
+        >>> 2.0 + Angle(2)
+        Angle(-2.2831853071795862)
+        >>> 1.0 + Angle(2)
+        Angle(3.0)
+        >>> 1 + Angle(2)
+        Angle(3.0)
         """
         return self.normalize(float.__radd__(self, other))
     # END_DEF: __radd__
@@ -332,10 +332,10 @@ class HueAngle(float):
     def __sub__(self, other):
         """
         Do subtraction and normalize the result
-        >>> HueAngle(2) - 1
-        HueAngle(1.0)
-        >>> HueAngle(2) - 6
-        HueAngle(2.2831853071795862)
+        >>> Angle(2) - 1
+        Angle(1.0)
+        >>> Angle(2) - 6
+        Angle(2.2831853071795862)
         """
         return self.normalize(float.__sub__(self, other))
     # END_DEF: __sub__
@@ -343,10 +343,10 @@ class HueAngle(float):
     def __rsub__(self, other):
         """
         Do subtraction and normalize the result
-        >>> 1 - HueAngle(2)
-        HueAngle(-1.0)
-        >>> 6 - HueAngle(2)
-        HueAngle(-2.2831853071795862)
+        >>> 1 - Angle(2)
+        Angle(-1.0)
+        >>> 6 - Angle(2)
+        Angle(-2.2831853071795862)
         """
         return self.normalize(float.__rsub__(self, other))
     # END_DEF: __rsub__
@@ -354,160 +354,59 @@ class HueAngle(float):
     def __mul__(self, other):
         """
         Do multiplication and normalize the result
-        >>> HueAngle(1) * 4
-        HueAngle(-2.2831853071795862)
-        >>> HueAngle(1) * 2.5
-        HueAngle(2.5)
+        >>> Angle(1) * 4
+        Angle(-2.2831853071795862)
+        >>> Angle(1) * 2.5
+        Angle(2.5)
         """
         return self.normalize(float.__mul__(self, other))
     # END_DEF: __mul__
-
-    @staticmethod
-    def get_index_value_order(hue_angle):
-        """
-        Return the size order of channels for an rgb with my hue_angle
-        >>> import math
-        >>> HueAngle.get_index_value_order(math.radians(45))
-        (0, 1, 2)
-        >>> HueAngle.get_index_value_order(math.radians(105))
-        (1, 0, 2)
-        >>> HueAngle.get_index_value_order(math.radians(165))
-        (1, 2, 0)
-        >>> HueAngle.get_index_value_order(-math.radians(45))
-        (0, 2, 1)
-        >>> HueAngle.get_index_value_order(-math.radians(105))
-        (2, 0, 1)
-        >>> HueAngle.get_index_value_order(-math.radians(165))
-        (2, 1, 0)
-        """
-        if hue_angle >= 0:
-            if hue_angle <= PI_60:
-                return (IRED, IGREEN, IBLUE)
-            elif hue_angle <= PI_120:
-                return (IGREEN, IRED, IBLUE)
-            elif hue_angle <= PI_180:
-                return (IGREEN, IBLUE, IRED)
-            else:
-                raise  ValueError('Should be in range -pi to +p')
-        elif hue_angle >= -PI_60:
-            return (IRED, IBLUE, IGREEN)
-        elif hue_angle >= -PI_120:
-            return (IBLUE, IRED, IGREEN)
-        elif hue_angle >= -PI_180:
-            return (IBLUE, IGREEN, IRED)
-        else:
-            raise ValueError('Should be in range -pi to +p')
-    # END_DEF: get_index_value_order
-
-    @classmethod
-    def get_rgb(cls, hue_angle, value=None):
-        '''
-        value is None return the RGB for the max chroma for this hue_angle
-        else return the RGB for our hue_angle with the specified value
-        NB if requested value is too big for the hue_angle the returned value
-        will deviate towards the weakest component on its way to white.
-        Return: an RGB() with proportion components of type Fraction()
-        >>> import math
-        >>> HueAngle.get_rgb(0.0)
-        RGB(red=Fraction(1, 1), green=Fraction(0, 1), blue=Fraction(0, 1))
-        >>> HueAngle.get_rgb(math.radians(120))
-        RGB(red=Fraction(0, 1), green=Fraction(1, 1), blue=Fraction(0, 1))
-        >>> HueAngle.get_rgb(math.radians(-120))
-        RGB(red=Fraction(0, 1), green=Fraction(0, 1), blue=Fraction(1, 1))
-        >>> HueAngle.get_rgb(HueAngle(0.0))
-        RGB(red=Fraction(1, 1), green=Fraction(0, 1), blue=Fraction(0, 1))
-        >>> HueAngle.get_rgb(math.radians(60)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=100, green=100, blue=0)
-        >>> HueAngle.get_rgb(math.radians(180)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=0, green=100, blue=100)
-        >>> HueAngle.get_rgb(math.radians(-60)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=100, green=0, blue=100)
-        >>> HueAngle.get_rgb(math.radians(-125)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=0, green=10, blue=100)
-        >>> HueAngle.get_rgb(math.radians(-125), fractions.Fraction(8,10)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=68, green=72, blue=100)
-        >>> HueAngle.get_rgb(math.radians(-125), fractions.Fraction(2,10)).mapped(lambda x: int(round(x * 100)))
-        RGB(red=0, green=5, blue=55)
-        '''
-        def second(rotated_hue_angle):
-            top = math.sin(rotated_hue_angle)
-            bottom = math.sin(PI_120 - rotated_hue_angle)
-            # This step is necessary part of type cohesion
-            frac = fractions.Fraction.from_float(top / bottom)
-            return cls.ONE * frac.numerator / frac.denominator
-
-        io = cls.get_index_value_order(hue_angle)
-        if io == (IRED, IGREEN, IBLUE):
-            rgb = RGB(red=cls.ONE, green=second(hue_angle), blue=cls.ZERO)
-        elif io == (IGREEN, IRED, IBLUE):
-            rgb = RGB(red=second(abs(hue_angle - PI_120)), green=cls.ONE, blue=cls.ZERO)
-        elif io == (IGREEN, IBLUE, IRED):
-            rgb = RGB(red=cls.ZERO, green=cls.ONE, blue=second(hue_angle - PI_120))
-        elif io == (IRED, IBLUE, IGREEN):
-            rgb = RGB(red=cls.ONE, green=cls.ZERO, blue=second(abs(hue_angle)))
-        elif io == (IBLUE, IRED, IGREEN):
-            rgb = RGB(red=second(hue_angle + PI_120), green=cls.ZERO, blue=cls.ONE)
-        else: # io == (IBLUE, IGREEN, IRED)
-            rgb = RGB(red=cls.ZERO, green=second(abs(hue_angle + PI_120)), blue=cls.ONE)
-        if value is None:
-            return rgb
-
-        # Use fractions for performance
-        ireq_value = 3 * cls.ONE * value.numerator / value.denominator
-        iach_value = sum(rgb)
-        shortfall = ireq_value - iach_value
-        if shortfall <= 0:
-            return RGB(*tuple(rgb[i] * ireq_value / iach_value for i in range(3)))
-        else:
-            result = {io[0] : cls.ONE}
-            # it's simpler two work out the weakest component first
-            result[io[2]] = (shortfall * cls.ONE) / (2 * cls.ONE - rgb[io[1]])
-            result[io[1]] = rgb[io[1]] + shortfall - result[io[2]]
-            return RGB(*tuple(result[i] for i in range(3)))
-    # END_DEF: get_rgb
-
-    def get_chroma_correction(self):
-        """
-        Return the factor required to adjust xy hypotenuse to a proportion
-        of the maximum chroma for this hue_angle.
-        >>> round(HueAngle(0).get_chroma_correction(), 4)
-        1.0
-        >>> round(PI_60.get_chroma_correction(), 4)
-        1.0
-        >>> round(PI_120.get_chroma_correction(), 4)
-        1.0
-        >>> round(PI_30.get_chroma_correction(), 4)
-        1.1547
-        >>> round(HueAngle(-math.radians(150)).get_chroma_correction(), 4)
-        1.1547
-        """
-        def func(rotated_hue_angle):
-            top = fractions.Fraction.from_float(math.sin(PI_120 - rotated_hue_angle))
-            return fractions.Fraction(top, SIN_60)
-        io = self.get_index_value_order(self)
-        if io == (IRED, IGREEN, IBLUE):
-            return func(self)
-        elif io == (IGREEN, IRED, IBLUE):
-            return func(abs(self - PI_120))
-        elif io == (IGREEN, IBLUE, IRED):
-            return func(self - PI_120)
-        elif io == (IRED, IBLUE, IGREEN):
-            return func(abs(self))
-        elif io == (IBLUE, IRED, IGREEN):
-            return func(self + PI_120)
-        else: # io == (IBLUE, IGREEN, IRED)
-            return func(abs(self + PI_120))
-    # END_DEF: get_chroma_correction
-PI_30 = HueAngle(math.pi / 6)
-PI_60 = HueAngle(math.pi / 3)
-PI_90 = HueAngle(math.pi / 2)
+PI_30 = Angle(math.pi / 6)
+PI_60 = Angle(math.pi / 3)
+PI_90 = Angle(math.pi / 2)
 PI_120 = PI_60 * 2
 PI_150 = PI_30 * 5
-PI_180 = HueAngle(math.pi)
-# END_CLASS: HueAngle
+PI_180 = Angle(math.pi)
+# END_CLASS: Angle
 
 class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
+    @classmethod
+    def from_angle(cls, angle, ONE=fractions.Fraction(1)):
+        assert not math.isnan(angle) and abs(angle) <= math.pi
+        ZERO = type(ONE)(0)
+        def calc_other(oa):
+            scale = fractions.Fraction.from_float(math.sin(oa) / math.sin(PI_120 - oa))
+            return ONE * scale.numerator / scale.denominator
+        aha = abs(angle)
+        if aha <= PI_60:
+            other = calc_other(aha)
+            if angle >= 0:
+                hue_rgb = RGB(ONE, other, ZERO)
+            else:
+                hue_rgb = RGB(ONE, ZERO, other)
+        elif aha <= PI_120:
+            other = calc_other(PI_120 - aha)
+            if angle >= 0:
+                hue_rgb = RGB(other, ONE, ZERO)
+            else:
+                hue_rgb = RGB(other, ZERO, ONE)
+        else:
+            other = calc_other(aha - PI_120)
+            if angle >= 0:
+                hue_rgb = RGB(ZERO, ONE, other)
+            else:
+                hue_rgb = RGB(ZERO, other, ONE)
+        return Hue(rgb=hue_rgb, angle=Angle(angle))
+    # END_DEF: from_angle
+
     def rgb_with_value(self, value):
+        '''
+        return the RGB for this hue with the specified value
+        NB if requested value is too big for the hue the returned value
+        will deviate towards the weakest component on its way to white.
+        Return: an RGB() with proportion components of the same type
+        as our rgb
+        '''
         ONE = max(self.rgb)
         io = RGB.indices_value_order(self.rgb)
         # Using fractions for performance
@@ -524,6 +423,22 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
             result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
             return RGB(*tuple(result[i] for i in range(3)))
     # END_DEF: rgb_with_value
+
+    def get_chroma_correction(self):
+        io = RGB.indices_value_order(self.rgb)
+        a = self.rgb[io[0]]
+        b = self.rgb[io[1]]
+        if a == b or b == 0: # avoid floating point inaccuracies near 1
+            return fractions.Fraction(1)
+        denom = fractions.Fraction.from_float(math.sqrt(a * a + b * b - a * b))
+        if isinstance(a, float):
+            a = fractions.Fraction(a)
+        return fractions.Fraction(a, denom)
+    # END_DEF: get_chroma_correction
+
+    def is_grey(self):
+        return math.isnan(self.angle)
+    # END_DEF: is_grey
 # END_CLASS: Hue
 
 # Primary Colours
@@ -550,7 +465,7 @@ Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)
     Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
-    HUE_CL = HueAngle
+    HUE_CL = Angle
 
     @classmethod
     def from_rgb(cls, rgb):
@@ -564,60 +479,29 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         return cls(x=x, y=y)
     # END_DEF: from_rgb
 
-    def get_hue_angle(self):
+    def get_angle(self):
         """
-        Return an instance of  HueAngle() for the angle represented by these coordinates
-        >>> print XY.from_rgb(RGB(100, 100, 100)).get_hue_angle()
+        Return an instance of  Angle() for the angle represented by these coordinates
+        >>> print XY.from_rgb(RGB(100, 100, 100)).get_angle()
         None
-        >>> XY.from_rgb(RGB(100, 0, 0)).get_hue_angle() == HueAngle(math.radians(0.0))
+        >>> XY.from_rgb(RGB(100, 0, 0)).get_angle() == Angle(math.radians(0.0))
         True
-        >>> XY.from_rgb(RGB(0, 100, 0)).get_hue_angle() == HueAngle(math.radians(120.0))
+        >>> XY.from_rgb(RGB(0, 100, 0)).get_angle() == Angle(math.radians(120.0))
         True
-        >>> XY.from_rgb(RGB(0, 0, 100)).get_hue_angle() == HueAngle(math.radians(-120.0))
+        >>> XY.from_rgb(RGB(0, 0, 100)).get_angle() == Angle(math.radians(-120.0))
         True
         """
         if self.x == 0 and self.y == 0:
             return float('nan')
         return self.HUE_CL(math.atan2(self.y, self.x))
-    # END_DEF: get_hue_angle
+    # END_DEF: get_angle
 
     def get_hue(self):
         ONE = self.HUE_CL.ONE
-        ZERO = self.HUE_CL.ZERO
-        hue_angle = self.get_hue_angle()
         if self.x == 0 and self.y == 0:
             return Hue(rgb=(ONE, ONE, ONE), angle=float('nan'))
         else:
-            hue_angle = math.atan2(self.y, self.x)
-            #a = self.x * SIN_120
-            #b = abs(self.y) * COS_120
-            calc_scale = lambda oa: fractions.Fraction.from_float(math.sin(oa) / math.sin(PI_120 - oa))
-            aha = abs(hue_angle)
-            if aha <= PI_60:
-                #scale = abs(self.y) / (a -b)
-                scale = calc_scale(aha)
-                other = ONE * scale.numerator / scale.denominator
-                if self.y >= 0:
-                    hue_rgb = RGB(ONE, other, ZERO)
-                else:
-                    hue_rgb = RGB(ONE, ZERO, other)
-            elif aha <= PI_120:
-                #scale = (a - b) / abs(self.y)
-                scale = calc_scale(PI_120 - aha)
-                other = ONE * scale.numerator / scale.denominator
-                if self.y >= 0:
-                    hue_rgb = RGB(other, ONE, ZERO)
-                else:
-                    hue_rgb = RGB(other, ZERO, ONE)
-            else:
-                #scale = (a - b) / (a + b)
-                scale = calc_scale(aha - PI_120)
-                other = ONE * scale.numerator / scale.denominator
-                if self.y >= 0:
-                    hue_rgb = RGB(ZERO, ONE, other)
-                else:
-                    hue_rgb = RGB(ZERO, other, ONE)
-        return Hue(rgb=hue_rgb, angle=self.HUE_CL(hue_angle))
+            return Hue.from_angle(math.atan2(self.y, self.x), ONE)
     # END_DEF: get_hue
 
     def get_hypot(self):

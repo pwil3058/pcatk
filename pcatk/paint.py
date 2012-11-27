@@ -31,16 +31,22 @@ if __name__ == '__main__':
 class RGB(rgbh.RGB):
     pass
 
-class HueAngle(rgbh.HueAngle):
+class Angle(rgbh.Angle):
+    BITS_PER_CHANNEL = 16
+    ONE = (1 << BITS_PER_CHANNEL) - 1
+    ZERO = 0
+
+class Hue(rgbh.Hue):
     pass
 
 class XY(rgbh.XY):
+    HUE_CL = Angle
     pass
 
 # Primary Colours
-RGB_RED = RGB(red=fractions.Fraction(1), green=fractions.Fraction(0), blue=fractions.Fraction(0))
-RGB_GREEN = RGB(red=fractions.Fraction(0), green=fractions.Fraction(1), blue=fractions.Fraction(0))
-RGB_BLUE = RGB(red=fractions.Fraction(0), green=fractions.Fraction(0), blue=fractions.Fraction(1))
+RGB_RED = RGB(red=Angle.ONE, green=Angle.ZERO, blue=Angle.ZERO)
+RGB_GREEN = RGB(red=Angle.ZERO, green=Angle.ONE, blue=Angle.ZERO)
+RGB_BLUE = RGB(red=Angle.ZERO, green=Angle.ZERO, blue=Angle.ONE)
 # Secondary Colours
 RGB_CYAN = RGB_BLUE + RGB_GREEN
 RGB_MAGENTA = RGB_BLUE + RGB_RED
@@ -52,76 +58,33 @@ RGB_BLACK = RGB(*((0,) * 3))
 IDEAL_RGB_COLOURS = [RGB_WHITE, RGB_MAGENTA, RGB_RED, RGB_YELLOW, RGB_GREEN, RGB_CYAN, RGB_BLUE, RGB_BLACK]
 IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLUE', 'BLACK']
 
-def map_rgbs(rgbs, maxcv):
-    if isinstance(maxcv, int):
-        mapf = lambda x: int(round(x * maxcv))
-    else:
-        mapf = lambda x: type(maxcv)(x * maxcv)
-    return [rgb.mapped(mapf) for rgb in rgbs]
-# END_DEF: map_rgbs
-
 class HCVW(object):
-    BITS_PER_CHANNEL = 16
-    ONE = (1 << BITS_PER_CHANNEL) - 1
+    ONE = Angle.ONE
     TWO = ONE * 2
     THREE = ONE * 3
-
-    IDEAL_COLOURS = map_rgbs(IDEAL_RGB_COLOURS, ONE)
-    WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK = IDEAL_COLOURS
-
-    @classmethod
-    def mapf(cls, x):
-         return int(round(x * cls.ONE))
-    # END_DEF: mapf
-
-    @classmethod
-    def rgb_for_hue_angle(cls, hue_angle, value=None):
-        # value is None return the RGB for the max chroma for the hue_angle
-        # else return the RGB for our hue_angle with the specified value
-        # NB if requested value is too big for the hue_angle the returned value
-        # will deviate towards the weakest component on its way to white.
-        # Zero chroma has a hue_angle of WHITE (allow for inaccuracies of real maths)
-        if math.isnan(hue_angle):
-            return cls.WHITE if value is None else (cls.WHITE * value)
-        return HueAngle.get_rgb(hue_angle, value).mapped(cls.mapf)
-    # END_DEF: rgb_for_hue_angle
 
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
         self.value = RGB.get_avg_value(rgb) / self.ONE
-        if self.rgb[0] == self.rgb[1] and self.rgb[0] == self.rgb[2]:
-            # Avoid problems with rounding errors for shades of white
-            self.hue_angle = float('nan')
-            self.chroma = 0.0
-            self.hue_rgb = self.WHITE * self.value
-            self.warmth = fractions.Fraction(0) # neither hot nor cold
-            return
         xy = XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction(xy.x, self.ONE)
-        self.hue_angle = xy.get_hue_angle()
-        if math.isnan(self.hue_angle):
-            self.hue_rgb = self.WHITE * self.value
-            self.chroma = fractions.Fraction(0)
-        else:
-            self.hue_rgb = HueAngle.get_rgb(self.hue_angle).mapped(self.mapf)
-            self.chroma = xy.get_hypot() * self.hue_angle.get_chroma_correction() / self.ONE
+        self.hue = xy.get_hue()
+        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / self.ONE
     # END_DEF: __init__
 
     def hue_rgb_for_value(self, value=None):
         if value is None:
-            # i.e. same hue_angle and value but without any unnecessary grey
+            # i.e. same hue and value but without any unnecessary grey
             value = self.value
-        if math.isnan(self.hue_angle):
-            return self.WHITE * value
-        return HueAngle.get_rgb(self.hue_angle, value).mapped(self.mapf)
+        return self.hue.rgb_with_value(value)
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
-        # Is it darker or lighter than max chroma for the hue_angle?
-        if math.isnan(self.hue_angle) or self.value * self.ONE > sum(self.hue_rgb) / 3:
-            return self.WHITE
+        # Is it darker or lighter than max chroma for the hue?
+        if sum(self.rgb) > sum(self.hue.rgb):
+            return WHITE
         else:
-            return self.BLACK
+            return BLACK
     # END_DEF: chroma_side
 
     def get_rotated_rgb(self, delta_hue_angle):
@@ -133,14 +96,15 @@ class HCVW(object):
         '''
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            return HueAngle.get_rgb(self.hue_angle + delta_hue_angle, self.value).mapped(self.mapf)
+            hue = Hue.from_angle(self.hue.angle + delta_hue_angle, self.ONE)
+            return hue.rgb_with_value(self.value)
         else:
             # Simple rotation is the correct solution for 1 or 3 components
             return RGB.rotated(self.rgb, delta_hue_angle)
     # END_DEF: get_rotated_rgb
 
     def __str__(self):
-        string = '(HUE = {0}, '.format(round(math.degrees(self.hue_angle), 2) if not math.isnan(self.hue_angle) else self.hue_angle)
+        string = '(HUE = {0}, '.format(self.hue.rgb)
         string += 'VALUE = {0}, '.format(round(self.value, 2))
         string += 'CHROMA = {0}, '.format(round(self.chroma, 2))
         string += 'WARMTH = {0})'.format(round(self.warmth, 2))
@@ -285,12 +249,17 @@ class Colour(object):
 
     @property
     def hue_angle(self):
-        return self.hcvw.hue_angle
+        return self.hcvw.hue.angle
     # END_DEF: hue_angle
 
     @property
+    def hue(self):
+        return self.hcvw.hue
+    # END_DEF: hue
+
+    @property
     def hue_rgb(self):
-        return self.hcvw.hue_rgb
+        return self.hcvw.hue.rgb
     # END_DEF: hue_rgb
 
     @property
@@ -299,7 +268,7 @@ class Colour(object):
     # END_DEF: value
 
     def value_rgb(self):
-        return HCVW.WHITE * self.hcvw.value
+        return RGB_WHITE * self.hcvw.value
     # END_DEF: value_rgb
 
     @property
@@ -313,7 +282,7 @@ class Colour(object):
     # END_DEF: warmth
 
     def warmth_rgb(self):
-        return (HCVW.CYAN * (1 - self.hcvw.warmth) + HCVW.RED * (1 + self.hcvw.warmth)) / 2
+        return (RGB_CYAN * (1 - self.hcvw.warmth) + RGB_RED * (1 + self.hcvw.warmth)) / 2
     # END_DEF: warmth_rgb
 
     def set_rgb(self, rgb):
@@ -358,7 +327,7 @@ class NamedColour(Colour):
     # END_DEF: __len__
 # END_CLASS: NamedColour
 
-WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK = [NamedColour(name, rgb) for name, rgb in zip(IDEAl_COLOUR_NAMES, HCVW.IDEAL_COLOURS)]
+WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK = [NamedColour(name, rgb) for name, rgb in zip(IDEAl_COLOUR_NAMES, IDEAL_RGB_COLOURS)]
 IDEAL_COLOURS = [WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK]
 
 SERIES_ID = collections.namedtuple('SERIES_ID', ['maker', 'name'])
@@ -440,7 +409,7 @@ BLOB = collections.namedtuple('BLOB', ['colour', 'parts'])
 
 class MixedColour(Colour):
     def __init__(self, blobs):
-        rgb = HCVW.BLACK
+        rgb = RGB_BLACK
         transparency = Transparency(0.0)
         permanence = Permanence(0.0)
         parts = 0
