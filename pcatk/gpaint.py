@@ -81,7 +81,7 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
         self._ptr_x = self._ptr_y = 100
         self._sample_images = []
         self._single_sample = single_sample
-        self.default_bg_colour = self.bg_colour = self.new_colour(paint.HCVW.WHITE) if default_bg is None else self.new_colour(default_bg)
+        self.default_bg_colour = self.bg_colour = self.new_colour(paint.RGB_WHITE) if default_bg is None else self.new_colour(default_bg)
 
         self.add_events(gtk.gdk.POINTER_MOTION_MASK|gtk.gdk.BUTTON_PRESS_MASK)
         self.connect('expose-event', self.expose_cb)
@@ -202,12 +202,11 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
 gobject.signal_new('samples-changed', ColourSampleArea, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_INT,))
 # END_CLASS: ColourSampleArea
 
-def generate_spectral_rgb_buf(hue_angle, spread, width, height, backwards=False):
-    # TODO: deprecate this function in favour of the one in pixbuf
+def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     """
     Generate a rectangular RGB buffer filled with the specified spectrum
 
-    hue_angle: the central hue_angle in radians from red
+    hue: the central hue
     spread: the total spread in radians (max. 2 * pi)
     width: the required width of the rectangle in pixels
     height: the required height of the rectangle in pixels
@@ -215,16 +214,16 @@ def generate_spectral_rgb_buf(hue_angle, spread, width, height, backwards=False)
     """
     row = bytearray()
     if backwards:
-        start_hue_angle = hue_angle - spread / 2
+        start_hue_angle = hue.angle - spread / 2
         delta_hue_angle = spread / width
     else:
-        start_hue_angle = hue_angle + spread / 2
+        start_hue_angle = hue.angle + spread / 2
         delta_hue_angle = -spread / width
     ONE = (1 << 8) - 1
     fraction_to_byte = lambda frac : chr(ONE * frac.numerator / frac.denominator)
     for i in range(width):
-        hue_angle = start_hue_angle + delta_hue_angle * i
-        rgb = hue_angle.get_rgb(hue_angle).mapped(fraction_to_byte)
+        hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i)
+        rgb = hue.rgb.mapped(fraction_to_byte)
         row.extend(rgb)
     buf = row * height
     return buffer(buf)
@@ -341,14 +340,14 @@ class HueDisplay(GenericAttrDisplay):
         gc = self.window.new_gc()
         gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
 
-        if math.isnan(self.colour.hue_angle):
+        if self.colour.hue.is_grey():
             self.window.set_background(self.new_colour(self.colour.hue_rgb))
             self.draw_label(gc)
             return
 
         backwards = options.get('colour_wheel', 'red_to_yellow_clockwise')
         w, h = self.window.get_size()
-        spectral_buf = generate_spectral_rgb_buf(self.colour.hue_angle, 2 * math.pi, w, h, backwards)
+        spectral_buf = generate_spectral_rgb_buf(self.colour.hue, 2 * math.pi, w, h, backwards)
         self.window.draw_rgb_image(gc, x=0, y=0, width=w, height=h,
             dith=gtk.gdk.RGB_DITHER_NONE,
             rgb_buf=spectral_buf)
@@ -587,7 +586,7 @@ class ColourWheel(gtk.DrawingArea):
         spacer = 10
         scaledmax = 110.0
 
-        self.gc.set_background(self.new_colour(paint.HCVW.WHITE / 2))
+        self.gc.set_background(self.new_colour(paint.RGB_WHITE / 2))
 
         dw, dh = self.window.get_size()
         self.cx = dw / 2
@@ -601,14 +600,14 @@ class ColourWheel(gtk.DrawingArea):
         self.scaled_size = self.size * self.scale
 
         # Draw the graticule
-        self.gc.set_foreground(self.new_colour(paint.HCVW.WHITE * 3 / 4))
+        self.gc.set_foreground(self.new_colour(paint.RGB_WHITE * 3 / 4))
         for radius in [100 * (i + 1) * self.scale / self.nrings for i in range(self.nrings)]:
             self.draw_circle(self.cx, self.cy, int(round(radius * self.zoom)))
 
         self.gc.line_width = 2
         for angle in [paint.rgbh.PI_60 * i for i in range(6)]:
-            hue_rgb = paint.HCVW.rgb_for_hue_angle(angle)
-            self.gc.set_foreground(self.new_colour(hue_rgb))
+            hue = paint.Hue.from_angle(angle, paint.HCVW.ONE)
+            self.gc.set_foreground(self.new_colour(hue.rgb))
             self.window.draw_line(self.gc, self.cx, self.cy, *self.polar_to_cartesian(self.one * self.zoom, angle))
         for tube in self.tube_colours.values():
             tube.draw()
@@ -631,7 +630,7 @@ class ColourWheel(gtk.DrawingArea):
             """
             Set up colour values ready for drawing
             """
-            self.colour_angle = self.colour.hue_angle if not math.isnan(self.colour.hue_angle) else paint.HueAngle(math.pi / 2)
+            self.colour_angle = self.colour.hue.angle if not self.colour.hue.is_grey() else paint.Angle(math.pi / 2)
             self.fg_colour = self.parent.new_colour(self.colour.rgb)
             self.value_colour = self.parent.new_colour(paint.BLACK)
             self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())
@@ -787,7 +786,7 @@ def colour_attribute_column_spec(tns):
 COLOUR_ATTRS = [
     TNS(_('Colour Name'), 'name', {'resizable' : True}, lambda row: row.colour.name),
     TNS(_('Value'), 'value', {}, lambda row: row.colour.value),
-    TNS(_('Hue'), 'hue', {}, lambda row: row.colour.hue_angle),
+    TNS(_('Hue'), 'hue', {}, lambda row: row.colour.hue),
     TNS(_('Warmth'), 'warmth', {}, lambda row: row.colour.warmth),
     TNS(_('T.'), 'transparency', {}, lambda row: row.colour.transparency),
     TNS(_('P.'), 'permanence', {}, lambda row: row.colour.permanence),

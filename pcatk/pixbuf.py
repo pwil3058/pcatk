@@ -55,12 +55,12 @@ WHITE = RGB(ONE, ONE, ONE)
 BLACK = RGB(0, 0, 0)
 # END_CLASS: RGB
 
-class HueAngle(rgbh.HueAngle):
+class Angle(rgbh.Angle):
     ONE = ONE
     ZERO = ZERO
 
 class XY(rgbh.XY):
-    HUE_CL = HueAngle
+    HUE_CL = Angle
 
 def calc_rowstride(bytes_per_row):
     """
@@ -115,21 +115,21 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc.n_hues == len(hlc.hues)
         True
         >>> hlc.hues[0].angle
-        HueAngle(0.0)
-        >>> HueAngle.get_rgb(hlc.hues[1].angle)
+        Angle(0.0)
+        >>> hlc.hues[1].rgb
         RGB(red=255, green=255, blue=0)
-        >>> HueAngle.get_rgb(hlc.hues[3].angle)
+        >>> hlc.hues[3].rgb
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
-        hue_angles = [HueAngle.normalize(step * i) for i in range(n_hues)]
-        hues = [rgbh.Hue(rgb=HueAngle.get_rgb(hue_angle), angle=hue_angle) for hue_angle in hue_angles]
+        angles = [Angle.normalize(step * i) for i in range(n_hues)]
+        hues = [rgbh.Hue.from_angle(angle, ONE) for angle in angles]
         return HueLimitCriteria(n_hues, hues, step)
     # END_DEF: create
 
     def get_hue_index(self, hue):
         """
-        Return the index of hue_angle w.r.t. the specified HueLevelCriteria
+        Return the index of hue w.r.t. the specified HueLevelCriteria
         >>> import math
         >>> hlc = HueLimitCriteria.create(6)
         >>> hlc.get_hue_index((ONE, ONE, 0))
@@ -137,7 +137,7 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc.get_hue_index((ONE, 0, ONE / 2))
         0
         """
-        if math.isnan(hue.angle):
+        if hue.is_grey():
             return None
         if hue.angle > 0.0:
             index = int(round(float(hue.angle) / self.step))
@@ -297,7 +297,7 @@ def transform_row_limited_hue_value(pbr, hvlc):
 
 class RGBHImage(gobject.GObject):
     """
-    An object containing a RGB and HueAngle array representing a Pixbuf
+    An object containing a RGB and Hue array representing a Pixbuf
     """
 
     def __init__(self, pixbuf=None):
