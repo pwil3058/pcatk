@@ -370,6 +370,30 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         return Hue(rgb=hue_rgb, angle=Angle(angle))
     # END_DEF: from_angle
 
+    def __eq__(self, other):
+        return self.angle.__eq__(other.angle)
+    # END_DEF: __eq__
+
+    def __ne__(self, other):
+        return self.angle.__ne__(other.angle)
+    # END_DEF: __ne__
+
+    def __lt__(self, other):
+        return self.angle.__lt__(other.angle)
+    # END_DEF: __lt__
+
+    def __le__(self, other):
+        return self.angle.__le__(other.angle)
+    # END_DEF: __le__
+
+    def __gt__(self, other):
+        return self.angle.__gt__(other.angle)
+    # END_DEF: __gt__
+
+    def __ge__(self, other):
+        return self.angle.__ge__(other.angle)
+    # END_DEF: __ge__
+
     def rgb_with_value(self, value):
         '''
         return the RGB for this hue with the specified value
