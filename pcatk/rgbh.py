@@ -25,8 +25,6 @@ if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
-IRED, IGREEN, IBLUE = range(3)
-
 class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
     __slots__ = ()
 
@@ -83,22 +81,6 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
     def __str__(self):
         return 'RGB({0}, {1}, {2})'.format(*self)
     # END_DEF: __str__
-
-    @staticmethod
-    def get_avg_value(rgb):
-        '''
-        Return the average value of the components as a fraction
-        >>> RGB.get_avg_value(RGB(0, 1, 2))
-        Fraction(1, 1)
-        >>> RGB.get_avg_value(RGB(7, 6, 5))
-        Fraction(6, 1)
-        >>> RGB.get_avg_value(RGB(7, 6, 6))
-        Fraction(19, 3)
-        >>> RGB.get_avg_value((7, 6, 6, 56))
-        Fraction(19, 3)
-        '''
-        return fractions.Fraction(sum(rgb[:3]), 3)
-    # END_DEF: get_avg_value
 
     @staticmethod
     def indices_value_order(rgb):
@@ -163,15 +145,6 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         '''
         return (RGB.ncomps(rgb), RGB.indices_value_order(rgb))
     # END_DEF: ncomps_and_indices_value_order
-
-    def mapped(self, map_func):
-        """
-        Return a copy of the RGB with components mapped by provided function
-        >>> RGB(1, 2, 3).mapped(lambda x: float(x))
-        RGB(red=1.0, green=2.0, blue=3.0)
-        """
-        return RGB(*tuple(map_func(comp) for comp in self))
-    # END_DEF: mapped
 
     @staticmethod
     def rotated(rgb, delta_hue_angle):
@@ -358,6 +331,7 @@ class Angle(float):
         """
         return self.normalize(float.__mul__(self, other))
     # END_DEF: __mul__
+PI_0 = Angle(0.0)
 PI_30 = Angle(math.pi / 6)
 PI_60 = Angle(math.pi / 3)
 PI_90 = Angle(math.pi / 2)
@@ -456,8 +430,6 @@ IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLU
 SIN_60 = fractions.Fraction.from_float(math.sin(PI_60))
 SIN_120 = fractions.Fraction.from_float(math.sin(PI_120))
 COS_120 = fractions.Fraction(-1, 2) # math.cos(PI_120)
-X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)
-Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
 
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)

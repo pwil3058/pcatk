@@ -35,7 +35,10 @@ TWO = ONE * 2
 THREE = ONE * 3
 
 class RGB(rgbh.RGB):
-    pass
+    def get_value(self):
+        return fractions.Fraction(sum(self), THREE)
+    # END_DEF: get_value
+# END_CLASS: RGB
 
 class Hue(rgbh.Hue):
     pass
@@ -61,7 +64,7 @@ IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLU
 class HCVW(object):
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
-        self.value = RGB.get_avg_value(rgb) / ONE
+        self.value = self.rgb.get_value()
         xy = XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction(xy.x, ONE)
         self.hue = xy.get_hue()

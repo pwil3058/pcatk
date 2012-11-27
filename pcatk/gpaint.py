@@ -220,11 +220,9 @@ def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
         start_hue_angle = hue.angle + spread / 2
         delta_hue_angle = -spread / width
     ONE = (1 << 8) - 1
-    fraction_to_byte = lambda frac : chr(ONE * frac.numerator / frac.denominator)
     for i in range(width):
-        hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i)
-        rgb = hue.rgb.mapped(fraction_to_byte)
-        row.extend(rgb)
+        hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i, ONE)
+        row.extend(hue.rgb)
     buf = row * height
     return buffer(buf)
 # END_DEF: generate_spectral_rgb_buf
