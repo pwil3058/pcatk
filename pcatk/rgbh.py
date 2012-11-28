@@ -21,6 +21,8 @@ import collections
 import math
 import fractions
 
+from pcatk import utils
+
 if __name__ == '__main__':
     import doctest
     _ = lambda x: x
@@ -155,30 +157,31 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         case of 2 non zero components this change is undesirable and
         needs to be avoided by using a higher level wrapper function
         that is aware of item types and maximum allowed value per component.
-        >>> RGB.rotated((1, 2, 3), Angle(0))
+        import utils
+        >>> RGB.rotated((1, 2, 3), utils.Angle(0))
         RGB(red=1, green=2, blue=3)
-        >>> RGB.rotated((1, 2, 3), PI_120)
+        >>> RGB.rotated((1, 2, 3), utils.PI_120)
         RGB(red=3, green=1, blue=2)
-        >>> RGB.rotated((1, 2, 3), -PI_120)
+        >>> RGB.rotated((1, 2, 3), -utils.PI_120)
         RGB(red=2, green=3, blue=1)
-        >>> RGB.rotated((2, 0, 0), PI_60)
+        >>> RGB.rotated((2, 0, 0), utils.PI_60)
         RGB(red=1, green=1, blue=0)
-        >>> RGB.rotated((2, 0, 0), -PI_60)
+        >>> RGB.rotated((2, 0, 0), -utils.PI_60)
         RGB(red=1, green=0, blue=1)
-        >>> RGB.rotated((1.0, 0.0, 0.0), PI_60)
+        >>> RGB.rotated((1.0, 0.0, 0.0), utils.PI_60)
         RGB(red=0.5, green=0.5, blue=0.0)
-        >>> RGB.rotated((100, 0, 0), Angle(math.radians(150)))
+        >>> RGB.rotated((100, 0, 0), utils.Angle(math.radians(150)))
         RGB(red=0, green=66, blue=33)
-        >>> RGB.rotated((100, 0, 0), Angle(math.radians(-150)))
+        >>> RGB.rotated((100, 0, 0), utils.Angle(math.radians(-150)))
         RGB(red=0, green=33, blue=66)
-        >>> RGB.rotated((100, 100, 0), -PI_60)
+        >>> RGB.rotated((100, 100, 0), -utils.PI_60)
         RGB(red=100, green=50, blue=50)
-        >>> RGB.rotated((100, 100, 10), -PI_60)
+        >>> RGB.rotated((100, 100, 10), -utils.PI_60)
         RGB(red=100, green=55, blue=55)
         """
         def calc_ks(delta_hue_angle):
             a = math.sin(delta_hue_angle)
-            b = math.sin(PI_120 - delta_hue_angle)
+            b = math.sin(utils.PI_120 - delta_hue_angle)
             c = fractions.Fraction.from_float(a + b)
             k1 = fractions.Fraction.from_float(b * c.denominator)
             k2 = fractions.Fraction.from_float(a * c.denominator)
@@ -187,15 +190,15 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         fmul = lambda x, frac: x * frac.numerator / frac.denominator
         f = lambda c1, c2: (fmul(rgb[c1], k1) + fmul(rgb[c2], k2)) / k3
         if delta_hue_angle > 0:
-            if delta_hue_angle > PI_120:
-                k1, k2, k3 = calc_ks(delta_hue_angle - PI_120)
+            if delta_hue_angle > utils.PI_120:
+                k1, k2, k3 = calc_ks(delta_hue_angle - utils.PI_120)
                 return RGB(red=f(2, 1), green=f(0, 2), blue=f(1, 0))
             else:
                 k1, k2, k3 = calc_ks(delta_hue_angle)
                 return RGB(red=f(0, 2), green=f(1, 0), blue=f(2, 1))
         elif delta_hue_angle < 0:
-            if delta_hue_angle < -PI_120:
-                k1, k2, k3 = calc_ks(abs(delta_hue_angle) - PI_120)
+            if delta_hue_angle < -utils.PI_120:
+                k1, k2, k3 = calc_ks(abs(delta_hue_angle) - utils.PI_120)
                 return RGB(red=f(1, 2), green=f(2, 0), blue=f(0, 1))
             else:
                 k1, k2, k3 = calc_ks(abs(delta_hue_angle))
@@ -205,169 +208,34 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
     # END_DEF: rotated
 # END_CLASS: RGB
 
-class Angle(float):
-    """
-    A wrapper around float type to represent hue_angles incorporating the
-    restrictions that apply to hue_angles.
-    """
-
-    def __new__(cls, value):
-        """
-        >>> Angle(2)
-        Angle(2.0)
-        >>> Angle(4)
-        Traceback (most recent call last):
-        AssertionError
-        """
-        #Make sure the value is between -pi and pi
-        assert value >= -math.pi and value <= math.pi
-        return float.__new__(cls, value)
-    # END_DEF: __init__()
-
-    def __repr__(self):
-        '''
-        >>> Angle(2).__repr__()
-        'Angle(2.0)'
-        '''
-        return '{0}({1})'.format(self.__class__.__name__, float.__repr__(self))
-    # END_DEF: __repr__
-
-    @classmethod
-    def normalize(cls, angle):
-        """
-        >>> Angle.normalize(2)
-        Angle(2.0)
-        >>> Angle.normalize(4)
-        Angle(-2.2831853071795862)
-        >>> Angle.normalize(-4)
-        Angle(2.2831853071795862)
-        >>> Angle.normalize(Angle(2))
-        Traceback (most recent call last):
-        AssertionError
-        """
-        assert not isinstance(angle, Angle)
-        if angle > math.pi:
-            return cls(angle - 2 * math.pi)
-        elif angle < -math.pi:
-            return cls(angle + 2 * math.pi)
-        return cls(angle)
-    # END_DEF: normalize_hue
-
-    def __neg__(self):
-        """
-        Change sign while maintaining type
-        >>> -Angle(2)
-        Angle(-2.0)
-        >>> -Angle(-2)
-        Angle(2.0)
-        """
-        return type(self)(float.__neg__(self))
-    # END_DEF: __neg__
-
-    def __abs__(self):
-        """
-        Get absolate value while maintaining type
-        >>> abs(-Angle(2))
-        Angle(2.0)
-        >>> abs(Angle(-2))
-        Angle(2.0)
-        """
-        return type(self)(float.__abs__(self))
-    # END_DEF: __abs__
-
-    def __add__(self, other):
-        """
-        Do addition and normalize the result
-        >>> Angle(2) + 2
-        Angle(-2.2831853071795862)
-        >>> Angle(2) + 1
-        Angle(3.0)
-        """
-        return self.normalize(float.__add__(self, other))
-    # END_DEF: __add__
-
-    def __radd__(self, other):
-        """
-        Do addition and normalize the result
-        >>> 2.0 + Angle(2)
-        Angle(-2.2831853071795862)
-        >>> 1.0 + Angle(2)
-        Angle(3.0)
-        >>> 1 + Angle(2)
-        Angle(3.0)
-        """
-        return self.normalize(float.__radd__(self, other))
-    # END_DEF: __radd__
-
-    def __sub__(self, other):
-        """
-        Do subtraction and normalize the result
-        >>> Angle(2) - 1
-        Angle(1.0)
-        >>> Angle(2) - 6
-        Angle(2.2831853071795862)
-        """
-        return self.normalize(float.__sub__(self, other))
-    # END_DEF: __sub__
-
-    def __rsub__(self, other):
-        """
-        Do subtraction and normalize the result
-        >>> 1 - Angle(2)
-        Angle(-1.0)
-        >>> 6 - Angle(2)
-        Angle(-2.2831853071795862)
-        """
-        return self.normalize(float.__rsub__(self, other))
-    # END_DEF: __rsub__
-
-    def __mul__(self, other):
-        """
-        Do multiplication and normalize the result
-        >>> Angle(1) * 4
-        Angle(-2.2831853071795862)
-        >>> Angle(1) * 2.5
-        Angle(2.5)
-        """
-        return self.normalize(float.__mul__(self, other))
-    # END_DEF: __mul__
-PI_0 = Angle(0.0)
-PI_30 = Angle(math.pi / 6)
-PI_60 = Angle(math.pi / 3)
-PI_90 = Angle(math.pi / 2)
-PI_120 = PI_60 * 2
-PI_150 = PI_30 * 5
-PI_180 = Angle(math.pi)
-# END_CLASS: Angle
-
 class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
     @classmethod
     def from_angle(cls, angle, ONE=fractions.Fraction(1)):
         assert not math.isnan(angle) and abs(angle) <= math.pi
         ZERO = type(ONE)(0)
         def calc_other(oa):
-            scale = fractions.Fraction.from_float(math.sin(oa) / math.sin(PI_120 - oa))
+            scale = fractions.Fraction.from_float(math.sin(oa) / math.sin(utils.PI_120 - oa))
             return ONE * scale.numerator / scale.denominator
         aha = abs(angle)
-        if aha <= PI_60:
+        if aha <= utils.PI_60:
             other = calc_other(aha)
             if angle >= 0:
                 hue_rgb = RGB(ONE, other, ZERO)
             else:
                 hue_rgb = RGB(ONE, ZERO, other)
-        elif aha <= PI_120:
-            other = calc_other(PI_120 - aha)
+        elif aha <= utils.PI_120:
+            other = calc_other(utils.PI_120 - aha)
             if angle >= 0:
                 hue_rgb = RGB(other, ONE, ZERO)
             else:
                 hue_rgb = RGB(other, ZERO, ONE)
         else:
-            other = calc_other(aha - PI_120)
+            other = calc_other(aha - utils.PI_120)
             if angle >= 0:
                 hue_rgb = RGB(ZERO, ONE, other)
             else:
                 hue_rgb = RGB(ZERO, other, ONE)
-        return Hue(rgb=hue_rgb, angle=Angle(angle))
+        return Hue(rgb=hue_rgb, angle=utils.Angle(angle))
     # END_DEF: from_angle
 
     def __eq__(self, other):
@@ -451,9 +319,9 @@ BLACK = RGB(*((fractions.Fraction(0),) * 3))
 IDEAL_COLOURS = [WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK]
 IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLUE', 'BLACK']
 
-SIN_60 = fractions.Fraction.from_float(math.sin(PI_60))
-SIN_120 = fractions.Fraction.from_float(math.sin(PI_120))
-COS_120 = fractions.Fraction(-1, 2) # math.cos(PI_120)
+SIN_60 = fractions.Fraction.from_float(math.sin(utils.PI_60))
+SIN_120 = fractions.Fraction.from_float(math.sin(utils.PI_120))
+COS_120 = fractions.Fraction(-1, 2) # math.cos(utils.PI_120)
 
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)
@@ -471,23 +339,6 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         y = sum(cls.Y_VECTOR[i] * rgb[i] for i in range(1, 3))
         return cls(x=x, y=y)
     # END_DEF: from_rgb
-
-    def get_angle(self):
-        """
-        Return an instance of  Angle() for the angle represented by these coordinates
-        >>> print XY.from_rgb(RGB(100, 100, 100)).get_angle()
-        None
-        >>> XY.from_rgb(RGB(100, 0, 0)).get_angle() == Angle(math.radians(0.0))
-        True
-        >>> XY.from_rgb(RGB(0, 100, 0)).get_angle() == Angle(math.radians(120.0))
-        True
-        >>> XY.from_rgb(RGB(0, 0, 100)).get_angle() == Angle(math.radians(-120.0))
-        True
-        """
-        if self.x == 0 and self.y == 0:
-            return float('nan')
-        return Angle(math.atan2(self.y, self.x))
-    # END_DEF: get_angle
 
     def get_hue(self):
         if self.x == 0 and self.y == 0:

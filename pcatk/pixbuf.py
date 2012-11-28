@@ -26,6 +26,7 @@ import gtk
 import gobject
 
 from pcatk import options
+from pcatk import utils
 from pcatk import gtkpwx
 from pcatk import rgbh
 
@@ -118,7 +119,7 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         RGB(red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
-        angles = [rgbh.Angle.normalize(step * i) for i in range(n_hues)]
+        angles = [utils.Angle.normalize(step * i) for i in range(n_hues)]
         hues = [rgbh.Hue.from_angle(angle, ONE) for angle in angles]
         return HueLimitCriteria(n_hues, hues, step)
     # END_DEF: create
