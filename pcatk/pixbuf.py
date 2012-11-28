@@ -296,6 +296,7 @@ class RGBHImage(gobject.GObject):
     """
     An object containing a RGB and Hue array representing a Pixbuf
     """
+    NPR = 50 # the number of progress reports to make during a loop
 
     def __init__(self, pixbuf=None):
         gobject.GObject.__init__(self)
@@ -329,8 +330,12 @@ class RGBHImage(gobject.GObject):
         rs = pixbuf.get_rowstride()
         data = array.array('B', pixbuf.get_pixels()).tolist()
         self.__pixel_rows = []
+        pr_step = h / self.NPR
+        next_pr_due = 0
         for j in range(h):
-            self.emit('progress-made', fractions.Fraction(j, h))
+            if j >= next_pr_due:
+                self.emit('progress-made', fractions.Fraction(j, h))
+                next_pr_due += pr_step
             start = j * rs
             self.__pixel_rows.append(PixBufRow(data, start, start + w * nc, nc))
         self.emit('progress-made', fractions.Fraction(1))
@@ -344,10 +349,15 @@ class RGBHImage(gobject.GObject):
         rowstride = calc_rowstride(bytes_per_row)
         padding = '\000' * (rowstride - bytes_per_row)
         data = ''
+        pr_step = len(self.__pixel_rows) / self.NPR
+        next_pr_due = 0
         for row_n, pixel_row in enumerate(self.__pixel_rows):
+            if row_n >= next_pr_due:
+                self.emit('progress-made', fractions.Fraction(row_n, self.__size.height))
+                next_pr_due += pr_step
             data += array.array('B', map_to_flat_row(pixel_row)).tostring()
             data += padding
-            self.emit('progress-made', fractions.Fraction(row_n + 1, self.__size.height))
+        self.emit('progress-made', fractions.Fraction(1))
         return gtk.gdk.pixbuf_new_from_data(
             data=data,
             colorspace=gtk.gdk.COLORSPACE_RGB,
