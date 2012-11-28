@@ -26,6 +26,7 @@ import gtk
 import gobject
 
 from pcatk import options
+from pcatk import utils
 from pcatk import gtkpwx
 from pcatk import paint
 from pcatk import gpaint
@@ -519,7 +520,7 @@ class ColourSampleMatcher(gtk.VBox):
     HUE_DISPLAY_SPAN =  math.pi / 8
     VALUE_DISPLAY_INCR = fractions.Fraction(1, 10)
     DEFAULT_COLOUR = paint.Colour(paint.RGB_WHITE / 2)
-    DELTA_HUE = paint.rgbh.Angle(math.pi / 100)
+    DELTA_HUE = utils.Angle(math.pi / 100)
 
     class HueClockwiseButton(gtkpwx.ColouredButton):
         def __init__(self):

@@ -15,6 +15,7 @@
 
 import string
 import bisect
+import math
 
 # Allow possessives and hyphenated words
 DELIMITERS = string.whitespace + string.punctuation.replace("'", '').replace('-', '')
@@ -67,3 +68,138 @@ def create_flag_generator(next_flag_num=0):
         yield 2 ** next_flag_num
         next_flag_num += 1
 # END_DEF: create_flag_generator
+
+class Angle(float):
+    """
+    A wrapper around float type to represent hue_angles incorporating the
+    restrictions that apply to hue_angles.
+    """
+
+    def __new__(cls, value):
+        """
+        >>> Angle(2)
+        Angle(2.0)
+        >>> Angle(4)
+        Traceback (most recent call last):
+        AssertionError
+        """
+        #Make sure the value is between -pi and pi
+        assert value >= -math.pi and value <= math.pi
+        return float.__new__(cls, value)
+    # END_DEF: __init__()
+
+    def __repr__(self):
+        '''
+        >>> Angle(2).__repr__()
+        'Angle(2.0)'
+        '''
+        return '{0}({1})'.format(self.__class__.__name__, float.__repr__(self))
+    # END_DEF: __repr__
+
+    @classmethod
+    def normalize(cls, angle):
+        """
+        >>> Angle.normalize(2)
+        Angle(2.0)
+        >>> Angle.normalize(4)
+        Angle(-2.2831853071795862)
+        >>> Angle.normalize(-4)
+        Angle(2.2831853071795862)
+        >>> Angle.normalize(Angle(2))
+        Traceback (most recent call last):
+        AssertionError
+        """
+        assert not isinstance(angle, Angle)
+        if angle > math.pi:
+            return cls(angle - 2 * math.pi)
+        elif angle < -math.pi:
+            return cls(angle + 2 * math.pi)
+        return cls(angle)
+    # END_DEF: normalize_hue
+
+    def __neg__(self):
+        """
+        Change sign while maintaining type
+        >>> -Angle(2)
+        Angle(-2.0)
+        >>> -Angle(-2)
+        Angle(2.0)
+        """
+        return type(self)(float.__neg__(self))
+    # END_DEF: __neg__
+
+    def __abs__(self):
+        """
+        Get absolate value while maintaining type
+        >>> abs(-Angle(2))
+        Angle(2.0)
+        >>> abs(Angle(-2))
+        Angle(2.0)
+        """
+        return type(self)(float.__abs__(self))
+    # END_DEF: __abs__
+
+    def __add__(self, other):
+        """
+        Do addition and normalize the result
+        >>> Angle(2) + 2
+        Angle(-2.2831853071795862)
+        >>> Angle(2) + 1
+        Angle(3.0)
+        """
+        return self.normalize(float.__add__(self, other))
+    # END_DEF: __add__
+
+    def __radd__(self, other):
+        """
+        Do addition and normalize the result
+        >>> 2.0 + Angle(2)
+        Angle(-2.2831853071795862)
+        >>> 1.0 + Angle(2)
+        Angle(3.0)
+        >>> 1 + Angle(2)
+        Angle(3.0)
+        """
+        return self.normalize(float.__radd__(self, other))
+    # END_DEF: __radd__
+
+    def __sub__(self, other):
+        """
+        Do subtraction and normalize the result
+        >>> Angle(2) - 1
+        Angle(1.0)
+        >>> Angle(2) - 6
+        Angle(2.2831853071795862)
+        """
+        return self.normalize(float.__sub__(self, other))
+    # END_DEF: __sub__
+
+    def __rsub__(self, other):
+        """
+        Do subtraction and normalize the result
+        >>> 1 - Angle(2)
+        Angle(-1.0)
+        >>> 6 - Angle(2)
+        Angle(-2.2831853071795862)
+        """
+        return self.normalize(float.__rsub__(self, other))
+    # END_DEF: __rsub__
+
+    def __mul__(self, other):
+        """
+        Do multiplication and normalize the result
+        >>> Angle(1) * 4
+        Angle(-2.2831853071795862)
+        >>> Angle(1) * 2.5
+        Angle(2.5)
+        """
+        return self.normalize(float.__mul__(self, other))
+    # END_DEF: __mul__
+PI_0 = Angle(0.0)
+PI_30 = Angle(math.pi / 6)
+PI_60 = Angle(math.pi / 3)
+PI_90 = Angle(math.pi / 2)
+PI_120 = PI_60 * 2
+PI_150 = PI_30 * 5
+PI_180 = Angle(math.pi)
+# END_CLASS: Angle

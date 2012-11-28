@@ -90,7 +90,8 @@ class HCVW(object):
         '''
         Return a copy of our rgb rotated by the given amount but with
         the same value and without unavoidable chroma change.
-        >>> HCVW((10, 10, 0)).get_rotated_rgb(-PI_60)
+        import utils
+        >>> HCVW((10, 10, 0)).get_rotated_rgb(-utils.PI_60)
         RGB(red=20, green=0, blue=0)
         '''
         if RGB.ncomps(self.rgb) == 2:
