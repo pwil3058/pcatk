@@ -304,21 +304,6 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
     # END_DEF: is_grey
 # END_CLASS: Hue
 
-# Primary Colours
-RED = RGB(red=fractions.Fraction(1), green=fractions.Fraction(0), blue=fractions.Fraction(0))
-GREEN = RGB(red=fractions.Fraction(0), green=fractions.Fraction(1), blue=fractions.Fraction(0))
-BLUE = RGB(red=fractions.Fraction(0), green=fractions.Fraction(0), blue=fractions.Fraction(1))
-# Secondary Colours
-CYAN = BLUE + GREEN
-MAGENTA = BLUE + RED
-YELLOW = RED + GREEN
-# Black and White
-WHITE = RED + GREEN + BLUE
-BLACK = RGB(*((fractions.Fraction(0),) * 3))
-# The "ideal" palette is one that contains the full range at full strength
-IDEAL_COLOURS = [WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK]
-IDEAl_COLOUR_NAMES = ['WHITE', 'MAGENTA', 'RED', 'YELLOW', 'GREEN', 'CYAN', 'BLUE', 'BLACK']
-
 SIN_60 = fractions.Fraction.from_float(math.sin(utils.PI_60))
 SIN_120 = fractions.Fraction.from_float(math.sin(utils.PI_120))
 COS_120 = fractions.Fraction(-1, 2) # math.cos(utils.PI_120)
