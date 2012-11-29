@@ -26,63 +26,7 @@ if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
-class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
-    __slots__ = ()
-
-    def __add__(self, other):
-        '''
-        Add two RGB values together
-        >>> RGB(1, 2, 3) + RGB(7, 5, 3)
-        RGB(red=8, green=7, blue=6)
-        >>> RGB(1.0, 2.0, 3.0) + RGB(7.0, 5.0, 3.0)
-        RGB(red=8.0, green=7.0, blue=6.0)
-        '''
-        return RGB(red=self.red + other.red, green=self.green + other.green, blue=self.blue + other.blue)
-    # END_DEF: __add__
-
-    def __sub__(self, other):
-        '''
-        Subtract one RGB value from another
-        >>> RGB(1, 2, 3) - RGB(7, 5, 3)
-        RGB(red=-6, green=-3, blue=0)
-        >>> RGB(1.0, 2.0, 3.0) - RGB(7.0, 5.0, 3.0)
-        RGB(red=-6.0, green=-3.0, blue=0.0)
-        '''
-        return RGB(red=self.red - other.red, green=self.green - other.green, blue=self.blue - other.blue)
-    # END_DEF: __sub__
-
-    def __mul__(self, mul):
-        '''
-        Multiply all components by a fraction preserving component type
-        >>> from fractions import Fraction
-        >>> RGB(1, 2, 3) * Fraction(3)
-        RGB(red=3, green=6, blue=9)
-        >>> RGB(7.0, 2.0, 5.0) * Fraction(3)
-        RGB(red=21.0, green=6.0, blue=15.0)
-        >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) * Fraction(3, 2)
-        RGB(red=Fraction(21, 2), green=Fraction(1, 1), blue=Fraction(15, 4))
-        '''
-        return RGB(*(self[i] * mul for i in range(3)))
-    # END_DEF: __mul__
-
-    def __div__(self, div):
-        '''
-        Divide all components by a value
-        >>> from fractions import Fraction
-        >>> RGB(1, 2, 3) / 3
-        RGB(red=0, green=0, blue=1)
-        >>> RGB(7.0, 2.0, 5.0) / Fraction(2)
-        RGB(red=3.5, green=1.0, blue=2.5)
-        >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) / 5
-        RGB(red=Fraction(7, 5), green=Fraction(2, 15), blue=Fraction(1, 2))
-        '''
-        return RGB(*(int(self[i] / div + 0.5) for i in range(3)))
-    # END_DEF: __div__
-
-    def __str__(self):
-        return 'RGB({0}, {1}, {2})'.format(*self)
-    # END_DEF: __str__
-
+class RGB:
     @staticmethod
     def indices_value_order(rgb):
         '''
@@ -158,25 +102,25 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         that is aware of item types and maximum allowed value per component.
         import utils
         >>> RGB.rotated((1, 2, 3), utils.Angle(0))
-        RGB(red=1, green=2, blue=3)
+        (1, 2, 3)
         >>> RGB.rotated((1, 2, 3), utils.PI_120)
-        RGB(red=3, green=1, blue=2)
+        (3, 1, 2)
         >>> RGB.rotated((1, 2, 3), -utils.PI_120)
-        RGB(red=2, green=3, blue=1)
+        (2, 3, 1)
         >>> RGB.rotated((2, 0, 0), utils.PI_60)
-        RGB(red=1, green=1, blue=0)
+        (1, 1, 0)
         >>> RGB.rotated((2, 0, 0), -utils.PI_60)
-        RGB(red=1, green=0, blue=1)
+        (1, 0, 1)
         >>> RGB.rotated((1.0, 0.0, 0.0), utils.PI_60)
-        RGB(red=0.5, green=0.5, blue=0.0)
+        (0.5, 0.5, 0.0)
         >>> RGB.rotated((100, 0, 0), utils.Angle(math.radians(150)))
-        RGB(red=0, green=66, blue=33)
+        (0, 66, 33)
         >>> RGB.rotated((100, 0, 0), utils.Angle(math.radians(-150)))
-        RGB(red=0, green=33, blue=66)
+        (0, 33, 66)
         >>> RGB.rotated((100, 100, 0), -utils.PI_60)
-        RGB(red=100, green=50, blue=50)
+        (100, 50, 50)
         >>> RGB.rotated((100, 100, 10), -utils.PI_60)
-        RGB(red=100, green=55, blue=55)
+        (100, 55, 55)
         """
         def calc_ks(delta_hue_angle):
             a = math.sin(delta_hue_angle)
@@ -190,19 +134,19 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         if delta_hue_angle > 0:
             if delta_hue_angle > utils.PI_120:
                 k1, k2 = calc_ks(delta_hue_angle - utils.PI_120)
-                return RGB(red=f(2, 1), green=f(0, 2), blue=f(1, 0))
+                return (f(2, 1), f(0, 2), f(1, 0))
             else:
                 k1, k2 = calc_ks(delta_hue_angle)
-                return RGB(red=f(0, 2), green=f(1, 0), blue=f(2, 1))
+                return (f(0, 2), f(1, 0), f(2, 1))
         elif delta_hue_angle < 0:
             if delta_hue_angle < -utils.PI_120:
                 k1, k2 = calc_ks(abs(delta_hue_angle) - utils.PI_120)
-                return RGB(red=f(1, 2), green=f(2, 0), blue=f(0, 1))
+                return (f(1, 2), f(2, 0), f(0, 1))
             else:
                 k1, k2 = calc_ks(abs(delta_hue_angle))
-                return RGB(red=f(0, 1), green=f(1, 2), blue=f(2, 0))
+                return (f(0, 1), f(1, 2), f(2, 0))
         else:
-            return RGB(*rgb)
+            return rgb
     # END_DEF: rotated
 # END_CLASS: RGB
 
@@ -217,21 +161,21 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         if aha <= utils.PI_60:
             other = calc_other(aha)
             if angle >= 0:
-                hue_rgb = RGB(ONE, other, 0)
+                hue_rgb = (ONE, other, 0)
             else:
-                hue_rgb = RGB(ONE, 0, other)
+                hue_rgb = (ONE, 0, other)
         elif aha <= utils.PI_120:
             other = calc_other(utils.PI_120 - aha)
             if angle >= 0:
-                hue_rgb = RGB(other, ONE, 0)
+                hue_rgb = (other, ONE, 0)
             else:
-                hue_rgb = RGB(other, 0, ONE)
+                hue_rgb = (other, 0, ONE)
         else:
             other = calc_other(aha - utils.PI_120)
             if angle >= 0:
-                hue_rgb = RGB(0, ONE, other)
+                hue_rgb = (0, ONE, other)
             else:
-                hue_rgb = RGB(0, other, ONE)
+                hue_rgb = (0, other, ONE)
         return Hue(rgb=hue_rgb, angle=utils.Angle(angle))
     # END_DEF: from_angle
 
@@ -264,15 +208,15 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         return the RGB for this hue with the specified component total
         NB if requested value is too big for the hue the returned value
         will deviate towards the weakest component on its way to white.
-        Return: an RGB() with proportion components of the same type
+        Return: a tuple with proportion components of the same type
         as our rgb
         '''
         cur_total = sum(self.rgb)
         shortfall = req_total - cur_total
         if shortfall == 0:
-            return RGB(*self.rgb)
+            return self.rgb
         elif shortfall < 0:
-            return RGB(*tuple(self.rgb[i] * req_total / cur_total for i in range(3)))
+            return tuple(self.rgb[i] * req_total / cur_total for i in range(3))
         else:
             ONE = max(self.rgb)
             io = RGB.indices_value_order(self.rgb)
@@ -280,7 +224,7 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
             # it's simpler two work out the weakest component first
             result[io[2]] = (shortfall * ONE) / (2 * ONE - self.rgb[io[1]])
             result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
-            return RGB(*tuple(result[i] for i in range(3)))
+            return tuple(result[i] for i in range(3))
     # END_DEF: rgb_with_total
 
     def rgb_with_value(self, value):
@@ -288,7 +232,7 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         return the RGB for this hue with the specified value
         NB if requested value is too big for the hue the returned value
         will deviate towards the weakest component on its way to white.
-        Return: an RGB() with proportion components of the same type
+        Return: a tuple with proportion components of the same type
         as our rgb
         '''
         return self.rgb_with_total(int(value * max(self.rgb) * 3 + 0.5))
@@ -321,7 +265,7 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
     def from_rgb(cls, rgb):
         """
         Return an XY instance derived from the specified rgb.
-        >>> XY.from_rgb(RGB(100, 0, 0))
+        >>> XY.from_rgb((100, 0, 0))
         XY(x=Fraction(100, 1), y=Fraction(0, 1))
         """
         x = sum(cls.X_VECTOR[i] * rgb[i] for i in range(3))
@@ -339,17 +283,17 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
     def get_hypot(self):
         """
         Return the hypotenuse as an instance of Fraction
-        >>> XY.from_rgb(RGB(100, 0, 0)).get_hypot()
+        >>> XY.from_rgb((100, 0, 0)).get_hypot()
         Fraction(100, 1)
-        >>> round(XY.from_rgb(RGB(100, 100, 100)).get_hypot())
+        >>> round(XY.from_rgb((100, 100, 100)).get_hypot())
         0.0
-        >>> round(XY.from_rgb(RGB(0, 100, 0)).get_hypot())
+        >>> round(XY.from_rgb((0, 100, 0)).get_hypot())
         100.0
-        >>> round(XY.from_rgb(RGB(0, 0, 100)).get_hypot())
+        >>> round(XY.from_rgb((0, 0, 100)).get_hypot())
         100.0
-        >>> round(XY.from_rgb(RGB(0, 100, 100)).get_hypot())
+        >>> round(XY.from_rgb((0, 100, 100)).get_hypot())
         100.0
-        >>> round(XY.from_rgb(RGB(0, 100, 50)).get_hypot())
+        >>> round(XY.from_rgb((0, 100, 50)).get_hypot())
         87.0
         """
         return math.hypot(self.x, self.y)

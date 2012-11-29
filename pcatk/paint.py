@@ -34,17 +34,78 @@ ONE = (1 << BITS_PER_CHANNEL) - 1
 TWO = ONE * 2
 THREE = ONE * 3
 
-class RGB(rgbh.RGB):
+class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB):
+    __slots__ = ()
+
+    def __add__(self, other):
+        '''
+        Add two RGB values together
+        >>> RGB(1, 2, 3) + RGB(7, 5, 3)
+        RGB(red=8, green=7, blue=6)
+        >>> RGB(1.0, 2.0, 3.0) + RGB(7.0, 5.0, 3.0)
+        RGB(red=8.0, green=7.0, blue=6.0)
+        '''
+        return RGB(red=self.red + other.red, green=self.green + other.green, blue=self.blue + other.blue)
+    # END_DEF: __add__
+
+    def __sub__(self, other):
+        '''
+        Subtract one RGB value from another
+        >>> RGB(1, 2, 3) - RGB(7, 5, 3)
+        RGB(red=-6, green=-3, blue=0)
+        >>> RGB(1.0, 2.0, 3.0) - RGB(7.0, 5.0, 3.0)
+        RGB(red=-6.0, green=-3.0, blue=0.0)
+        '''
+        return RGB(red=self.red - other.red, green=self.green - other.green, blue=self.blue - other.blue)
+    # END_DEF: __sub__
+
+    def __mul__(self, mul):
+        '''
+        Multiply all components by a fraction preserving component type
+        >>> from fractions import Fraction
+        >>> RGB(1, 2, 3) * Fraction(3)
+        RGB(red=3, green=6, blue=9)
+        >>> RGB(7.0, 2.0, 5.0) * Fraction(3)
+        RGB(red=21.0, green=6.0, blue=15.0)
+        >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) * Fraction(3, 2)
+        RGB(red=Fraction(21, 2), green=Fraction(1, 1), blue=Fraction(15, 4))
+        '''
+        return RGB(*(int(self[i] * mul + 0.5) for i in range(3)))
+    # END_DEF: __mul__
+
+    def __div__(self, div):
+        '''
+        Divide all components by a value
+        >>> from fractions import Fraction
+        >>> RGB(1, 2, 3) / 3
+        RGB(red=0, green=0, blue=1)
+        >>> RGB(7.0, 2.0, 5.0) / Fraction(2)
+        RGB(red=3.5, green=1.0, blue=2.5)
+        >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) / 5
+        RGB(red=Fraction(7, 5), green=Fraction(2, 15), blue=Fraction(1, 2))
+        '''
+        return RGB(*(int(self[i] / div + 0.5) for i in range(3)))
+    # END_DEF: __div__
+
+    def __str__(self):
+        return 'RGB({0}, {1}, {2})'.format(*self)
+    # END_DEF: __str__
+
     def get_value(self):
         return fractions.Fraction(sum(self), THREE)
     # END_DEF: get_value
-# END_CLASS: RGB
 
-class Hue(rgbh.Hue):
-    pass
+    @staticmethod
+    def rotated(rgb, delta_hue_angle):
+        return RGB(*rgbh.RGB.rotated(rgb, delta_hue_angle))
+    # END_DEF: rotated
+# END_CLASS: RGB
 
 class XY(rgbh.XY):
     ONE = ONE
+
+class Hue(rgbh.Hue):
+    pass
 
 # Primary Colours
 RGB_RED = RGB(red=ONE, green=ZERO, blue=ZERO)
@@ -75,7 +136,7 @@ class HCVW(object):
         if value is None:
             # i.e. same hue and value but without any unnecessary grey
             value = self.value
-        return self.hue.rgb_with_value(value)
+        return RGB(*self.hue.rgb_with_value(value))
     # END_DEF: hue_rgb_for_value
 
     def chroma_side(self):
@@ -97,7 +158,7 @@ class HCVW(object):
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
             hue = rgbh.Hue.from_angle(self.hue.angle + delta_hue_angle, ONE)
-            return hue.rgb_with_value(self.value)
+            return RGB(*hue.rgb_with_value(self.value))
         else:
             # Simple rotation is the correct solution for 1 or 3 components
             return RGB.rotated(self.rgb, delta_hue_angle)
@@ -259,7 +320,7 @@ class Colour(object):
 
     @property
     def hue_rgb(self):
-        return self.hcvw.hue.rgb
+        return RGB(*self.hcvw.hue.rgb)
     # END_DEF: hue_rgb
 
     @property
