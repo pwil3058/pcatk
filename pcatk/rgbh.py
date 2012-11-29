@@ -19,7 +19,6 @@ Implement types to represent red/green/blue data as a tuple and hue angle as a f
 
 import collections
 import math
-import fractions
 
 from pcatk import utils
 
@@ -63,12 +62,12 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) * Fraction(3, 2)
         RGB(red=Fraction(21, 2), green=Fraction(1, 1), blue=Fraction(15, 4))
         '''
-        return RGB(*(self[i] * mul.numerator / mul.denominator for i in range(3)))
+        return RGB(*(self[i] * mul for i in range(3)))
     # END_DEF: __mul__
 
     def __div__(self, div):
         '''
-        Divide all components by a value preserving component type
+        Divide all components by a value
         >>> from fractions import Fraction
         >>> RGB(1, 2, 3) / 3
         RGB(red=0, green=0, blue=1)
@@ -77,7 +76,7 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         >>> RGB(Fraction(7), Fraction(2, 3), Fraction(5, 2)) / 5
         RGB(red=Fraction(7, 5), green=Fraction(2, 15), blue=Fraction(1, 2))
         '''
-        return RGB(*(self[i] / div for i in range(3)))
+        return RGB(*(int(self[i] / div + 0.5) for i in range(3)))
     # END_DEF: __div__
 
     def __str__(self):
@@ -182,26 +181,25 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
         def calc_ks(delta_hue_angle):
             a = math.sin(delta_hue_angle)
             b = math.sin(utils.PI_120 - delta_hue_angle)
-            c = fractions.Fraction.from_float(a + b)
-            k1 = fractions.Fraction.from_float(b * c.denominator)
-            k2 = fractions.Fraction.from_float(a * c.denominator)
-            return (k1, k2, c.numerator)
+            c = a + b
+            k1 = b / c
+            k2 = a / c
+            return (k1, k2)
         # END_DEF: calc_ks
-        fmul = lambda x, frac: x * frac.numerator / frac.denominator
-        f = lambda c1, c2: (fmul(rgb[c1], k1) + fmul(rgb[c2], k2)) / k3
+        f = lambda c1, c2: int((rgb[c1] * k1 + rgb[c2] * k2) + 0.5)
         if delta_hue_angle > 0:
             if delta_hue_angle > utils.PI_120:
-                k1, k2, k3 = calc_ks(delta_hue_angle - utils.PI_120)
+                k1, k2 = calc_ks(delta_hue_angle - utils.PI_120)
                 return RGB(red=f(2, 1), green=f(0, 2), blue=f(1, 0))
             else:
-                k1, k2, k3 = calc_ks(delta_hue_angle)
+                k1, k2 = calc_ks(delta_hue_angle)
                 return RGB(red=f(0, 2), green=f(1, 0), blue=f(2, 1))
         elif delta_hue_angle < 0:
             if delta_hue_angle < -utils.PI_120:
-                k1, k2, k3 = calc_ks(abs(delta_hue_angle) - utils.PI_120)
+                k1, k2 = calc_ks(abs(delta_hue_angle) - utils.PI_120)
                 return RGB(red=f(1, 2), green=f(2, 0), blue=f(0, 1))
             else:
-                k1, k2, k3 = calc_ks(abs(delta_hue_angle))
+                k1, k2 = calc_ks(abs(delta_hue_angle))
                 return RGB(red=f(0, 1), green=f(1, 2), blue=f(2, 0))
         else:
             return RGB(*rgb)
@@ -210,31 +208,30 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue'])):
 
 class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
     @classmethod
-    def from_angle(cls, angle, ONE=fractions.Fraction(1)):
+    def from_angle(cls, angle, ONE=None):
         assert not math.isnan(angle) and abs(angle) <= math.pi
-        ZERO = type(ONE)(0)
         def calc_other(oa):
-            scale = fractions.Fraction.from_float(math.sin(oa) / math.sin(utils.PI_120 - oa))
-            return ONE * scale.numerator / scale.denominator
+            scale = math.sin(oa) / math.sin(utils.PI_120 - oa)
+            return int(ONE * scale + 0.5)
         aha = abs(angle)
         if aha <= utils.PI_60:
             other = calc_other(aha)
             if angle >= 0:
-                hue_rgb = RGB(ONE, other, ZERO)
+                hue_rgb = RGB(ONE, other, 0)
             else:
-                hue_rgb = RGB(ONE, ZERO, other)
+                hue_rgb = RGB(ONE, 0, other)
         elif aha <= utils.PI_120:
             other = calc_other(utils.PI_120 - aha)
             if angle >= 0:
-                hue_rgb = RGB(other, ONE, ZERO)
+                hue_rgb = RGB(other, ONE, 0)
             else:
-                hue_rgb = RGB(other, ZERO, ONE)
+                hue_rgb = RGB(other, 0, ONE)
         else:
             other = calc_other(aha - utils.PI_120)
             if angle >= 0:
-                hue_rgb = RGB(ZERO, ONE, other)
+                hue_rgb = RGB(0, ONE, other)
             else:
-                hue_rgb = RGB(ZERO, other, ONE)
+                hue_rgb = RGB(0, other, ONE)
         return Hue(rgb=hue_rgb, angle=utils.Angle(angle))
     # END_DEF: from_angle
 
@@ -262,6 +259,30 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         return self.angle.__ge__(other.angle)
     # END_DEF: __ge__
 
+    def rgb_with_total(self, req_total):
+        '''
+        return the RGB for this hue with the specified component total
+        NB if requested value is too big for the hue the returned value
+        will deviate towards the weakest component on its way to white.
+        Return: an RGB() with proportion components of the same type
+        as our rgb
+        '''
+        cur_total = sum(self.rgb)
+        shortfall = req_total - cur_total
+        if shortfall == 0:
+            return RGB(*self.rgb)
+        elif shortfall < 0:
+            return RGB(*tuple(self.rgb[i] * req_total / cur_total for i in range(3)))
+        else:
+            ONE = max(self.rgb)
+            io = RGB.indices_value_order(self.rgb)
+            result = {io[0] : ONE}
+            # it's simpler two work out the weakest component first
+            result[io[2]] = (shortfall * ONE) / (2 * ONE - self.rgb[io[1]])
+            result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
+            return RGB(*tuple(result[i] for i in range(3)))
+    # END_DEF: rgb_with_total
+
     def rgb_with_value(self, value):
         '''
         return the RGB for this hue with the specified value
@@ -270,21 +291,7 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         Return: an RGB() with proportion components of the same type
         as our rgb
         '''
-        ONE = max(self.rgb)
-        io = RGB.indices_value_order(self.rgb)
-        # Using fractions for performance
-        ireq_value = 3 * ONE * value.numerator / value.denominator
-        iach_value = sum(self.rgb)
-        shortfall = ireq_value - iach_value
-        if shortfall <= 0:
-            scale = fractions.Fraction(ireq_value, iach_value)
-            return RGB(*tuple(self.rgb[i] * scale.numerator / scale.denominator for i in range(3)))
-        else:
-            result = {io[0] : ONE}
-            # it's simpler two work out the weakest component first
-            result[io[2]] = (shortfall * ONE) / (2 * ONE - self.rgb[io[1]])
-            result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
-            return RGB(*tuple(result[i] for i in range(3)))
+        return self.rgb_with_total(int(value * max(self.rgb) * 3 + 0.5))
     # END_DEF: rgb_with_value
 
     def get_chroma_correction(self):
@@ -292,11 +299,8 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         a = self.rgb[io[0]]
         b = self.rgb[io[1]]
         if a == b or b == 0: # avoid floating point inaccuracies near 1
-            return fractions.Fraction(1)
-        denom = fractions.Fraction.from_float(math.sqrt(a * a + b * b - a * b))
-        if isinstance(a, float):
-            a = fractions.Fraction(a)
-        return fractions.Fraction(a, denom)
+            return 1.0
+        return a / math.sqrt(a * a + b * b - a * b)
     # END_DEF: get_chroma_correction
 
     def is_grey(self):
@@ -304,14 +308,14 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
     # END_DEF: is_grey
 # END_CLASS: Hue
 
-SIN_60 = fractions.Fraction.from_float(math.sin(utils.PI_60))
-SIN_120 = fractions.Fraction.from_float(math.sin(utils.PI_120))
-COS_120 = fractions.Fraction(-1, 2) # math.cos(utils.PI_120)
+SIN_60 = math.sin(utils.PI_60)
+SIN_120 = math.sin(utils.PI_120)
+COS_120 = -0.5 # math.cos(utils.PI_120) is slightly out
 
 class XY(collections.namedtuple('XY', ['x', 'y'])):
-    X_VECTOR = (fractions.Fraction(1), COS_120, COS_120)
-    Y_VECTOR = (fractions.Fraction(0), SIN_120, -SIN_120)
-    ONE = fractions.Fraction(1)
+    X_VECTOR = (1.0, COS_120, COS_120)
+    Y_VECTOR = (0.0, SIN_120, -SIN_120)
+    ONE = None
 
     @classmethod
     def from_rgb(cls, rgb):
@@ -326,7 +330,7 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
     # END_DEF: from_rgb
 
     def get_hue(self):
-        if self.x == 0 and self.y == 0:
+        if self.x == 0.0 and self.y == 0.0:
             return Hue(rgb=(self.ONE, self.ONE, self.ONE), angle=float('nan'))
         else:
             return Hue.from_angle(math.atan2(self.y, self.x), self.ONE)
@@ -348,7 +352,7 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         >>> round(XY.from_rgb(RGB(0, 100, 50)).get_hypot())
         87.0
         """
-        return fractions.Fraction.from_float(math.hypot(self.x, self.y))
+        return math.hypot(self.x, self.y)
     # END_DEF: get_hypot
 # END_CLASS: XY
 
