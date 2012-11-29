@@ -50,17 +50,16 @@ class RGB(rgbh.RGB):
     @staticmethod
     def scaled_to_sum(rgb, new_sum):
         cur_sum = sum(rgb)
-        scaled = [int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)]
-        return RGB(*scaled)
+        return tuple(int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3))
     # END_DEF: get_value
 
     @staticmethod
     def to_mono(rgb):
         val = (sum(rgb) + 1) / 3
-        return RGB(val, val, val)
+        return (val, val, val)
     # END_DEF: to_mono
-WHITE = RGB(ONE, ONE, ONE)
-BLACK = RGB(0, 0, 0)
+WHITE = (ONE, ONE, ONE)
+BLACK = (0, 0, 0)
 # END_CLASS: RGB
 
 class XY(rgbh.XY):
@@ -86,7 +85,7 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         ValueLimitCriteria(n_values=6, c_totals=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
         """
         c_totals = tuple([int(THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
-        value_rgbs = tuple([RGB(*((int((total + 0.5) / 3),) * 3)) for total in c_totals])
+        value_rgbs = tuple([(int((total + 0.5) / 3),) * 3 for total in c_totals])
         return ValueLimitCriteria(n_values, c_totals, value_rgbs)
     # END_DEF: create
 
@@ -120,9 +119,9 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc.hues[0].angle
         Angle(0.0)
         >>> hlc.hues[1].rgb
-        RGB(red=255, green=255, blue=0)
+        (red=255, green=255, blue=0)
         >>> hlc.hues[3].rgb
-        RGB(red=0, green=255, blue=255)
+        (red=0, green=255, blue=255)
         '''
         step = 2 * math.pi / n_hues
         angles = [utils.Angle.normalize(step * i) for i in range(n_hues)]
@@ -180,7 +179,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         """
         Generate an instance from data at the given offet
         """
-        rgb = RGB(data[offset], data[offset + 1], data[offset + 2])
+        rgb = (data[offset], data[offset + 1], data[offset + 2])
         hue = XY.from_rgb(rgb).get_hue()
         return cls(rgb, hue)
     # END_DEF: from_pixbuf_data
