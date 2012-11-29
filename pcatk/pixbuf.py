@@ -325,7 +325,19 @@ class RGBHImage(gobject.GObject):
     # END_DEF: __getitem__
 
     def set_from_pixbuf(self, pixbuf):
+        size = pixbuf.get_width() * pixbuf.get_height()
+        if size > 640 * 640:
+            # Scale down large images
+            ar = fractions.Fraction(pixbuf.get_width(), pixbuf.get_height())
+            if ar > 1:
+                new_w = int(640 * math.sqrt(ar) + 0.5)
+                new_h = int(new_w / ar + 0.5)
+            else:
+                new_h = int(640 / math.sqrt(ar) + 0.5)
+                new_w = int(new_w * ar + 0.5)
+            pixbuf = pixbuf.scale_simple(new_w, new_h, gtk.gdk.INTERP_BILINEAR)
         w, h = (pixbuf.get_width(), pixbuf.get_height())
+        self.__size = gtkpwx.WH(width=w, height=h)
         # FUTUREPROOF: make useable for bps other than 8
         # TODO: think about what to do if pixbuf has alpha
         assert pixbuf.get_bits_per_sample() == 8
@@ -342,7 +354,6 @@ class RGBHImage(gobject.GObject):
             start = j * rs
             self.__pixel_rows.append(PixBufRow(data, start, start + w * nc, nc))
         self.emit('progress-made', fractions.Fraction(1))
-        self.__size = gtkpwx.WH(width=w, height=h)
     # END_DEF: set_from_pixbuf
 
     def get_mapped_pixbuf(self, map_to_flat_row):
