@@ -342,6 +342,12 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
                         self.__pixbuf.set_zoom(max(current_zoom / factor, min_zoom))
                         self._resize_da()
                 return True
+        elif event.state & gtk.gdk.SHIFT_MASK:
+            if event.direction == gtk.gdk.SCROLL_UP:
+                self.emit('scroll-child', gtk.SCROLL_STEP_FORWARD, True)
+            elif event.direction == gtk.gdk.SCROLL_DOWN:
+                self.emit('scroll-child', gtk.SCROLL_STEP_BACKWARD, True)
+            return True
     # END_DEF: _scroll_ecb
 
     def _copy_to_clipboard_acb(self, _action):
