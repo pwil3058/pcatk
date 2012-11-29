@@ -219,11 +219,7 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
             self.__pixbuf = ZoomedPixbuf(pixbuf)
             alloc = self.get_allocation()
             sizediff = alloc - self.__pixbuf.get_unzoomed_size()
-            if sizediff.width < 0 and sizediff.height < 0:
-                # pixbuf is bigger than viewport so leave it unzoomed
-                # and set the drawable size too match
-                self._resize_da()
-            elif self.__pixbuf.aspect_ratio_matches(alloc):
+            if self.__pixbuf.aspect_ratio_matches(alloc):
                 self.__pixbuf.set_zoomed_size(alloc)
                 self._resize_da()
             else:
