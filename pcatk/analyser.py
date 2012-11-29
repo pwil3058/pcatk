@@ -683,4 +683,8 @@ class Analyser(gtk.VBox):
         while gtk.events_pending():
             gtk.main_iteration()
     # END_DEF: _progress_made_cb
+
+    def get_image_size(self):
+        return self.__image.size
+    # END_DEF: get_image_size
 # END_CLASS: Analyser
