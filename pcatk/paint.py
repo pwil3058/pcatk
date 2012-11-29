@@ -66,7 +66,7 @@ class HCVW(object):
         self.rgb = RGB(*rgb)
         self.value = self.rgb.get_value()
         xy = XY.from_rgb(self.rgb)
-        self.warmth = fractions.Fraction(xy.x, ONE)
+        self.warmth = fractions.Fraction.from_float(xy.x / ONE)
         self.hue = xy.get_hue()
         self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / ONE
     # END_DEF: __init__

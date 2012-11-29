@@ -48,6 +48,13 @@ class RGB(rgbh.RGB):
     # END_DEF: get_value
 
     @staticmethod
+    def scaled_to_sum(rgb, new_sum):
+        cur_sum = sum(rgb)
+        scaled = [int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)]
+        return RGB(*scaled)
+    # END_DEF: get_value
+
+    @staticmethod
     def to_mono(rgb):
         val = (sum(rgb) + 1) / 3
         return RGB(val, val, val)
@@ -67,7 +74,7 @@ def calc_rowstride(bytes_per_row):
     return bytes_per_row + (0 if rem == 0 else 4 - rem)
 # END_DEF: calc_rowstride
 
-class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values', 'values', 'value_rgbs'])):
+class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values', 'c_totals', 'value_rgbs'])):
     __slots__ = ()
 
     @classmethod
@@ -76,12 +83,11 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         Create an instance of ValueLimitCriteria for the specified number of
         levels and rgbs associated with this class (i.e. cls.ONE).
         >>> ValueLimitCriteria.create(6)
-        ValueLimitCriteria(n_values=6, values=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
+        ValueLimitCriteria(n_values=6, c_totals=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
         """
-        step = fractions.Fraction(1, n_values - 1)
-        values = tuple([step * i for i in range(n_values)])
-        value_rgbs = tuple([WHITE * value for value in values])
-        return ValueLimitCriteria(n_values, values, value_rgbs)
+        c_totals = tuple([int(THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
+        value_rgbs = tuple([RGB(*((int((total + 0.5) / 3),) * 3)) for total in c_totals])
+        return ValueLimitCriteria(n_values, c_totals, value_rgbs)
     # END_DEF: create
 
     def get_value_index(self, rgb):
@@ -153,7 +159,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     def create(cls, n_hues, n_values):
         hlc = HueLimitCriteria.create(n_hues)
         vlc = ValueLimitCriteria.create(n_values)
-        hv_rgbs = [[hue.rgb_with_value(val) for val in vlc.values] for hue in hlc.hues]
+        hv_rgbs = [[hue.rgb_with_total(total) for total in vlc.c_totals] for hue in hlc.hues]
         return HueValueLimitCriteria(hlc, vlc, hv_rgbs)
     # END_DEF: create
 
@@ -180,7 +186,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
     # END_DEF: from_pixbuf_data
 
     def transform_high_chroma(self):
-        return self.hue.rgb_with_value(RGB.get_value(self.rgb))
+        return self.hue.rgb_with_total(sum(self.rgb))
     # END_DEF: transform_high_chroma
 
     def transform_limited_value(self, vlc):
@@ -189,10 +195,9 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
             return BLACK
         elif index == vlc.n_values - 1:
             return WHITE
-        value = RGB.get_value(self.rgb)
-        rgb = self.rgb * fractions.Fraction(vlc.values[index], value)
+        rgb = RGB.scaled_to_sum(self.rgb, vlc.c_totals[index])
         if max(rgb) > ONE:
-            rgb = self.hue.rgb_with_value(vlc.values[index])
+            rgb = self.hue.rgb_with_total(vlc.c_totals[index])
         return rgb
     # END_DEF: transform_limited_value
 
@@ -206,8 +211,7 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         if index is None:
             return self.rgb
         if RGB.ncomps(self.rgb) == 2:
-            value = RGB.get_value(self.rgb)
-            rgb = hlc.hues[index].rgb_with_value(value)
+            rgb = hlc.hues[index].rgb_with_total(sum(self.rgb))
         else:
             rgb = RGB.rotated(self.rgb, hlc.hues[index].angle - self.hue.angle)
         return rgb
@@ -222,12 +226,12 @@ class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
         h_index = hvlc.get_hue_index(self.hue)
         if h_index is None:
             return hvlc.vlc.value_rgbs[v_index]
-        target_value = hvlc.vlc.values[v_index]
+        target_total = hvlc.vlc.c_totals[v_index]
         if RGB.ncomps(self.rgb) == 2:
-            rgb = hvlc.hlc.hues[h_index].rgb_with_value(target_value)
+            rgb = hvlc.hlc.hues[h_index].rgb_with_total(target_total)
         else:
             rgb = RGB.rotated(self.rgb, hvlc.hlc.hues[h_index].angle - self.hue.angle)
-            rgb = rgb * fractions.Fraction(target_value, RGB.get_value(rgb))
+            rgb = RGB.scaled_to_sum(rgb, target_total)
             if max(rgb) > ONE:
                 rgb = hvlc.hv_rgbs[h_index][v_index]
         return rgb
