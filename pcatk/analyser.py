@@ -36,7 +36,7 @@ class Analysis(object):
         particular view
         """
         self.__image = image
-        self.pixbuf_view = iview.PixbufView(None)
+        self.pixbuf_view = iview.PixbufView()
         self.initialize_parameters()
         self.update_pixbuf()
     # END_DEF: __init__()
