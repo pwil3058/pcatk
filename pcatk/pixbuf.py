@@ -334,7 +334,7 @@ class RGBHImage(gobject.GObject):
                 new_h = int(new_w / ar + 0.5)
             else:
                 new_h = int(640 / math.sqrt(ar) + 0.5)
-                new_w = int(new_w * ar + 0.5)
+                new_w = int(new_h * ar + 0.5)
             pixbuf = pixbuf.scale_simple(new_w, new_h, gtk.gdk.INTERP_BILINEAR)
         w, h = (pixbuf.get_width(), pixbuf.get_height())
         self.__size = gtkpwx.WH(width=w, height=h)
