@@ -321,13 +321,13 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         """
         if event.state & gtk.gdk.CONTROL_MASK:
             factor = fractions.Fraction(11, 10)
-            if event.direction == gtk.gdk.SCROLL_UP:
+            if event.direction == gtk.gdk.SCROLL_DOWN:
                 if self.__pixbuf is not None:
                     current_zoom = self.__pixbuf.zoom
                     self.__pixbuf.set_zoom(current_zoom * factor)
                     self._resize_da()
                 return True
-            elif event.direction == gtk.gdk.SCROLL_DOWN:
+            elif event.direction == gtk.gdk.SCROLL_UP:
                 if self.__pixbuf is not None:
                     current_zoom = self.__pixbuf.zoom
                     min_zoom = max(self.__pixbuf.calc_zooms_for(self.__last_alloc))
