@@ -142,7 +142,7 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         '''
     AC_SELN_MADE, AC_SELN_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
     AC_PIXBUF_SET, AC_PICBUF_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
-    def __init__(self, pixbuf):
+    def __init__(self):
         """
         A drawing area to contain a single image
         """
@@ -162,8 +162,6 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         self.__seln = XYSelection(self.__da)
         self.__seln.connect('status-changed', self._seln_status_change_cb)
         self.__seln.connect('motion_notify', self._seln_motion_cb)
-
-        self.set_pixbuf(pixbuf)
     # END_DEF: __init__
 
     def populate_action_groups(self):
