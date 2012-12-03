@@ -170,11 +170,11 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         self.__seln = XYSelection(self.__da)
         self.__seln.connect('status-changed', self._seln_status_change_cb)
         self.__seln.connect('motion_notify', self._seln_motion_cb)
-        self.__press_cb_id = self.__da.connect('button_press_event', self._button_press_cb)
+        self.__press_cb_id = self.__da.connect('button_press_event', self._da_button_press_cb)
         self.__cb_ids = []
-        self.__cb_ids.append(self.__da.connect('button_release_event', self._button_release_cb))
-        self.__cb_ids.append(self.__da.connect('motion_notify_event', self._motion_notify_cb))
-        self.__cb_ids.append(self.__da.connect('leave_notify_event', self._leave_notify_cb))
+        self.__cb_ids.append(self.__da.connect('button_release_event', self._da_button_release_cb))
+        self.__cb_ids.append(self.__da.connect('motion_notify_event', self._da_motion_notify_cb))
+        self.__cb_ids.append(self.__da.connect('leave_notify_event', self._da_leave_notify_cb))
         for cb_id in self.__cb_ids:
             self.__da.handler_block(cb_id)
     # END_DEF: __init__
@@ -387,15 +387,16 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
             return True
     # END_DEF: _scroll_ecb
 
-    def _button_press_cb(self, widget, event):
+    # Careful not to override CAGandUIManager method
+    def _da_button_press_cb(self, widget, event):
         if event.button == 1 and event.state & gtk.gdk.CONTROL_MASK:
             self.__last_xy = gtkpwx.XY(event.x, event.y)
             for cb_id in self.__cb_ids:
                 widget.handler_unblock(cb_id)
             return True
-    # END_DEF: _button_press_cb
+    # END_DEF: _da_button_press_cb
 
-    def _motion_notify_cb(self, widget, event):
+    def _da_motion_notify_cb(self, widget, event):
         this_xy = gtkpwx.XY(event.x, event.y)
         delta_xy = this_xy - self.__last_xy
         size = self.__last_alloc
@@ -405,21 +406,21 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
             adj.set_value(min(max(new_val, 0), adj.upper - adj.page_size))
         widget.queue_draw()
         return True
-    # END_DEF: _motion_notify_cb
+    # END_DEF: _da_motion_notify_cb
 
-    def _button_release_cb(self, widget, event):
+    def _da_button_release_cb(self, widget, event):
         if event.button != 1:
             return
         for cb_id in self.__cb_ids:
             widget.handler_block(cb_id)
         return True
-    # END_DEF: _button_release_cb
+    # END_DEF: _da_button_release_cb
 
-    def _leave_notify_cb(self, widget, event):
+    def _da_leave_notify_cb(self, widget, event):
         for cb_id in self.__cb_ids:
             widget.handler_block(cb_id)
         return True
-    # END_DEF: _button_release_cb
+    # END_DEF: _da_button_release_cb
 
     def _copy_to_clipboard_acb(self, _action):
         """
