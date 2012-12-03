@@ -35,6 +35,7 @@ class ZoomedPixbuf(object):
         pixbuf: an instance of gtk.gdk.Pixbuf
         """
         self.__uz_pixbuf = self.__z_pixbuf = pixbuf
+        self.__zoom = fractions.Fraction(1)
     # END_DEF: __init__()
 
     @property
@@ -76,7 +77,7 @@ class ZoomedPixbuf(object):
         """
         Return the zoom factor
         """
-        return (self.hzoom + self.wzoom) / 2
+        return self.__zoom
     # END_DEF: zoom
 
     def get_unzoomed_size(self):
@@ -110,6 +111,9 @@ class ZoomedPixbuf(object):
         new_width = int(round(self.__uz_pixbuf.get_width() * zoom))
         new_height = int(round(self.__uz_pixbuf.get_height() * zoom))
         self.__z_pixbuf = self.__uz_pixbuf.scale_simple(new_width, new_height, gtk.gdk.INTERP_BILINEAR)
+        # make sure reported zoom matches what was set so user code doesn't
+        # get stuck in endless loops
+        self.__zoom = zoom
     # END_DEF: set_zoom
 
     def set_zoomed_size(self, new_zsize):
@@ -118,6 +122,7 @@ class ZoomedPixbuf(object):
         """
         assert self.aspect_ratio_matches(new_zsize)
         self.__z_pixbuf = self.__uz_pixbuf.scale_simple(new_zsize.width, new_zsize.height, gtk.gdk.INTERP_BILINEAR)
+        self.__zoom = (self.hzoom + self.wzoom) / 2
     # END_DEF: set_zoomed_size
 
     def calc_zooms_for(self, wharg):
@@ -142,6 +147,9 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         '''
     AC_SELN_MADE, AC_SELN_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
     AC_PIXBUF_SET, AC_PICBUF_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
+    ZOOM_FACTOR = fractions.Fraction(11, 10)
+    ZOOM_IN_ADJ = (ZOOM_FACTOR - 1) / 2
+    ZOOM_OUT_ADJ = (1 / ZOOM_FACTOR - 1) / 2
     def __init__(self):
         """
         A drawing area to contain a single image
@@ -178,6 +186,14 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
                 ('print_pixbuf', gtk.STOCK_PRINT, None, None,
                  _('Print this image.'),
                  self._print_pixbuf_acb
+                ),
+                ('zoom_in', gtk.STOCK_ZOOM_IN, None, None,
+                 _('Enlarge the image.'),
+                 self.zoom_in
+                ),
+                ('zoom_out', gtk.STOCK_ZOOM_OUT, None, None,
+                 _('Shrink the image.'),
+                 self.zoom_out
                 ),
             ]
         )
@@ -254,10 +270,14 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         """
         alloc = self.get_allocation()
         if self.__last_alloc is None:
+            self.__zin_adj = (alloc.width * self.ZOOM_IN_ADJ, alloc.height * self.ZOOM_IN_ADJ)
+            self.__zout_adj = (alloc.width * self.ZOOM_OUT_ADJ, alloc.height * self.ZOOM_OUT_ADJ)
             self.__last_alloc = gtkpwx.WH(alloc.width, alloc.height)
             return
         elif alloc == self.__last_alloc:
             return
+        self.__zin_adj = (alloc.width * self.ZOOM_IN_ADJ, alloc.height * self.ZOOM_IN_ADJ)
+        self.__zout_adj = (alloc.width * self.ZOOM_OUT_ADJ, alloc.height * self.ZOOM_OUT_ADJ)
         delta_alloc = alloc - self.__last_alloc
         self.__last_alloc = gtkpwx.WH(alloc.width, alloc.height)
         if self.__pixbuf is None:
@@ -315,27 +335,42 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         self.__da.queue_draw()
     # END_DEF: _seln_motion_cb
 
+    # TODO: make 'zoom in' smoother
+    def zoom_in(self, _action=None):
+        if self.__pixbuf is not None:
+            current_zoom = self.__pixbuf.zoom
+            self.__pixbuf.set_zoom(current_zoom * self.ZOOM_FACTOR)
+            self._resize_da()
+            for dim, adj in enumerate([self.get_hadjustment(), self.get_vadjustment()]):
+                new_val = adj.get_value() * self.ZOOM_FACTOR + self.__zin_adj[dim]
+                adj.set_value(new_val)
+    # END_DEF: zoom_in
+
+    # TODO: make 'zoom out' smoother
+    def zoom_out(self, _action=None):
+        if self.__pixbuf is not None:
+            current_zoom = self.__pixbuf.zoom
+            min_zoom = max(self.__pixbuf.calc_zooms_for(self.__last_alloc))
+            if current_zoom <= min_zoom:
+                gtk.gdk.beep()
+            else:
+                self.__pixbuf.set_zoom(max(current_zoom / self.ZOOM_FACTOR, min_zoom))
+                self._resize_da()
+                for dim, adj in enumerate([self.get_hadjustment(), self.get_vadjustment()]):
+                    new_val = adj.get_value() / self.ZOOM_FACTOR + self.__zout_adj[dim]
+                    adj.set_value(max(0, new_val))
+    # END_DEF: zoom_out
+
     def _scroll_ecb(self, _widget, event):
         """
         Manage use of the scroll wheel for zooming and scrolling
         """
         if event.state & gtk.gdk.CONTROL_MASK:
-            factor = fractions.Fraction(11, 10)
             if event.direction == gtk.gdk.SCROLL_DOWN:
-                if self.__pixbuf is not None:
-                    current_zoom = self.__pixbuf.zoom
-                    self.__pixbuf.set_zoom(current_zoom * factor)
-                    self._resize_da()
+                self.zoom_in()
                 return True
             elif event.direction == gtk.gdk.SCROLL_UP:
-                if self.__pixbuf is not None:
-                    current_zoom = self.__pixbuf.zoom
-                    min_zoom = max(self.__pixbuf.calc_zooms_for(self.__last_alloc))
-                    if current_zoom <= min_zoom:
-                        gtk.gdk.beep()
-                    else:
-                        self.__pixbuf.set_zoom(max(current_zoom / factor, min_zoom))
-                        self._resize_da()
+                self.zoom_out()
                 return True
         elif event.state & gtk.gdk.SHIFT_MASK:
             if event.direction == gtk.gdk.SCROLL_UP:

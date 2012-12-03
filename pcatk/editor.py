@@ -24,14 +24,17 @@ import fractions
 
 import gtk
 import gobject
+import glib
 
 from pcatk import options
+from pcatk import recollect
 from pcatk import utils
 from pcatk import gtkpwx
 from pcatk import paint
 from pcatk import gpaint
 from pcatk import data
 from pcatk import icons
+from pcatk import iview
 
 class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
     UI_DESCR = '''
@@ -43,6 +46,9 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
           <menuitem action='save_tube_series_to_file'/>
           <menuitem action='save_tube_series_as_file'/>
           <menuitem action='close_colour_editor'/>
+        </menu>
+        <menu action='tube_series_editor_samples_menu'>
+          <menuitem action='open_sample_viewer'/>
         </menu>
       </menubar>
     </ui>
@@ -124,12 +130,16 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         # TODO: make some of these conditional
         self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
             ('tube_series_editor_file_menu', None, _('File')),
+            ('tube_series_editor_samples_menu', None, _('Samples')),
             ('reset_colour_editor', None, _('Reset'), None,
             _('Reset the colour editor to its default state.'),
             self._reset_colour_editor_cb),
             ('open_tube_series_file', gtk.STOCK_OPEN, None, None,
             _('Load a tube series from a file for editing.'),
             self._open_tube_series_file_cb),
+            ('open_sample_viewer', None, _('Open Sample Viewer'), None,
+            _('Open a graphics file containing colour samples.'),
+            self._open_sample_viewer_cb),
             ('close_colour_editor', gtk.STOCK_CLOSE, None, None,
             _('Close this window.'),
             self._close_colour_editor_cb),
@@ -353,7 +363,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             return
         parent = self.get_toplevel()
         dlg = gtk.FileChooserDialog(
-            title='Load Tube Series Description',
+            title=_('Load Tube Series Description'),
             parent=parent if isinstance(parent, gtk.Window) else None,
             action=gtk.FILE_CHOOSER_ACTION_OPEN,
             buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
@@ -366,6 +376,13 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             self.load_fm_file(filepath)
         dlg.destroy()
     # END_DEF: _open_tube_series_file_cb
+
+    def _open_sample_viewer_cb(self, _action):
+        """
+        Launch a window containing a sample viewer
+        """
+        SampleViewer(self.get_toplevel()).show()
+    # END_DEF: _open_sample_viewer_cb
 
     def get_definition_text(self):
         """
@@ -910,3 +927,102 @@ class TopLevelWindow(gtk.Window):
         self.show_all()
     # END_DEF: __init__()
 # END_CLASS: TopLevelWindow
+
+class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
+    """
+    A top level window for a colour sample file
+    """
+    UI_DESCR = '''
+    <ui>
+      <menubar name='colour_sample_menubar'>
+        <menu action='colour_sample_file_menu'>
+          <menuitem action='open_colour_sample_file'/>
+          <menuitem action='close_colour_sample_viewer'/>
+        </menu>
+      </menubar>
+    </ui>
+    '''
+    TITLE_TEMPLATE = _('pcatk: Colour Sample: {}')
+
+    def __init__(self, parent):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        gtkpwx.CAGandUIManager.__init__(self)
+        self.set_icon_from_file(icons.APP_ICON_FILE)
+        self.set_size_request(300, 200)
+        last_samples_file = recollect.get('sample_viewer', 'last_file')
+        if os.path.isfile(last_samples_file):
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(last_samples_file)
+            except glib.GError:
+                pixbuf = None
+                last_samples_file = None
+        else:
+            pixbuf = None
+            last_samples_file = None
+        self.set_title(self.TITLE_TEMPLATE.format(os.path.relpath(last_samples_file)))
+        self.pixbuf_view = iview.PixbufView()
+        self._menubar = self.ui_manager.get_widget('/colour_sample_menubar')
+        self.buttons = self.pixbuf_view.action_groups.create_action_button_box([
+            'zoom_in',
+            'zoom_out',
+        ])
+        vbox = gtk.VBox()
+        vbox.pack_start(self._menubar, expand=False)
+        vbox.pack_start(self.pixbuf_view, expand=True, fill=True)
+        vbox.pack_start(self.buttons, expand=False)
+        self.add(vbox)
+        self.set_transient_for(parent)
+        self.show_all()
+        self.pixbuf_view.set_pixbuf(pixbuf)
+    # END_DEF: __init__()
+
+    def populate_action_groups(self):
+        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+            ('colour_sample_file_menu', None, _('File')),
+            ('open_colour_sample_file', gtk.STOCK_OPEN, None, None,
+            _('Load a colour sample file.'),
+            self._open_colour_sample_file_cb),
+            ('close_colour_sample_viewer', gtk.STOCK_CLOSE, None, None,
+            _('Close this window.'),
+            self._close_colour_sample_viewer_cb),
+        ])
+    # END_DEF: populate_action_groups
+
+    def _open_colour_sample_file_cb(self, _action):
+        """
+        Ask the user for the name of the file then open it.
+        """
+        parent = self.get_toplevel()
+        dlg = gtk.FileChooserDialog(
+            title=_('Open Colour Sample File'),
+            parent=parent if isinstance(parent, gtk.Window) else None,
+            action=gtk.FILE_CHOOSER_ACTION_OPEN,
+            buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
+        )
+        last_samples_file = recollect.get('sample_viewer', 'last_file')
+        last_samples_dir = None if last_samples_file is None else os.path.dirname(last_samples_file)
+        if last_samples_dir:
+            dlg.set_current_folder(last_samples_dir)
+        gff = gtk.FileFilter()
+        gff.set_name(_('Image Files'))
+        gff.add_pixbuf_formats()
+        dlg.add_filter(gff)
+        if dlg.run() == gtk.RESPONSE_OK:
+            filepath = dlg.get_filename()
+            dlg.destroy()
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(filepath)
+            except glib.GError:
+                msg = _('{}: Problem extracting image from file.').format(filepath)
+                gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
+                return
+            recollect.set('sample_viewer', 'last_file', filepath)
+            self.pixbuf_view.set_pixbuf(pixbuf)
+        else:
+            dlg.destroy()
+    # END_DEF: _open_colour_sample_file_cb
+
+    def _close_colour_sample_viewer_cb(self, _action):
+        self.get_toplevel().destroy()
+    # END_DEF: _close_colour_sample_viewer_cb
+# END_CLASS: SampleViewer
