@@ -16,6 +16,7 @@
 '''Manage configurable options'''
 
 import os
+import sys
 import collections
 
 try:
@@ -24,6 +25,29 @@ except ImportError:
     import ConfigParser as configparser
 
 from pcatk import i18n
+
+def _find_sys_base_dir():
+    sys_data_dir = os.path.join(sys.path[0], 'data')
+    if os.path.exists(sys_data_dir) or not os.path.isdir(sys_data_dir):
+        return os.path.dirname(sys_data_dir)
+    else:
+        _TAILEND = os.path.join('share', i18n.APP_NAME, 'data')
+        _prefix = sys.path[0]
+        while _prefix:
+            sys_data_dir = os.path.join(_prefix, _TAILEND)
+            if os.path.exists(sys_data_dir) and os.path.isdir(sys_data_dir):
+                return os.path.dirname(sys_data_dir)
+            _prefix = os.path.dirname(_prefix)
+
+_SYS_BASE_DIR = _find_sys_base_dir()
+_SYS_DATA_DIR = os.path.join(_SYS_BASE_DIR, 'data')
+_SYS_SAMPLES_DIR = os.path.join(_SYS_BASE_DIR, 'samples')
+
+def get_sys_data_dir():
+    return _SYS_DATA_DIR
+
+def get_sys_samples_dir():
+    return _SYS_SAMPLES_DIR
 
 _USER_CONFIG_DIR_PATH = os.path.expanduser('~/.' + i18n.APP_NAME)
 _USER_CFG_FILE_PATH = os.path.join(_USER_CONFIG_DIR_PATH, 'options.cfg')

@@ -20,14 +20,6 @@ import sys
 
 import gtk
 
-def get_data_dir():
-    # first look in the source directory (so that we can run uninstalled)
-    data_dir = os.path.join(sys.path[0], 'data')
-    if not os.path.exists(data_dir) or not os.path.isdir(data_dir):
-        data_dir = wx.StandardPaths_Get().GetDataDir()
-    return data_dir
-# END_DEF: get_data_dir
-
 # Words commonly used in paint names
 _COLOUR_NAME_LEXICON = [
     # Colours
