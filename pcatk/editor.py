@@ -1017,6 +1017,7 @@ class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
                 gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
                 return
             recollect.set('sample_viewer', 'last_file', filepath)
+            self.set_title(self.TITLE_TEMPLATE.format(None if filepath is None else os.path.relpath(filepath)))
             self.pixbuf_view.set_pixbuf(pixbuf)
         else:
             dlg.destroy()
