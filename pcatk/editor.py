@@ -959,7 +959,7 @@ class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
         else:
             pixbuf = None
             last_samples_file = None
-        self.set_title(self.TITLE_TEMPLATE.format(os.path.relpath(last_samples_file)))
+        self.set_title(self.TITLE_TEMPLATE.format(None if last_samples_file is None else os.path.relpath(last_samples_file)))
         self.pixbuf_view = iview.PixbufView()
         self._menubar = self.ui_manager.get_widget('/colour_sample_menubar')
         self.buttons = self.pixbuf_view.action_groups.create_action_button_box([
