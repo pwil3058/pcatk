@@ -24,7 +24,7 @@ for_windows = sys.platform in ['win32', 'cygwin'] or 'bdist_wininst' in sys.argv
 
 NAME = 'PaintersColourAssistant'
 
-VERSION = '0.03'
+VERSION = '0.04'
 
 DESCRIPTION = 'A set of tools for painters to experiment with mixing colours.'
 
@@ -62,6 +62,10 @@ tubes = glob.glob('data/*.tsd')
 
 TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
 
+samples = glob.glob('samples/*.jpg')
+
+SAMPLES = [(os.path.join('share', NAME, 'samples'), samples)]
+
 if for_windows:
     SCRIPTS.append('win_post_install.py')
     DESKTOP = []
@@ -82,5 +86,5 @@ setup(
     url = URL,
     scripts = SCRIPTS,
     packages = PACKAGES,
-    data_files = DESKTOP + PIXMAPS + TUBES
+    data_files = DESKTOP + PIXMAPS + TUBES + SAMPLES
 )

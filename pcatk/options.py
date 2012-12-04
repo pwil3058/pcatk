@@ -28,7 +28,7 @@ from pcatk import i18n
 
 def _find_sys_base_dir():
     sys_data_dir = os.path.join(sys.path[0], 'data')
-    if os.path.exists(sys_data_dir) or not os.path.isdir(sys_data_dir):
+    if os.path.exists(sys_data_dir) and os.path.isdir(sys_data_dir):
         return os.path.dirname(sys_data_dir)
     else:
         _TAILEND = os.path.join('share', i18n.APP_NAME, 'data')
