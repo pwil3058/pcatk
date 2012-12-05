@@ -272,7 +272,8 @@ def transform_row_mono(pbr):
 # END_DEF: transform_row_mono
 
 def transform_row_notan(pbr, threshold):
-    return [BLACK if RGB.get_value(pixel.rgb) <= threshold else WHITE for pixel in pbr]
+    sum_thr = THREE * threshold.numerator / threshold.denominator
+    return [BLACK if sum(pixel.rgb) <= sum_thr else WHITE for pixel in pbr]
 # END_DEF: transform_row_notan
 
 def transform_row_high_chroma(pbr):
