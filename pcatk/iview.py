@@ -264,9 +264,9 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
                 scale = self.__pixbuf.zoom / self.__seln_zoom
                 rect = self.__seln.get_scaled_rectangle(scale)
                 if self.__seln.seln_made():
-                    gc.set_values(line_style=gtk.gdk.LINE_SOLID)
+                    gc.set_values(line_style=gtk.gdk.LINE_SOLID, function=gtk.gdk.INVERT)
                 else:
-                    gc.set_values(line_style=gtk.gdk.LINE_ON_OFF_DASH)
+                    gc.set_values(line_style=gtk.gdk.LINE_ON_OFF_DASH, function=gtk.gdk.INVERT)
                 self.window.draw_rectangle(gc, False, *rect)
         return True
     # END_DEF: expose_cb
