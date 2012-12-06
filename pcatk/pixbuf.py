@@ -265,6 +265,14 @@ def transform_row_limited_hue_value(pbr, hvlc):
     return [transform_limited_hue_value(rgb, hue, hvlc) for rgb, hue in pbr]
 # END_DEF: transform_limited_hue_value
 
+def rgb_row_to_string(rgb_row):
+    def flatten(rgb_row):
+        for rgb in rgb_row:
+            for component in rgb:
+                yield component
+    return array.array('B', flatten(rgb_row)).tostring()
+# END_DEF: rgb_row_to_string
+
 class RGBHImage(gobject.GObject):
     """
     An object containing a RGB and Hue array representing a Pixbuf
@@ -339,7 +347,7 @@ class RGBHImage(gobject.GObject):
             if row_n >= next_pr_due:
                 self.emit('progress-made', fractions.Fraction(row_n, self.__size.height))
                 next_pr_due += pr_step
-            data += array.array('B', map_to_flat_row(pixel_row)).tostring()
+            data += rgb_row_to_string(map_to_flat_row(pixel_row))
             data += padding
         self.emit('progress-made', fractions.Fraction(1))
         return gtk.gdk.pixbuf_new_from_data(
