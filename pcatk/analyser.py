@@ -56,9 +56,7 @@ class AnalysisRaw(Analysis):
     LABEL = _('Raw')
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_raw(row):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_raw(row)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRaw)
 # END_CLASS: AnalysisRaw
@@ -71,9 +69,7 @@ class AnalysisNotan(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_notan(row, self._threshold):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_notan(row, self._threshold)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisNotan)
 # END_CLASS: AnalysisNotan
@@ -82,9 +78,7 @@ class AnalysisValue(Analysis):
     LABEL = _('Monotone')
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_mono(row):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_mono(row)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisValue)
 # END_CLASS: AnalysisValue
@@ -97,9 +91,7 @@ class AnalysisRestrictedValue(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_limited_value_mono(row, self.__vlc):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_limited_value_mono(row, self.__vlc)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedValue)
 # END_CLASS: AnalysisRestrictedValue
@@ -112,9 +104,7 @@ class AnalysisColourRestrictedValue(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_limited_value(row, self.__vlc):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_limited_value(row, self.__vlc)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisColourRestrictedValue)
 # END_CLASS: AnalysisColourRestrictedValue
@@ -127,9 +117,7 @@ class AnalysisRestrictedHue(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_limited_hue(row, self.__hlc):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_limited_hue(row, self.__hlc)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedHue)
 # END_CLASS: AnalysisRestrictedHue
@@ -142,9 +130,7 @@ class AnalysisRestrictedHueValue(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_limited_hue_value(row, self.__hvlc):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_limited_hue_value(row, self.__hvlc)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisRestrictedHueValue)
 # END_CLASS: AnalysisRestrictedHueValue
@@ -157,9 +143,7 @@ class AnalysisHighChroma(Analysis):
     # END_DEF: initialize_parameters
 
     def map_to_flat_row(self, row):
-        for rgb in pixbuf.transform_row_high_chroma(row):
-            for component in rgb:
-                yield component
+        return pixbuf.transform_row_high_chroma(row)
     # END_DEF: map_to_flat_row
 ANALYSES.append(AnalysisHighChroma)
 # END_CLASS: AnalysisHighChroma
