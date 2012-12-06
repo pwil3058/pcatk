@@ -28,7 +28,7 @@ class Analysis(object):
     """
     A wrapper for an artistic analytical view of an image
     """
-    LABEL = ''
+    TRANSFORMER = None
 
     def __init__(self, image):
         """
@@ -37,114 +37,62 @@ class Analysis(object):
         """
         self.__image = image
         self.pixbuf_view = iview.PixbufView()
-        self.initialize_parameters()
+        self.transformer = self.TRANSFORMER()
         self.update_pixbuf()
     # END_DEF: __init__()
+
+    def get_label(self):
+        return self.transformer.LABEL
+    # END_DEF: get_label
 
     def initialize_parameters(self):
         pass
     # END_DEF: initialize_parameters
 
     def update_pixbuf(self):
-        self.pixbuf_view.set_pixbuf(self.__image.get_mapped_pixbuf(self.map_to_flat_row))
+        self.pixbuf_view.set_pixbuf(self.transformer.transformed_pixbuf(self.__image))
     # END_DEF: update_pixbuf
 # END_CLASS: Analysis
 
 ANALYSES = []
 
 class AnalysisRaw(Analysis):
-    LABEL = _('Raw')
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_raw(row)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerRaw
 ANALYSES.append(AnalysisRaw)
 # END_CLASS: AnalysisRaw
 
 class AnalysisNotan(Analysis):
-    LABEL = _('Notan')
-
-    def initialize_parameters(self):
-        self._threshold = fractions.Fraction(2, 10)
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_notan(row, self._threshold)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerNotan
 ANALYSES.append(AnalysisNotan)
 # END_CLASS: AnalysisNotan
 
 class AnalysisValue(Analysis):
-    LABEL = _('Monotone')
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_mono(row)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerValue
 ANALYSES.append(AnalysisValue)
 # END_CLASS: AnalysisValue
 
 class AnalysisRestrictedValue(Analysis):
-    LABEL = _('Restricted Value (Monotone)')
-
-    def initialize_parameters(self):
-        self.__vlc = pixbuf.ValueLimitCriteria.create(11)
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_limited_value_mono(row, self.__vlc)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerRestrictedValue
 ANALYSES.append(AnalysisRestrictedValue)
 # END_CLASS: AnalysisRestrictedValue
 
 class AnalysisColourRestrictedValue(Analysis):
-    LABEL = _('Restricted Value')
-
-    def initialize_parameters(self):
-        self.__vlc = pixbuf.ValueLimitCriteria.create(11)
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_limited_value(row, self.__vlc)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerColourRestrictedValue
 ANALYSES.append(AnalysisColourRestrictedValue)
 # END_CLASS: AnalysisColourRestrictedValue
 
 class AnalysisRestrictedHue(Analysis):
-    LABEL = _('Restricted Hue')
-
-    def initialize_parameters(self):
-        self.__hlc = pixbuf.HueLimitCriteria.create(6)
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_limited_hue(row, self.__hlc)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerRestrictedHue
 ANALYSES.append(AnalysisRestrictedHue)
 # END_CLASS: AnalysisRestrictedHue
 
 class AnalysisRestrictedHueValue(Analysis):
-    LABEL = _('Restricted Hue and Value')
-
-    def initialize_parameters(self):
-        self.__hvlc = pixbuf.HueValueLimitCriteria.create(6, 11)
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_limited_hue_value(row, self.__hvlc)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerRestrictedHueValue
 ANALYSES.append(AnalysisRestrictedHueValue)
 # END_CLASS: AnalysisRestrictedHueValue
 
 class AnalysisHighChroma(Analysis):
-    LABEL = _('High Chroma')
-
-    def initialize_parameters(self):
-        pass
-    # END_DEF: initialize_parameters
-
-    def map_to_flat_row(self, row):
-        return pixbuf.transform_row_high_chroma(row)
-    # END_DEF: map_to_flat_row
+    TRANSFORMER = pixbuf.TransformerHighChroma
 ANALYSES.append(AnalysisHighChroma)
 # END_CLASS: AnalysisHighChroma
 
@@ -158,7 +106,7 @@ class Analyser(gtk.VBox):
         self.notebook.set_scrollable(True)
         self.notebook.popup_enable()
         for analysis in self.__analyses:
-            self.notebook.append_page(analysis.pixbuf_view, gtk.Label(analysis.LABEL))
+            self.notebook.append_page(analysis.pixbuf_view, gtk.Label(analysis.get_label()))
         self.notebook.show_all()
         self.progress_bar = gtk.ProgressBar()
         self.pack_start(self.notebook, expand=True, fill=True)
@@ -170,7 +118,7 @@ class Analyser(gtk.VBox):
         self.progress_bar.set_text(_('Analysing Image'))
         self.__image.set_from_pixbuf(pixbuf)
         for analysis in self.__analyses:
-            self.progress_bar.set_text(_('Generating {0} Image').format(analysis.LABEL))
+            self.progress_bar.set_text(_('Generating {0} Image').format(analysis.get_label()))
             analysis.update_pixbuf()
         self.progress_bar.set_text(_(''))
         self.progress_bar.set_fraction(0)
