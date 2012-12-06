@@ -171,80 +171,14 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     # END_DEF: get_value_index
 # END_CLASS: HueValueLimitCriteria
 
-class RGBH(collections.namedtuple('RGBH', ['rgb', 'hue'])):
-    __slots__ = ()
-
-    @classmethod
-    def from_data(cls, data, offset):
-        """
-        Generate an instance from data at the given offet
-        """
-        rgb = (data[offset], data[offset + 1], data[offset + 2])
-        hue = XY.from_rgb(rgb).get_hue()
-        return cls(rgb, hue)
-    # END_DEF: from_pixbuf_data
-
-    def transform_high_chroma(self):
-        return self.hue.rgb_with_total(sum(self.rgb))
-    # END_DEF: transform_high_chroma
-
-    def transform_limited_value(self, vlc):
-        index = vlc.get_value_index(self.rgb)
-        if index == 0:
-            return BLACK
-        elif index == vlc.n_values - 1:
-            return WHITE
-        rgb = RGB.scaled_to_sum(self.rgb, vlc.c_totals[index])
-        if max(rgb) > ONE:
-            rgb = self.hue.rgb_with_total(vlc.c_totals[index])
-        return rgb
-    # END_DEF: transform_limited_value
-
-    def transform_limited_value_mono(self, vlc):
-        index = vlc.get_value_index(self.rgb)
-        return vlc.value_rgbs[index]
-    # END_DEF: transform_limited_value
-
-    def transform_limited_hue(self, hlc):
-        index = hlc.get_hue_index(self.hue)
-        if index is None:
-            return self.rgb
-        if RGB.ncomps(self.rgb) == 2:
-            rgb = hlc.hues[index].rgb_with_total(sum(self.rgb))
-        else:
-            rgb = RGB.rotated(self.rgb, hlc.hues[index].angle - self.hue.angle)
-        return rgb
-    # END_DEF: transform_limited_hue
-
-    def transform_limited_hue_value(self, hvlc):
-        v_index = hvlc.get_value_index(self.rgb)
-        if v_index == 0:
-            return BLACK
-        elif v_index == hvlc.vlc.n_values - 1:
-            return WHITE
-        h_index = hvlc.get_hue_index(self.hue)
-        if h_index is None:
-            return hvlc.vlc.value_rgbs[v_index]
-        target_total = hvlc.vlc.c_totals[v_index]
-        if RGB.ncomps(self.rgb) == 2:
-            rgb = hvlc.hlc.hues[h_index].rgb_with_total(target_total)
-        else:
-            rgb = RGB.rotated(self.rgb, hvlc.hlc.hues[h_index].angle - self.hue.angle)
-            rgb = RGB.scaled_to_sum(rgb, target_total)
-            if max(rgb) > ONE:
-                rgb = hvlc.hv_rgbs[h_index][v_index]
-        return rgb
-    # END_DEF: transform_limited_hue
-# END_CLASS: RGBH
-
 class PixBufRow:
     def __init__(self, data, start, end, nc=3):
-        self.pixels = [RGBH.from_data(data, i) for i in xrange(start, end, nc)]
-    # END_DEF: __init__
+        self.rgbs = [(data[i], data[i+1], data[i+2]) for i in xrange(start, end, nc)]
+        self.hues = [XY.from_rgb(rgb).get_hue() for rgb in self.rgbs]
 
     def __iter__(self):
-        for pixel in self.pixels:
-            yield pixel
+        for rgb, hue in zip(self.rgbs, self.hues):
+            yield (rgb, hue)
     # END_DEF: __iter__
 
     @property
@@ -256,44 +190,79 @@ class PixBufRow:
     def has_alpha(self):
         return False
     # END_DEF: has_alpha
-
-    def tostring(self):
-        assert False
-        return self.pixels.tostring()
-    # END_DEF: tostring
 # END_CLASS: PixBufRow
 
 def transform_row_raw(pbr):
-    return [pixel.rgb for pixel in pbr]
+    return pbr.rgbs
 # END_DEF: transform_row_raw
 
 def transform_row_mono(pbr):
-    return [RGB.to_mono(pixel.rgb) for pixel in pbr]
+    return [RGB.to_mono(rgb) for rgb in pbr.rgbs]
 # END_DEF: transform_row_mono
 
 def transform_row_notan(pbr, threshold):
     sum_thr = THREE * threshold.numerator / threshold.denominator
-    return [BLACK if sum(pixel.rgb) <= sum_thr else WHITE for pixel in pbr]
+    return [BLACK if sum(rgb) <= sum_thr else WHITE for rgb in pbr.rgbs]
 # END_DEF: transform_row_notan
 
 def transform_row_high_chroma(pbr):
-    return [pixel.transform_high_chroma() for pixel in pbr]
+    return [hue.rgb_with_total(sum(rgb)) for rgb, hue in pbr]
 # END_DEF: transform_row_notan
 
 def transform_row_limited_value(pbr, vlc):
-    return [pixel.transform_limited_value(vlc) for pixel in pbr]
-# END_DEF: transform_row_high_chroma
+    def transform_limited_value(rgb, hue, vlc):
+        index = vlc.get_value_index(rgb)
+        if index == 0:
+            return BLACK
+        elif index == vlc.n_values - 1:
+            return WHITE
+        rgb = RGB.scaled_to_sum(rgb, vlc.c_totals[index])
+        if max(rgb) > ONE:
+            rgb = hue.rgb_with_total(vlc.c_totals[index])
+        return rgb
+    # END_DEF: transform_limited_value
+    return [transform_limited_value(rgb, hue, vlc) for rgb, hue in pbr]
+# END_DEF: transform_row_limited_value
 
 def transform_row_limited_value_mono(pbr, vlc):
-    return [pixel.transform_limited_value_mono(vlc) for pixel in pbr]
+    return [vlc.value_rgbs[vlc.get_value_index(rgb)] for rgb in pbr.rgbs]
 # END_DEF: transform_row_limited_value_mono
 
 def transform_row_limited_hue(pbr, hlc):
-    return [pixel.transform_limited_hue(hlc) for pixel in pbr]
+    def transform_limited_hue(rgb, hue, hlc):
+        index = hlc.get_hue_index(hue)
+        if index is None:
+            return rgb
+        if RGB.ncomps(rgb) == 2:
+            rgb = hlc.hues[index].rgb_with_total(sum(rgb))
+        else:
+            rgb = RGB.rotated(rgb, hlc.hues[index].angle - hue.angle)
+        return rgb
+    # END_DEF: transform_limited_hue
+    return [transform_limited_hue(rgb, hue, hlc) for rgb, hue in pbr]
 # END_DEF: transform_limited_hue
 
 def transform_row_limited_hue_value(pbr, hvlc):
-    return [pixel.transform_limited_hue_value(hvlc) for pixel in pbr]
+    def transform_limited_hue_value(rgb, hue, hvlc):
+        v_index = hvlc.get_value_index(rgb)
+        if v_index == 0:
+            return BLACK
+        elif v_index == hvlc.vlc.n_values - 1:
+            return WHITE
+        h_index = hvlc.get_hue_index(hue)
+        if h_index is None:
+            return hvlc.vlc.value_rgbs[v_index]
+        target_total = hvlc.vlc.c_totals[v_index]
+        if RGB.ncomps(rgb) == 2:
+            rgb = hvlc.hlc.hues[h_index].rgb_with_total(target_total)
+        else:
+            rgb = RGB.rotated(rgb, hvlc.hlc.hues[h_index].angle - hue.angle)
+            rgb = RGB.scaled_to_sum(rgb, target_total)
+            if max(rgb) > ONE:
+                rgb = hvlc.hv_rgbs[h_index][v_index]
+        return rgb
+    # END_DEF: transform_limited_hue
+    return [transform_limited_hue_value(rgb, hue, hvlc) for rgb, hue in pbr]
 # END_DEF: transform_limited_hue_value
 
 class RGBHImage(gobject.GObject):
