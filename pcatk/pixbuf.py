@@ -375,5 +375,112 @@ gobject.type_register(RGBHImage)
 gobject.signal_new('progress-made', RGBHImage, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 # END_CLASS: RGBHImage
 
+class Transformer(object):
+    """
+    A wrapper for an artistic analytical view of an image
+    """
+    LABEL = ''
+
+    def __init__(self):
+        self.initialize_parameters()
+    # END_DEF: __init__()
+
+    def initialize_parameters(self):
+        pass
+    # END_DEF: initialize_parameters
+
+    def transformed_pixbuf(self, rgbh_image):
+        return rgbh_image.get_mapped_pixbuf(self.transform_row)
+    # END_DEF: transformed_pixbuf
+# END_CLASS: Transformer
+
+class TransformerRaw(Transformer):
+    LABEL = _('Raw')
+
+    def transform_row(self, row):
+        return transform_row_raw(row)
+    # END_DEF: transform_row
+# END_CLASS: TransformerRaw
+
+class TransformerNotan(Transformer):
+    LABEL = _('Notan')
+
+    def initialize_parameters(self):
+        self._threshold = fractions.Fraction(2, 10)
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_notan(row, self._threshold)
+    # END_DEF: transform_row
+# END_CLASS: TransformerNotan
+
+class TransformerValue(Transformer):
+    LABEL = _('Monotone')
+
+    def transform_row(self, row):
+        return transform_row_mono(row)
+    # END_DEF: transform_row
+# END_CLASS: TransformerValue
+
+class TransformerRestrictedValue(Transformer):
+    LABEL = _('Restricted Value (Monotone)')
+
+    def initialize_parameters(self):
+        self.__vlc = ValueLimitCriteria.create(11)
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_limited_value_mono(row, self.__vlc)
+    # END_DEF: transform_row
+# END_CLASS: TransformerRestrictedValue
+
+class TransformerColourRestrictedValue(Transformer):
+    LABEL = _('Restricted Value')
+
+    def initialize_parameters(self):
+        self.__vlc = ValueLimitCriteria.create(11)
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_limited_value(row, self.__vlc)
+    # END_DEF: transform_row
+# END_CLASS: TransformerColourRestrictedValue
+
+class TransformerRestrictedHue(Transformer):
+    LABEL = _('Restricted Hue')
+
+    def initialize_parameters(self):
+        self.__hlc = HueLimitCriteria.create(6)
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_limited_hue(row, self.__hlc)
+    # END_DEF: transform_row
+# END_CLASS: TransformerRestrictedHue
+
+class TransformerRestrictedHueValue(Transformer):
+    LABEL = _('Restricted Hue and Value')
+
+    def initialize_parameters(self):
+        self.__hvlc = HueValueLimitCriteria.create(6, 11)
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_limited_hue_value(row, self.__hvlc)
+    # END_DEF: transform_row
+# END_CLASS: TransformerRestrictedHueValue
+
+class TransformerHighChroma(Transformer):
+    LABEL = _('High Chroma')
+
+    def initialize_parameters(self):
+        pass
+    # END_DEF: initialize_parameters
+
+    def transform_row(self, row):
+        return transform_row_high_chroma(row)
+    # END_DEF: transform_row
+# END_CLASS: TransformerHighChroma
+
 if __name__ == '__main__':
     doctest.testmod()
