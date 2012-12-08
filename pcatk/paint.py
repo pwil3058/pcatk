@@ -101,11 +101,8 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB):
     # END_DEF: rotated
 # END_CLASS: RGB
 
-class XY(rgbh.XY):
-    ONE = ONE
-
 class Hue(rgbh.Hue):
-    pass
+    ONE = ONE
 
 # Primary Colours
 RGB_RED = RGB(red=ONE, green=ZERO, blue=ZERO)
@@ -126,9 +123,9 @@ class HCVW(object):
     def __init__(self, rgb):
         self.rgb = RGB(*rgb)
         self.value = self.rgb.get_value()
-        xy = XY.from_rgb(self.rgb)
+        xy = rgbh.XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction.from_float(xy.x / ONE)
-        self.hue = xy.get_hue()
+        self.hue = Hue.from_angle(xy.get_angle())
         self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / ONE
     # END_DEF: __init__
 

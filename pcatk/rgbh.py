@@ -151,33 +151,41 @@ class RGB:
 # END_CLASS: RGB
 
 class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
+    ONE = None
     @classmethod
-    def from_angle(cls, angle, ONE=None):
-        assert not math.isnan(angle) and abs(angle) <= math.pi
+    def from_angle(cls, angle):
+        if math.isnan(angle):
+            return cls(rgb=(cls.ONE, cls.ONE, cls.ONE), angle=angle)
+        assert abs(angle) <= math.pi
         def calc_other(oa):
             scale = math.sin(oa) / math.sin(utils.PI_120 - oa)
-            return int(ONE * scale + 0.5)
+            return int(cls.ONE * scale + 0.5)
         aha = abs(angle)
         if aha <= utils.PI_60:
             other = calc_other(aha)
             if angle >= 0:
-                hue_rgb = (ONE, other, 0)
+                hue_rgb = (cls.ONE, other, 0)
             else:
-                hue_rgb = (ONE, 0, other)
+                hue_rgb = (cls.ONE, 0, other)
         elif aha <= utils.PI_120:
             other = calc_other(utils.PI_120 - aha)
             if angle >= 0:
-                hue_rgb = (other, ONE, 0)
+                hue_rgb = (other, cls.ONE, 0)
             else:
-                hue_rgb = (other, 0, ONE)
+                hue_rgb = (other, 0, cls.ONE)
         else:
             other = calc_other(aha - utils.PI_120)
             if angle >= 0:
-                hue_rgb = (0, ONE, other)
+                hue_rgb = (0, cls.ONE, other)
             else:
-                hue_rgb = (0, other, ONE)
-        return Hue(rgb=hue_rgb, angle=utils.Angle(angle))
+                hue_rgb = (0, other, cls.ONE)
+        return cls(rgb=hue_rgb, angle=utils.Angle(angle))
     # END_DEF: from_angle
+
+    @classmethod
+    def from_rgb(cls, rgb):
+        return cls.from_angle(XY.from_rgb(rgb).get_angle())
+    # END_DEF: from_rgb
 
     def __eq__(self, other):
         return self.angle.__eq__(other.angle)
@@ -218,11 +226,10 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         elif shortfall < 0:
             return tuple(self.rgb[i] * req_total / cur_total for i in range(3))
         else:
-            ONE = max(self.rgb)
             io = RGB.indices_value_order(self.rgb)
-            result = {io[0] : ONE}
+            result = {io[0] : self.ONE}
             # it's simpler two work out the weakest component first
-            result[io[2]] = (shortfall * ONE) / (2 * ONE - self.rgb[io[1]])
+            result[io[2]] = (shortfall * self.ONE) / (2 * self.ONE - self.rgb[io[1]])
             result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
             return tuple(result[i] for i in range(3))
     # END_DEF: rgb_with_total
@@ -259,7 +266,6 @@ COS_120 = -0.5 # math.cos(utils.PI_120) is slightly out
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (1.0, COS_120, COS_120)
     Y_VECTOR = (0.0, SIN_120, -SIN_120)
-    ONE = None
 
     @classmethod
     def from_rgb(cls, rgb):
@@ -273,11 +279,11 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         return cls(x=x, y=y)
     # END_DEF: from_rgb
 
-    def get_hue(self):
+    def get_angle(self):
         if self.x == 0.0 and self.y == 0.0:
-            return Hue(rgb=(self.ONE, self.ONE, self.ONE), angle=float('nan'))
+            return float('nan')
         else:
-            return Hue.from_angle(math.atan2(self.y, self.x), self.ONE)
+            return math.atan2(self.y, self.x)
     # END_DEF: get_hue
 
     def get_hypot(self):
