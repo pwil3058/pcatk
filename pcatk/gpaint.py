@@ -220,10 +220,10 @@ def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     else:
         start_hue_angle = hue.angle + spread / 2
         delta_hue_angle = -spread / width
-    ONE = (1 << 8) - 1
     for i in range(width):
-        hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i, ONE)
-        row.extend(hue.rgb)
+        hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i)
+        for j in range(3):
+            row.append(hue.rgb[j] >> 8)
     buf = row * height
     return buffer(buf)
 # END_DEF: generate_spectral_rgb_buf
@@ -605,7 +605,7 @@ class ColourWheel(gtk.DrawingArea):
 
         self.gc.line_width = 2
         for angle in [utils.PI_60 * i for i in range(6)]:
-            hue = paint.Hue.from_angle(angle, paint.ONE)
+            hue = paint.Hue.from_angle(angle)
             self.gc.set_foreground(self.new_colour(hue.rgb))
             self.window.draw_line(self.gc, self.cx, self.cy, *self.polar_to_cartesian(self.one * self.zoom, angle))
         for tube in self.tube_colours.values():

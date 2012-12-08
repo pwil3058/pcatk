@@ -62,7 +62,7 @@ WHITE = (ONE, ONE, ONE)
 BLACK = (0, 0, 0)
 # END_CLASS: RGB
 
-class XY(rgbh.XY):
+class Hue(rgbh.Hue):
     ONE = ONE
 
 def calc_rowstride(bytes_per_row):
@@ -125,7 +125,7 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         '''
         step = 2 * math.pi / n_hues
         angles = [utils.Angle.normalize(step * i) for i in range(n_hues)]
-        hues = [rgbh.Hue.from_angle(angle, ONE) for angle in angles]
+        hues = [Hue.from_angle(angle) for angle in angles]
         return HueLimitCriteria(n_hues, hues, step)
     # END_DEF: create
 
@@ -174,7 +174,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
 class PixBufRow:
     def __init__(self, data, start, end, nc=3):
         self.rgbs = [(data[i], data[i+1], data[i+2]) for i in xrange(start, end, nc)]
-        self.hues = [XY.from_rgb(rgb).get_hue() for rgb in self.rgbs]
+        self.hues = [Hue.from_rgb(rgb) for rgb in self.rgbs]
 
     def __iter__(self):
         for rgb, hue in zip(self.rgbs, self.hues):
