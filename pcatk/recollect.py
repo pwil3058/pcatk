@@ -92,5 +92,6 @@ def set(section, oname, val):
 # END_DEF: set
 
 define('sample_viewer', 'last_file', Defn(str, os.path.join(options.get_sys_samples_dir(), 'example.jpg')))
+define('analysed_image_viewer', 'last_file', Defn(str, ''))
 
 load_recollections()
