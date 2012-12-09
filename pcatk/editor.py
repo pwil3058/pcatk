@@ -710,16 +710,16 @@ class ColourSampleMatcher(gtk.VBox):
     # TODO: implement matcher's colour fiddler functions in paint module
     def _incr_channel(self, rgb, channel, denom=None):
         if denom is None:
-            rgb[channel] = min(paint.ONE, rgb[channel] + self._delta)
+            rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta)
         else:
-            rgb[channel] = min(paint.ONE, rgb[channel] + self._delta * rgb[channel] / denom)
+            rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta * rgb[channel] / denom)
     # END_DEF: _incr_channel
 
     def _decr_channel(self, rgb, channel, denom=None):
         if denom is None:
             rgb[channel] = max(0, rgb[channel] - self._delta)
         else:
-            rgb[channel] = min(paint.ONE, rgb[channel] - self._delta * rgb[channel] / denom)
+            rgb[channel] = min(paint.RGB.ONE, rgb[channel] - self._delta * rgb[channel] / denom)
     # END_DEF: _decr_channel
 
     def incr_grayness_cb(self, event):
@@ -735,7 +735,7 @@ class ColourSampleMatcher(gtk.VBox):
                 self._incr_channel(new_colour, i)
         elif (new_colour[io[0]] - new_colour[io[2]]) > self._delta:
             self._decr_channel(new_colour, io[0])
-            if new_colour[io[1]] > self.colour.value * paint.ONE:
+            if new_colour[io[1]] > self.colour.value * paint.RGB.ONE:
                 # we're brighter than that required grey at our value
                 self._decr_channel(new_colour, io[1])
             self._incr_channel(new_colour, io[2])
@@ -750,7 +750,7 @@ class ColourSampleMatcher(gtk.VBox):
         new_colour = list(self.colour.rgb)
         if self.colour.hue.is_grey():
             # we're colourless so a change to any channel will do
-            if new_colour[0] < paint.ONE:
+            if new_colour[0] < paint.RGB.ONE:
                 self._incr_channel(new_colour, 0)
             else:
                 self._decr_channel(new_colour, 0)
@@ -761,13 +761,13 @@ class ColourSampleMatcher(gtk.VBox):
                 gtk.gdk.beep()
                 return
             else:
-                if new_colour[io[0]] < paint.ONE:
+                if new_colour[io[0]] < paint.RGB.ONE:
                     self._incr_channel(new_colour, io[0])
                 if new_colour[io[1]] == new_colour[io[2]]:
                     for i in io[1:]:
                         self._decr_channel(new_colour, i)
                 else:
-                    if new_colour[io[1]] < paint.ONE:
+                    if new_colour[io[1]] < paint.RGB.ONE:
                         self._incr_channel(new_colour, io[1])
                     self._decr_channel(new_colour, io[2])
         self.set_colour(new_colour)
@@ -775,19 +775,19 @@ class ColourSampleMatcher(gtk.VBox):
 
     def incr_value_cb(self, button):
         denom = sum(self.colour.rgb)
-        if denom == paint.THREE:
+        if denom == paint.RGB.THREE:
             # we're white and can't go any further
             gtk.gdk.beep()
             return
         ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
         # try to maintain the same grayness and hue angle
-        if self.colour.rgb[io[0]] == paint.ONE:
+        if self.colour.rgb[io[0]] == paint.RGB.ONE:
             # rgb_with_value() can only be used in this situation as
             # it could incorrectly modify greyness in other cases
-            new_value = min(1.0, self.colour.value * (1 + fractions.Fraction(self._delta, paint.TWO)))
+            new_value = min(1.0, self.colour.value * (1 + fractions.Fraction(self._delta, paint.RGB.TWO)))
             new_colour = self.colour.hue.rgb_with_value(new_value)
         elif ncomps == 3:
-            new_colour = [min(comp + self._delta * comp / denom, paint.ONE) for comp in self.colour.rgb]
+            new_colour = [min(comp + self._delta * comp / denom, paint.RGB.ONE) for comp in self.colour.rgb]
         else:
             new_colour = list(self.colour.rgb)
             if ncomps == 1:

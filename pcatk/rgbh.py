@@ -19,6 +19,7 @@ Implement types to represent red/green/blue data as a tuple and hue angle as a f
 
 import collections
 import math
+import array
 
 from pcatk import utils
 
@@ -26,7 +27,27 @@ if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
-class RGB:
+# 8 bits per channel specific constants
+class BPC8:
+    ZERO = 0
+    BITS_PER_CHANNEL = 8
+    ONE = (1 << BITS_PER_CHANNEL) - 1
+    TWO = ONE * 2
+    THREE = ONE * 3
+    SIX = ONE * 6
+    TYPECODE = 'B'
+
+# 16 bits per channel specific constants
+class BPC16:
+    ZERO = 0
+    BITS_PER_CHANNEL = 16
+    ONE = (1 << BITS_PER_CHANNEL) - 1
+    TWO = ONE * 2
+    THREE = ONE * 3
+    SIX = ONE * 6
+    TYPECODE = 'H'
+
+class RGBNG:
     @staticmethod
     def indices_value_order(rgb):
         '''
@@ -73,8 +94,8 @@ class RGB:
         return len(rgb) - rgb.count(0)
     # END_DEF: ncomps
 
-    @staticmethod
-    def ncomps_and_indices_value_order(rgb):
+    @classmethod
+    def ncomps_and_indices_value_order(cls, rgb):
         '''
         Return the number of non zero components and indices in value order
         >>> RGB.ncomps_and_indices_value_order((0, 0, 0))
@@ -88,11 +109,11 @@ class RGB:
         >>> RGB.ncomps_and_indices_value_order((0, 10, 0))
         (1, (1, 2, 0))
         '''
-        return (RGB.ncomps(rgb), RGB.indices_value_order(rgb))
+        return (cls.ncomps(rgb), cls.indices_value_order(rgb))
     # END_DEF: ncomps_and_indices_value_order
 
-    @staticmethod
-    def rotated(rgb, delta_hue_angle):
+    @classmethod
+    def rotated(cls, rgb, delta_hue_angle):
         """
         Return a copy of the RGB with the same value but the hue angle rotated
         by the specified amount and with the item types unchanged.
@@ -134,24 +155,29 @@ class RGB:
         if delta_hue_angle > 0:
             if delta_hue_angle > utils.PI_120:
                 k1, k2 = calc_ks(delta_hue_angle - utils.PI_120)
-                return (f(2, 1), f(0, 2), f(1, 0))
+                return array.array(cls.TYPECODE, (f(2, 1), f(0, 2), f(1, 0)))
             else:
                 k1, k2 = calc_ks(delta_hue_angle)
-                return (f(0, 2), f(1, 0), f(2, 1))
+                return array.array(cls.TYPECODE, (f(0, 2), f(1, 0), f(2, 1)))
         elif delta_hue_angle < 0:
             if delta_hue_angle < -utils.PI_120:
                 k1, k2 = calc_ks(abs(delta_hue_angle) - utils.PI_120)
-                return (f(1, 2), f(2, 0), f(0, 1))
+                return array.array(cls.TYPECODE, (f(1, 2), f(2, 0), f(0, 1)))
             else:
                 k1, k2 = calc_ks(abs(delta_hue_angle))
-                return (f(0, 1), f(1, 2), f(2, 0))
+                return array.array(cls.TYPECODE, (f(0, 1), f(1, 2), f(2, 0)))
         else:
             return rgb
     # END_DEF: rotated
-# END_CLASS: RGB
+# END_CLASS: RGBNG
 
-class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
-    ONE = None
+class RGB8(RGBNG, BPC8):
+    pass
+
+class RGB16(RGBNG, BPC16):
+    pass
+
+class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
     @classmethod
     def from_angle(cls, angle):
         if math.isnan(angle):
@@ -209,11 +235,11 @@ class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
     @property
     def rgb(self):
         if math.isnan(self.angle):
-            return (self.ONE, self.ONE, self.ONE)
-        result = [0, 0, 0]
+            return array.array(self.TYPECODE, (self.ONE, self.ONE, self.ONE))
+        result = array.array(self.TYPECODE, [0, 0, 0])
         result[self.io[0]] = self.ONE
         result[self.io[1]] = self.other
-        return tuple(result)
+        return result
     # END_DEF: rgb
 
     def rgb_with_total(self, req_total):
@@ -226,10 +252,10 @@ class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
         '''
         if math.isnan(self.angle):
             val = int((req_total + 0.5) / 3)
-            return (val, val, val)
+            return array.array(self.TYPECODE, (val, val, val))
         cur_total = self.ONE + self.other
         shortfall = req_total - cur_total
-        result = [0, 0, 0]
+        result = array.array(self.TYPECODE, [0, 0, 0])
         if shortfall == 0:
             result[self.io[0]] = self.ONE
             result[self.io[1]] = self.other
@@ -241,7 +267,7 @@ class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
             # it's simpler two work out the weakest component first
             result[self.io[2]] = (shortfall * self.ONE) / (2 * self.ONE - self.other)
             result[self.io[1]] = self.other + shortfall - result[self.io[2]]
-        return tuple(result)
+        return result
     # END_DEF: rgb_with_total
 
     def rgb_with_value(self, value):
@@ -268,7 +294,13 @@ class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
     def is_grey(self):
         return math.isnan(self.angle)
     # END_DEF: is_grey
-# END_CLASS: Hue
+# END_CLASS: HueNG
+
+class Hue8(HueNG, BPC8):
+    pass
+
+class Hue16(HueNG, BPC16):
+    pass
 
 SIN_60 = math.sin(utils.PI_60)
 SIN_120 = math.sin(utils.PI_120)
