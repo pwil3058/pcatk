@@ -70,7 +70,7 @@ class RGB:
         >>> RGB.ncomps((0, 10, 0))
         1
         '''
-        return sum((1 if comp else 0) for comp in rgb)
+        return len(rgb) - rgb.count(0)
     # END_DEF: ncomps
 
     @staticmethod
