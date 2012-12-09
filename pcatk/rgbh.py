@@ -179,27 +179,31 @@ class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
     # END_DEF: from_rgb
 
     def __eq__(self, other):
+        if math.isnan(self.angle):
+            return math.isnan(other.angle)
         return self.angle.__eq__(other.angle)
     # END_DEF: __eq__
 
     def __ne__(self, other):
-        return self.angle.__ne__(other.angle)
+        return not self.__eq__(other.angle)
     # END_DEF: __ne__
 
     def __lt__(self, other):
+        if math.isnan(self.angle):
+            return not math.isnan(other.angle)
         return self.angle.__lt__(other.angle)
     # END_DEF: __lt__
 
     def __le__(self, other):
-        return self.angle.__le__(other.angle)
+        return self.__lt__(other.angle) or self.__eq__(other.angle)
     # END_DEF: __le__
 
     def __gt__(self, other):
-        return self.angle.__gt__(other.angle)
+        return not self.__le__(other.angle)
     # END_DEF: __gt__
 
     def __ge__(self, other):
-        return self.angle.__ge__(other.angle)
+        return not self.__lt__(other.angle)
     # END_DEF: __ge__
 
     @property
