@@ -971,7 +971,7 @@ class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
         vbox.pack_start(self.pixbuf_view, expand=True, fill=True)
         vbox.pack_start(self.buttons, expand=False)
         self.add(vbox)
-        self.set_transient_for(parent)
+        #self.set_transient_for(parent)
         self.show_all()
         self.pixbuf_view.set_pixbuf(pixbuf)
     # END_DEF: __init__()

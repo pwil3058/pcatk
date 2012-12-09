@@ -25,11 +25,13 @@ import time
 import gtk
 import gobject
 
+from pcatk import recollect
 from pcatk import gtkpwx
 from pcatk import gpaint
 from pcatk import paint
 from pcatk import printer
 from pcatk import icons
+from pcatk import analyser
 
 def pango_rgb_str(rgb, bits_per_channel=16):
     """
@@ -51,6 +53,9 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
             </menu>
             <menu action='tube_series_menu'>
                 <menuitem action='open_tube_series_selector'/>
+            </menu>
+            <menu action='reference_resource_menu'>
+                <menuitem action='open_analysed_image_viewer'/>
             </menu>
         </menubar>
     </ui>
@@ -111,6 +116,7 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
             ('palette_file_menu', None, _('File')),
             ('tube_series_menu', None, _('Tube Colour Series')),
+            ('reference_resource_menu', None, _('Reference Resources')),
             ('reset_contributions', None, _('Reset'), None,
             _('Reset all colour contributions to zero.'),
             self._reset_contributions_cb),
@@ -123,6 +129,9 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
             ('quit_palette', gtk.STOCK_QUIT, None, None,
             _('Quit this program.'),
             self._quit_palette_cb),
+            ('open_analysed_image_viewer', None, _('Open Analysed Image Viewer'), None,
+            _('Open a tool for viewing analysed reference images.'),
+            self._open_analysed_image_viewer_cb),
             ('print_palette', gtk.STOCK_PRINT, None, None,
             _('Print a text description of the palette.'),
             self._print_palette_cb),
@@ -352,6 +361,13 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         # TODO: make printing more exotic
         printer.print_markup_chunks(self.pango_markup_chunks())
     # END_DEF: _exit_palette_cb
+
+    def _open_analysed_image_viewer_cb(self, _action):
+        """
+        Launch a window containing an analysed image viewer
+        """
+        AnalysedImageViewer(self.get_toplevel()).show()
+    # END_DEF: _open_analysed_image_viewer_cb
 
     def _quit_palette_cb(self, _action):
         """
@@ -738,3 +754,105 @@ class TopLevelWindow(gtk.Window):
         self.show_all()
     # END_DEF: __init__()
 # END_CLASS: TopLevelWindow
+
+class AnalysedImageViewer(gtk.Window, gtkpwx.CAGandUIManager):
+    """
+    A top level window for a colour sample file
+    """
+    UI_DESCR = '''
+    <ui>
+      <menubar name='analysed_image_menubar'>
+        <menu action='analysed_image_file_menu'>
+          <menuitem action='open_analysed_image_file'/>
+          <menuitem action='close_analysed_image_viewer'/>
+        </menu>
+      </menubar>
+    </ui>
+    '''
+    TITLE_TEMPLATE = _('pcatk: Analysed Image: {}')
+
+    def __init__(self, parent):
+        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        gtkpwx.CAGandUIManager.__init__(self)
+        self.set_icon_from_file(icons.APP_ICON_FILE)
+        self.set_size_request(300, 200)
+        last_image_file = recollect.get('analysed_image_viewer', 'last_file')
+        if os.path.isfile(last_image_file):
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(last_image_file)
+            except glib.GError:
+                pixbuf = None
+                last_image_file = None
+        else:
+            pixbuf = None
+            last_image_file = None
+        self.set_title(self.TITLE_TEMPLATE.format(None if last_image_file is None else os.path.relpath(last_image_file)))
+        self.analyser = analyser.Analyser()
+        self._menubar = self.ui_manager.get_widget('/analysed_image_menubar')
+        #self.buttons = self.analyser.action_groups.create_action_button_box([
+            #'zoom_in',
+            #'zoom_out',
+        #])
+        vbox = gtk.VBox()
+        vbox.pack_start(self._menubar, expand=False)
+        vbox.pack_start(self.analyser, expand=True, fill=True)
+        #vbox.pack_start(self.buttons, expand=False)
+        vbox.pack_start(self.analyser.progress_bar, expand=False)
+        self.add(vbox)
+        #self.set_transient_for(parent)
+        self.show_all()
+        if pixbuf is not None:
+            self.analyser.set_pixbuf(pixbuf)
+    # END_DEF: __init__()
+
+    def populate_action_groups(self):
+        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+            ('analysed_image_file_menu', None, _('File')),
+            ('open_analysed_image_file', gtk.STOCK_OPEN, None, None,
+            _('Load and analyse an image file as for reference.'),
+            self._open_analysed_image_file_cb),
+            ('close_analysed_image_viewer', gtk.STOCK_CLOSE, None, None,
+            _('Close this window.'),
+            self._close_analysed_image_viewer_cb),
+        ])
+    # END_DEF: populate_action_groups
+
+    def _open_analysed_image_file_cb(self, _action):
+        """
+        Ask the user for the name of the file then open it.
+        """
+        parent = self.get_toplevel()
+        dlg = gtk.FileChooserDialog(
+            title=_('Open Image File'),
+            parent=parent if isinstance(parent, gtk.Window) else None,
+            action=gtk.FILE_CHOOSER_ACTION_OPEN,
+            buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
+        )
+        last_image_file = recollect.get('analysed_image_viewer', 'last_file')
+        last_samples_dir = None if last_image_file is None else os.path.dirname(last_image_file)
+        if last_samples_dir:
+            dlg.set_current_folder(last_samples_dir)
+        gff = gtk.FileFilter()
+        gff.set_name(_('Image Files'))
+        gff.add_pixbuf_formats()
+        dlg.add_filter(gff)
+        if dlg.run() == gtk.RESPONSE_OK:
+            filepath = dlg.get_filename()
+            dlg.destroy()
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file(filepath)
+            except glib.GError:
+                msg = _('{}: Problem extracting image from file.').format(filepath)
+                gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
+                return
+            recollect.set('analysed_image_viewer', 'last_file', filepath)
+            self.set_title(self.TITLE_TEMPLATE.format(None if filepath is None else os.path.relpath(filepath)))
+            self.analyser.set_pixbuf(pixbuf)
+        else:
+            dlg.destroy()
+    # END_DEF: _open_analysed_image_file_cb
+
+    def _close_analysed_image_viewer_cb(self, _action):
+        self.get_toplevel().destroy()
+    # END_DEF: _close_analysed_image_viewer_cb
+# END_CLASS: AnalysedImageViewer
