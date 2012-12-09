@@ -154,7 +154,7 @@ class HCVW(object):
         '''
         if RGB.ncomps(self.rgb) == 2:
             # we have no grey so only add grey if necessary to maintain value
-            hue = rgbh.Hue.from_angle(self.hue.angle + delta_hue_angle, ONE)
+            hue = Hue.from_angle(self.hue.angle + delta_hue_angle)
             return RGB(*hue.rgb_with_value(self.value))
         else:
             # Simple rotation is the correct solution for 1 or 3 components
