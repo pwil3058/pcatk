@@ -150,12 +150,12 @@ class RGB:
     # END_DEF: rotated
 # END_CLASS: RGB
 
-class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
+class Hue(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
     ONE = None
     @classmethod
     def from_angle(cls, angle):
         if math.isnan(angle):
-            return cls(rgb=(cls.ONE, cls.ONE, cls.ONE), angle=angle)
+            return cls(io=None, other=cls.ONE, angle=angle)
         assert abs(angle) <= math.pi
         def calc_other(oa):
             scale = math.sin(oa) / math.sin(utils.PI_120 - oa)
@@ -163,23 +163,14 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         aha = abs(angle)
         if aha <= utils.PI_60:
             other = calc_other(aha)
-            if angle >= 0:
-                hue_rgb = (cls.ONE, other, 0)
-            else:
-                hue_rgb = (cls.ONE, 0, other)
+            io = (0, 1, 2) if angle >= 0 else (0, 2, 1)
         elif aha <= utils.PI_120:
             other = calc_other(utils.PI_120 - aha)
-            if angle >= 0:
-                hue_rgb = (other, cls.ONE, 0)
-            else:
-                hue_rgb = (other, 0, cls.ONE)
+            io = (1, 0, 2) if angle >= 0 else (2, 0, 1)
         else:
             other = calc_other(aha - utils.PI_120)
-            if angle >= 0:
-                hue_rgb = (0, cls.ONE, other)
-            else:
-                hue_rgb = (0, other, cls.ONE)
-        return cls(rgb=hue_rgb, angle=utils.Angle(angle))
+            io = (1, 2, 0) if angle >= 0 else (2, 1, 0)
+        return cls(io=io, other=other, angle=utils.Angle(angle))
     # END_DEF: from_angle
 
     @classmethod
@@ -211,6 +202,16 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         return self.angle.__ge__(other.angle)
     # END_DEF: __ge__
 
+    @property
+    def rgb(self):
+        if math.isnan(self.angle):
+            return (self.ONE, self.ONE, self.ONE)
+        result = [0, 0, 0]
+        result[self.io[0]] = self.ONE
+        result[self.io[1]] = self.other
+        return tuple(result)
+    # END_DEF: rgb
+
     def rgb_with_total(self, req_total):
         '''
         return the RGB for this hue with the specified component total
@@ -219,19 +220,24 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
         Return: a tuple with proportion components of the same type
         as our rgb
         '''
-        cur_total = sum(self.rgb)
+        if math.isnan(self.angle):
+            val = int((req_total + 0.5) / 3)
+            return (val, val, val)
+        cur_total = self.ONE + self.other
         shortfall = req_total - cur_total
+        result = [0, 0, 0]
         if shortfall == 0:
-            return self.rgb
+            result[self.io[0]] = self.ONE
+            result[self.io[1]] = self.other
         elif shortfall < 0:
-            return tuple(self.rgb[i] * req_total / cur_total for i in range(3))
+            result[self.io[0]] = self.ONE * req_total / cur_total
+            result[self.io[1]] = self.other * req_total / cur_total
         else:
-            io = RGB.indices_value_order(self.rgb)
-            result = {io[0] : self.ONE}
+            result[self.io[0]] = self.ONE
             # it's simpler two work out the weakest component first
-            result[io[2]] = (shortfall * self.ONE) / (2 * self.ONE - self.rgb[io[1]])
-            result[io[1]] = self.rgb[io[1]] + shortfall - result[io[2]]
-            return tuple(result[i] for i in range(3))
+            result[self.io[2]] = (shortfall * self.ONE) / (2 * self.ONE - self.other)
+            result[self.io[1]] = self.other + shortfall - result[self.io[2]]
+        return tuple(result)
     # END_DEF: rgb_with_total
 
     def rgb_with_value(self, value):
@@ -246,9 +252,10 @@ class Hue(collections.namedtuple('Hue', ['rgb', 'angle'])):
     # END_DEF: rgb_with_value
 
     def get_chroma_correction(self):
-        io = RGB.indices_value_order(self.rgb)
-        a = self.rgb[io[0]]
-        b = self.rgb[io[1]]
+        if math.isnan(self.angle):
+            return 1.0
+        a = self.ONE
+        b = self.other
         if a == b or b == 0: # avoid floating point inaccuracies near 1
             return 1.0
         return a / math.sqrt(a * a + b * b - a * b)
