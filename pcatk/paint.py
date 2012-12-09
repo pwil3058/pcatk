@@ -28,13 +28,7 @@ if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
-ZERO = 0
-BITS_PER_CHANNEL = 16
-ONE = (1 << BITS_PER_CHANNEL) - 1
-TWO = ONE * 2
-THREE = ONE * 3
-
-class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB):
+class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB16):
     __slots__ = ()
 
     def __add__(self, other):
@@ -92,22 +86,22 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB):
     # END_DEF: __str__
 
     def get_value(self):
-        return fractions.Fraction(sum(self), THREE)
+        return fractions.Fraction(sum(self), self.THREE)
     # END_DEF: get_value
 
     @staticmethod
     def rotated(rgb, delta_hue_angle):
-        return RGB(*rgbh.RGB.rotated(rgb, delta_hue_angle))
+        return RGB(*rgbh.RGB16.rotated(rgb, delta_hue_angle))
     # END_DEF: rotated
 # END_CLASS: RGB
 
-class Hue(rgbh.Hue):
-    ONE = ONE
+class Hue(rgbh.Hue16):
+    pass
 
 # Primary Colours
-RGB_RED = RGB(red=ONE, green=ZERO, blue=ZERO)
-RGB_GREEN = RGB(red=ZERO, green=ONE, blue=ZERO)
-RGB_BLUE = RGB(red=ZERO, green=ZERO, blue=ONE)
+RGB_RED = RGB(red=RGB.ONE, green=RGB.ZERO, blue=RGB.ZERO)
+RGB_GREEN = RGB(red=RGB.ZERO, green=RGB.ONE, blue=RGB.ZERO)
+RGB_BLUE = RGB(red=RGB.ZERO, green=RGB.ZERO, blue=RGB.ONE)
 # Secondary Colours
 RGB_CYAN = RGB_BLUE + RGB_GREEN
 RGB_MAGENTA = RGB_BLUE + RGB_RED
@@ -124,9 +118,9 @@ class HCVW(object):
         self.rgb = RGB(*rgb)
         self.value = self.rgb.get_value()
         xy = rgbh.XY.from_rgb(self.rgb)
-        self.warmth = fractions.Fraction.from_float(xy.x / ONE)
+        self.warmth = fractions.Fraction.from_float(xy.x / RGB.ONE)
         self.hue = Hue.from_angle(xy.get_angle())
-        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / ONE
+        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / RGB.ONE
     # END_DEF: __init__
 
     def hue_rgb_for_value(self, value=None):

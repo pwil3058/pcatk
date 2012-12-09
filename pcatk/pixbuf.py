@@ -34,36 +34,24 @@ if __name__ == '__main__':
     _ = lambda x: x
     import doctest
 
-# 8 bits per channel specific constants
-ZERO = 0
-BITS_PER_CHANNEL = 8
-ONE = (1 << BITS_PER_CHANNEL) - 1
-THREE = ONE * 3
-SIX = ONE * 6
-
-class RGB(rgbh.RGB):
-    @staticmethod
-    def get_value(rgb):
-        return fractions.Fraction(sum(rgb), THREE)
-    # END_DEF: get_value
-
-    @staticmethod
-    def scaled_to_sum(rgb, new_sum):
+class RGB(rgbh.RGB8):
+    @classmethod
+    def scaled_to_sum(cls, rgb, new_sum):
         cur_sum = sum(rgb)
-        return tuple(int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3))
-    # END_DEF: get_value
+        return array.array(cls.TYPECODE, (int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)))
+    # END_DEF: scaled_to_sum
 
-    @staticmethod
-    def to_mono(rgb):
+    @classmethod
+    def to_mono(cls, rgb):
         val = (sum(rgb) + 1) / 3
-        return (val, val, val)
+        return array.array(cls.TYPECODE, (val, val, val))
     # END_DEF: to_mono
-WHITE = (ONE, ONE, ONE)
-BLACK = (0, 0, 0)
+WHITE = array.array(RGB.TYPECODE, (RGB.ONE, RGB.ONE, RGB.ONE))
+BLACK = array.array(RGB.TYPECODE, (0, 0, 0))
 # END_CLASS: RGB
 
-class Hue(rgbh.Hue):
-    ONE = ONE
+class Hue(rgbh.Hue8):
+    pass
 
 def calc_rowstride(bytes_per_row):
     """
@@ -73,7 +61,7 @@ def calc_rowstride(bytes_per_row):
     return bytes_per_row + (0 if rem == 0 else 4 - rem)
 # END_DEF: calc_rowstride
 
-class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values', 'c_totals', 'value_rgbs'])):
+class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values', 'c_totals', 'value_rgbs']), rgbh.BPC8):
     __slots__ = ()
 
     @classmethod
@@ -84,8 +72,8 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         >>> ValueLimitCriteria.create(6)
         ValueLimitCriteria(n_values=6, c_totals=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
         """
-        c_totals = tuple([int(THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
-        value_rgbs = tuple([(int((total + 0.5) / 3),) * 3 for total in c_totals])
+        c_totals = tuple([int(cls.THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
+        value_rgbs = tuple([array.array(cls.TYPECODE, (int((total + 0.5) / 3),) * 3) for total in c_totals])
         return ValueLimitCriteria(n_values, c_totals, value_rgbs)
     # END_DEF: create
 
@@ -100,7 +88,7 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         >>> vlc.get_value_index(ONE, 0, 0)
         2
         """
-        return (sum(rgb) * (self.n_values - 1) * 2 + THREE) / SIX
+        return (sum(rgb) * (self.n_values - 1) * 2 + self.THREE) / self.SIX
     # END_DEF: get_value_index
 # END_CLASS: ValueLimitCriteria
 
@@ -171,9 +159,9 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     # END_DEF: get_value_index
 # END_CLASS: HueValueLimitCriteria
 
-class PixBufRow:
+class PixBufRow(rgbh.BPC8):
     def __init__(self, data, start, end, nc=3):
-        self.rgbs = [(data[i], data[i+1], data[i+2]) for i in xrange(start, end, nc)]
+        self.rgbs = [array.array(self.TYPECODE, (data[i], data[i+1], data[i+2])) for i in xrange(start, end, nc)]
         self.hues = [Hue.from_rgb(rgb) for rgb in self.rgbs]
 
     def __iter__(self):
@@ -201,7 +189,7 @@ def transform_row_mono(pbr):
 # END_DEF: transform_row_mono
 
 def transform_row_notan(pbr, threshold):
-    sum_thr = THREE * threshold.numerator / threshold.denominator
+    sum_thr = RGB.THREE * threshold.numerator / threshold.denominator
     return [BLACK if sum(rgb) <= sum_thr else WHITE for rgb in pbr.rgbs]
 # END_DEF: transform_row_notan
 
@@ -216,8 +204,9 @@ def transform_row_limited_value(pbr, vlc):
             return BLACK
         elif index == vlc.n_values - 1:
             return WHITE
-        rgb = RGB.scaled_to_sum(rgb, vlc.c_totals[index])
-        if max(rgb) > ONE:
+        try:
+            rgb = RGB.scaled_to_sum(rgb, vlc.c_totals[index])
+        except OverflowError:
             rgb = hue.rgb_with_total(vlc.c_totals[index])
         return rgb
     # END_DEF: transform_limited_value
@@ -257,8 +246,9 @@ def transform_row_limited_hue_value(pbr, hvlc):
             rgb = hvlc.hlc.hues[h_index].rgb_with_total(target_total)
         else:
             rgb = RGB.rotated(rgb, hvlc.hlc.hues[h_index].angle - hue.angle)
-            rgb = RGB.scaled_to_sum(rgb, target_total)
-            if max(rgb) > ONE:
+            try:
+                rgb = RGB.scaled_to_sum(rgb, target_total)
+            except OverflowError:
                 rgb = hvlc.hv_rgbs[h_index][v_index]
         return rgb
     # END_DEF: transform_limited_hue
@@ -266,11 +256,10 @@ def transform_row_limited_hue_value(pbr, hvlc):
 # END_DEF: transform_limited_hue_value
 
 def rgb_row_to_string(rgb_row):
-    def flatten(rgb_row):
-        for rgb in rgb_row:
-            for component in rgb:
-                yield component
-    return array.array('B', flatten(rgb_row)).tostring()
+    result = array.array('B')
+    for rgb in rgb_row:
+        result.extend(rgb)
+    return result.tostring()
 # END_DEF: rgb_row_to_string
 
 class RGBHImage(gobject.GObject):
@@ -285,7 +274,7 @@ class RGBHImage(gobject.GObject):
         self.__pixel_rows = None
         if pixbuf is not None:
             self.set_from_pixbuf(pixbuf)
-    # END_DEF: __init__()
+    # END_DEF: __init__
 
     @property
     def size(self):
@@ -321,7 +310,7 @@ class RGBHImage(gobject.GObject):
         assert pixbuf.get_bits_per_sample() == 8
         nc = pixbuf.get_n_channels()
         rs = pixbuf.get_rowstride()
-        data = array.array('B', pixbuf.get_pixels()).tolist()
+        data = array.array('B', pixbuf.get_pixels())
         self.__pixel_rows = []
         pr_step = h / self.NPR
         next_pr_due = 0
