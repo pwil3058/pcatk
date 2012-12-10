@@ -34,7 +34,10 @@ saved to a list of mixed colours (along with notes about its intended
 use) and used in the mixing of further colours.  When the painter has
 finished planning their palette they may print out a report to be used
 as a reference while completing the painting for which the palette was
-planned.
+planned. An analysed image viewer is included as part of the palette
+planner and displays a number of transformations of a (user selected)
+digital image from which the user can copy samples for pasting into
+the mixed colour area for matching.
 
 2. The Tube Series Editor (pcatk_editor.py) is a GUI that enables the
 painter create sets of tube colours for use in the palette planner.
@@ -42,7 +45,7 @@ The recommended method is to produce a "sampler" of the actual paints
 to be used on a suitable medium, take a digital photograph and then
 cut and paste from that photograph into the tube series editor where
 its buttons can be used to match the colour.  A Colour Sample Viewer
-is now included as part of the editor. An example colour sampler
+is included as part of the editor. An example colour sampler
 file has been added and should be loaded by the viewer the first time
 it is launched (and after that it should remember the last file used).
 
