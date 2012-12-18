@@ -29,6 +29,7 @@ import glib
 from pcatk import options
 from pcatk import recollect
 from pcatk import utils
+from pcatk import actions
 from pcatk import gtkpwx
 from pcatk import paint
 from pcatk import gpaint
@@ -36,7 +37,7 @@ from pcatk import data
 from pcatk import icons
 from pcatk import iview
 
-class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
+class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
     UI_DESCR = '''
     <ui>
       <menubar name='tube_series_editor_menubar'>
@@ -53,11 +54,11 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
       </menubar>
     </ui>
     '''
-    AC_HAS_COLOUR, AC_NOT_HAS_COLOUR, AC_HAS_FILE, AC_ID_READY, AC_MASK = gtkpwx.ActionCondns.new_flags_and_mask(4)
+    AC_HAS_COLOUR, AC_NOT_HAS_COLOUR, AC_HAS_FILE, AC_ID_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(4)
 
     def __init__(self):
         gtk.HBox.__init__(self)
-        gtkpwx.CAGandUIManager.__init__(self)
+        actions.CAGandUIManager.__init__(self)
 
         self.set_file_path(None)
         self.set_current_colour(None)
@@ -128,7 +129,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             self._save_tube_series_as_file_cb),
         ])
         # TODO: make some of these conditional
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+        self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('tube_series_editor_file_menu', None, _('File')),
             ('tube_series_editor_samples_menu', None, _('Samples')),
             ('reset_colour_editor', None, _('Reset'), None,
@@ -159,7 +160,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             condns |= self.AC_HAS_FILE
         if self.manufacturer_name.get_text_length() > 0 and self.series_name.get_text_length() > 0:
             condns |= self.AC_ID_READY
-        return gtkpwx.MaskedConds(condns, self.AC_MASK)
+        return actions.MaskedConds(condns, self.AC_MASK)
     # END_DEF: get_masked_condns
 
     def unsaved_changes_ok(self):
@@ -218,7 +219,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
             condns = 0
         else:
             condns = self.AC_ID_READY
-        self.action_groups.update_condns(gtkpwx.MaskedConds(condns, self.AC_ID_READY))
+        self.action_groups.update_condns(actions.MaskedConds(condns, self.AC_ID_READY))
     # END_DEF: _id_change_cb
 
     def set_current_colour(self, colour):
@@ -229,7 +230,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         self.current_colour = colour
         mask = self.AC_NOT_HAS_COLOUR + self.AC_HAS_COLOUR
         condns = self.AC_NOT_HAS_COLOUR if colour is None else self.AC_HAS_COLOUR
-        self.action_groups.update_condns(gtkpwx.MaskedConds(condns, mask))
+        self.action_groups.update_condns(actions.MaskedConds(condns, mask))
     # END_DEF: set_current_colour
 
     def set_file_path(self, file_path):
@@ -239,7 +240,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
         """
         self.file_path = file_path
         condns = 0 if file_path is None else self.AC_HAS_FILE
-        self.action_groups.update_condns(gtkpwx.MaskedConds(condns, self.AC_HAS_FILE))
+        self.action_groups.update_condns(actions.MaskedConds(condns, self.AC_HAS_FILE))
     # END_DEF: set_file_path
 
     def _edit_selected_colour_cb(self, _action):
@@ -457,7 +458,7 @@ class TubeSeriesEditor(gtk.HBox, gtkpwx.CAGandUIManager):
 # END_CLASS: TubeSeriesEditor
 
 class TubeEditor(gtk.VBox):
-    AC_READY, AC_NOT_READY, AC_MASK = gtkpwx.ActionCondns.new_flags_and_mask(2)
+    AC_READY, AC_NOT_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(2)
 
     def __init__(self):
         gtk.VBox.__init__(self)
@@ -523,12 +524,12 @@ class TubeEditor(gtk.VBox):
 
     def get_masked_condns(self):
         if self.colour_name.get_text_length() == 0:
-            return gtkpwx.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
+            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
         if self.colour_transparency.get_active() == -1:
-            return gtkpwx.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
+            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
         if self.colour_transparency.get_active() == -1:
-            return gtkpwx.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
-        return gtkpwx.MaskedConds(self.AC_READY, self.AC_MASK)
+            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
+        return actions.MaskedConds(self.AC_READY, self.AC_MASK)
     # END_DEF: get_masked_condns
 gobject.signal_new('changed', TubeEditor, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 # END_CLASS: TubeEditor
@@ -845,7 +846,7 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
             Populate action groups ready for UI initialization.
             """
             gpaint.ColourListView.populate_action_groups(self)
-            self.action_groups[gtkpwx.AC_SELN_UNIQUE].add_actions(
+            self.action_groups[actions.AC_SELN_UNIQUE].add_actions(
                 [
                     ('edit_selected_colour', gtk.STOCK_EDIT, None, None,
                      _('Load the selected colour into the tube editor.'), ),
@@ -928,7 +929,7 @@ class TopLevelWindow(gtk.Window):
     # END_DEF: __init__()
 # END_CLASS: TopLevelWindow
 
-class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
+class SampleViewer(gtk.Window, actions.CAGandUIManager):
     """
     A top level window for a colour sample file
     """
@@ -946,7 +947,7 @@ class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
 
     def __init__(self, parent):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
-        gtkpwx.CAGandUIManager.__init__(self)
+        actions.CAGandUIManager.__init__(self)
         self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_size_request(300, 200)
         last_samples_file = recollect.get('sample_viewer', 'last_file')
@@ -977,7 +978,7 @@ class SampleViewer(gtk.Window, gtkpwx.CAGandUIManager):
     # END_DEF: __init__()
 
     def populate_action_groups(self):
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+        self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('colour_sample_file_menu', None, _('File')),
             ('open_colour_sample_file', gtk.STOCK_OPEN, None, None,
             _('Load a colour sample file.'),
