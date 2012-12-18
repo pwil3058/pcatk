@@ -22,6 +22,7 @@ import fractions
 import gtk
 import gobject
 
+from pcatk import actions
 from pcatk import gtkpwx
 from pcatk import printer
 
@@ -136,7 +137,7 @@ class ZoomedPixbuf(object):
     # END_DEF: calc_zooms_for
 # END_CLASS: ZoomedPixbuf
 
-class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
+class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
     UI_DESCR = '''
         <ui>
             <popup name='pixbuf_view_popup'>
@@ -145,8 +146,8 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
             </popup>
         </ui>
         '''
-    AC_SELN_MADE, AC_SELN_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
-    AC_PIXBUF_SET, AC_PICBUF_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
+    AC_SELN_MADE, AC_SELN_MASK = actions.ActionCondns.new_flags_and_mask(1)
+    AC_PIXBUF_SET, AC_PICBUF_MASK = actions.ActionCondns.new_flags_and_mask(1)
     ZOOM_FACTOR = fractions.Fraction(11, 10)
     ZOOM_IN_ADJ = (ZOOM_FACTOR - 1) / 2
     ZOOM_OUT_ADJ = (1 / ZOOM_FACTOR - 1) / 2
@@ -155,7 +156,7 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
         A drawing area to contain a single image
         """
         gtk.ScrolledWindow.__init__(self)
-        gtkpwx.CAGandUIManager.__init__(self, popup='/pixbuf_view_popup')
+        actions.CAGandUIManager.__init__(self, popup='/pixbuf_view_popup')
         self.__pixbuf = None
         self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.__da = gtk.DrawingArea()
@@ -245,10 +246,10 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
                 self.__pixbuf.set_zoom(zoom)
                 self._resize_da()
             self.__seln.clear()
-            self.action_groups.update_condns(gtkpwx.MaskedConds(self.AC_PIXBUF_SET, self.AC_PICBUF_MASK))
+            self.action_groups.update_condns(actions.MaskedConds(self.AC_PIXBUF_SET, self.AC_PICBUF_MASK))
         else:
             self.__pixbuf = None
-            self.action_groups.update_condns(gtkpwx.MaskedConds(0, self.AC_PICBUF_MASK))
+            self.action_groups.update_condns(actions.MaskedConds(0, self.AC_PICBUF_MASK))
     # END_DEF: set_pixbuf
 
     def _expose_cb(self, _widget, _event):
@@ -331,7 +332,7 @@ class PixbufView(gtk.ScrolledWindow, gtkpwx.CAGandUIManager):
             self.__seln_zoom = self.__pixbuf.zoom
         else:
             self.__seln_zoom = None
-        self.action_groups.update_condns(gtkpwx.MaskedConds(self.AC_SELN_MADE if seln_made else 0, self.AC_SELN_MASK))
+        self.action_groups.update_condns(actions.MaskedConds(self.AC_SELN_MADE if seln_made else 0, self.AC_SELN_MASK))
         self.__da.queue_draw()
     # END_DEF: _seln_status_change_cb
 

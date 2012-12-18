@@ -26,6 +26,7 @@ import gobject
 
 from pcatk import options
 from pcatk import utils
+from pcatk import actions
 from pcatk import gtkpwx
 from pcatk import paint
 
@@ -62,7 +63,7 @@ class PermanenceChoice(MappedFloatChoice):
     MFDC = paint.Permanence
 # END_CLASS: PermanenceChoice
 
-class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
+class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
     """
     A coloured drawing area onto which samples can be dropped.
     """
@@ -74,7 +75,7 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
         </popup>
     </ui>
     '''
-    AC_SAMPLES_PASTED, AC_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
+    AC_SAMPLES_PASTED, AC_MASK = actions.ActionCondns.new_flags_and_mask(1)
     def __init__(self, single_sample=False, default_bg=None):
         gtk.DrawingArea.__init__(self)
 
@@ -88,11 +89,11 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
         self.connect('expose-event', self.expose_cb)
         self.connect('motion_notify_event', self._motion_notify_cb)
 
-        gtkpwx.CAGandUIManager.__init__(self, popup='/colour_sample_popup')
+        actions.CAGandUIManager.__init__(self, popup='/colour_sample_popup')
     # END_DEF: __init__()
 
     def populate_action_groups(self):
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions(
+        self.action_groups[actions.AC_DONT_CARE].add_actions(
             [
                 ('paste_sample_image', gtk.STOCK_PASTE, None, None,
                  _('Paste an image from clipboard at this position.'), self._paste_fm_clipboard_cb),
@@ -106,9 +107,9 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
 
     def get_masked_condns(self):
         if len(self._sample_images) > 0:
-            return gtkpwx.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK)
+            return actions.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK)
         else:
-            return gtkpwx.MaskedConds(0, self.AC_MASK)
+            return actions.MaskedConds(0, self.AC_MASK)
     # END_DEF: get_masked_condns
 
     def _motion_notify_cb(self, widget, event):
@@ -150,7 +151,7 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
             else:
                 self._sample_images.append((int(posn[0]), int(posn[1]), img))
             self.queue_draw()
-            self.action_groups.update_condns(gtkpwx.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK))
             self.emit('samples-changed', len(self._sample_images))
     # END_DEF: _image_from_clipboard_cb
 
@@ -160,7 +161,7 @@ class ColourSampleArea(gtk.DrawingArea, gtkpwx.CAGandUIManager):
         """
         self._sample_images = []
         self.queue_draw()
-        self.action_groups.update_condns(gtkpwx.MaskedConds(0, self.AC_MASK))
+        self.action_groups.update_condns(actions.MaskedConds(0, self.AC_MASK))
         self.emit('samples-changed', len(self._sample_images))
     # END_DEF: erase_samples
 
@@ -811,7 +812,7 @@ def generate_colour_list_spec(model):
     )
 # END_DEF: generate_colour_list_spec
 
-class ColourListView(gtkpwx.View, gtkpwx.CAGandUIManager):
+class ColourListView(gtkpwx.View, actions.CAGandUIManager):
     Model = ColourListStore
     specification = generate_colour_list_spec(ColourListStore)
     UI_DESCR = '''
@@ -823,14 +824,14 @@ class ColourListView(gtkpwx.View, gtkpwx.CAGandUIManager):
     '''
     def __init__(self, *args, **kwargs):
         gtkpwx.View.__init__(self, *args, **kwargs)
-        gtkpwx.CAGandUIManager.__init__(self, selection=self.get_selection(), popup='/colour_list_popup')
+        actions.CAGandUIManager.__init__(self, selection=self.get_selection(), popup='/colour_list_popup')
     # END_DEF: __init__
 
     def populate_action_groups(self):
         """
         Populate action groups ready for UI initialization.
         """
-        self.action_groups[gtkpwx.AC_SELN_MADE].add_actions(
+        self.action_groups[actions.AC_SELN_MADE].add_actions(
             [
                 ('remove_selected_colours', gtk.STOCK_REMOVE, None, None,
                  _('Remove the selected colours from the list.'), self._remove_selection_cb),

@@ -26,6 +26,7 @@ import gtk
 import gobject
 
 from pcatk import recollect
+from pcatk import actions
 from pcatk import gtkpwx
 from pcatk import gpaint
 from pcatk import paint
@@ -43,7 +44,7 @@ def pango_rgb_str(rgb, bits_per_channel=16):
     return string
 # END_DEF: pango_rgb_str
 
-class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
+class Palette(gtk.VBox, actions.CAGandUIManager):
     UI_DESCR = '''
     <ui>
         <menubar name='palette_menubar'>
@@ -60,10 +61,10 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         </menubar>
     </ui>
     '''
-    AC_HAVE_MIXTURE, AC_MASK = gtkpwx.ActionCondns.new_flags_and_mask(1)
+    AC_HAVE_MIXTURE, AC_MASK = actions.ActionCondns.new_flags_and_mask(1)
     def __init__(self):
         gtk.VBox.__init__(self)
-        gtkpwx.CAGandUIManager.__init__(self)
+        actions.CAGandUIManager.__init__(self)
         self._last_dir = None
         # Components
         self.notes = gtk.Entry()
@@ -113,7 +114,7 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         """
         Set up the actions for this component
         """
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+        self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('palette_file_menu', None, _('File')),
             ('tube_series_menu', None, _('Tube Colour Series')),
             ('reference_resource_menu', None, _('Reference Resources')),
@@ -210,9 +211,9 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
         self.mixpanel.set_bg_colour(new_colour.rgb)
         self.hcvw_display.set_colour(new_colour)
         if len(contributions) > 1:
-            self.action_groups.update_condns(gtkpwx.MaskedConds(self.AC_HAVE_MIXTURE, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedConds(self.AC_HAVE_MIXTURE, self.AC_MASK))
         else:
-            self.action_groups.update_condns(gtkpwx.MaskedConds(0, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedConds(0, self.AC_MASK))
     # END_DEF: recalculate_colour
 
     def _add_mixed_colour_cb(self,_action):
@@ -381,7 +382,7 @@ class Palette(gtk.VBox, gtkpwx.CAGandUIManager):
 def colour_parts_adjustment():
     return gtk.Adjustment(0, 0, 999, 1, 10, 0)
 
-class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, gtkpwx.CAGandUIManager):
+class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
     UI_DESCR = '''
         <ui>
             <popup name='colour_spinner_popup'>
@@ -392,7 +393,7 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, gtkpwx.CAGandUIManager):
     def __init__(self, colour, *kwargs):
         self.colour = colour
         gtkpwx.ColouredSpinButton.__init__(self, colour=colour.rgb)
-        gtkpwx.CAGandUIManager.__init__(self, popup='/colour_spinner_popup')
+        actions.CAGandUIManager.__init__(self, popup='/colour_spinner_popup')
         self.set_adjustment(colour_parts_adjustment())
         self.set_tooltip_text(str(colour))
     # END_DEF: __init__()
@@ -401,7 +402,7 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, gtkpwx.CAGandUIManager):
         """
         Populate action groups ready for UI initialization.
         """
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions(
+        self.action_groups[actions.AC_DONT_CARE].add_actions(
             [
                 ('remove_me', gtk.STOCK_REMOVE, None, None,
                  _('Remove this tube colour from the palette.'),
@@ -654,7 +655,7 @@ class PartsColourListView(gpaint.ColourListView):
         """
         Populate action groups ready for UI initialization.
         """
-        self.action_groups[gtkpwx.AC_SELN_MADE].add_actions(
+        self.action_groups[actions.AC_SELN_MADE].add_actions(
             [
                 ('remove_selected_colours', gtk.STOCK_REMOVE, None, None,
                  _('Remove the selected colours from the list.'), ),
@@ -686,13 +687,13 @@ class SelectColourListView(gpaint.ColourListView):
         """
         Populate action groups ready for UI initialization.
         """
-        self.action_groups[gtkpwx.AC_SELN_UNIQUE].add_actions(
+        self.action_groups[actions.AC_SELN_UNIQUE].add_actions(
             [
                 ('show_colour_details', gtk.STOCK_INFO, None, None,
                  _('Show a detailed description of the selected colour.'),),
             ]
         )
-        self.action_groups[gtkpwx.AC_SELN_MADE].add_actions(
+        self.action_groups[actions.AC_SELN_MADE].add_actions(
             [
                 ('add_colours_to_palette', gtk.STOCK_ADD, None, None,
                  _('Add the selected colours to the palette.'),),
@@ -755,7 +756,7 @@ class TopLevelWindow(gtk.Window):
     # END_DEF: __init__()
 # END_CLASS: TopLevelWindow
 
-class AnalysedImageViewer(gtk.Window, gtkpwx.CAGandUIManager):
+class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
     """
     A top level window for a colour sample file
     """
@@ -773,7 +774,7 @@ class AnalysedImageViewer(gtk.Window, gtkpwx.CAGandUIManager):
 
     def __init__(self, parent):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
-        gtkpwx.CAGandUIManager.__init__(self)
+        actions.CAGandUIManager.__init__(self)
         self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_size_request(300, 200)
         last_image_file = recollect.get('analysed_image_viewer', 'last_file')
@@ -806,7 +807,7 @@ class AnalysedImageViewer(gtk.Window, gtkpwx.CAGandUIManager):
     # END_DEF: __init__()
 
     def populate_action_groups(self):
-        self.action_groups[gtkpwx.AC_DONT_CARE].add_actions([
+        self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('analysed_image_file_menu', None, _('File')),
             ('open_analysed_image_file', gtk.STOCK_OPEN, None, None,
             _('Load and analyse an image file as for reference.'),
