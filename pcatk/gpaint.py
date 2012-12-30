@@ -27,6 +27,7 @@ import gobject
 from pcatk import options
 from pcatk import utils
 from pcatk import actions
+from pcatk import tlview
 from pcatk import gtkpwx
 from pcatk import paint
 
@@ -701,7 +702,7 @@ class HueValueWheel(ColourWheel):
     # END_CLASS: ColourCircle
 # END_CLASS: HueValueWheel
 
-class ColourListStore(gtkpwx.NamedListStore):
+class ColourListStore(tlview.NamedListStore):
     Row = collections.namedtuple('Row', ['colour'])
     types = Row(colour=object)
 
@@ -762,19 +763,19 @@ def paint_cell_data_func(column, cell, model, model_iter, attribute):
 TNS = collections.namedtuple('TNS', ['title', 'attr', 'properties', 'sort_key_function'])
 
 def colour_attribute_column_spec(tns):
-    return gtkpwx.ColumnSpec(
+    return tlview.ColumnSpec(
         title=tns.title,
         properties=tns.properties,
         sort_key_function=tns.sort_key_function,
         cells=[
-            gtkpwx.CellSpec(
-                cell_renderer_spec=gtkpwx.CellRendererSpec(
+            tlview.CellSpec(
+                cell_renderer_spec=tlview.CellRendererSpec(
                     cell_renderer=gtk.CellRendererText,
                     expand=None,
                     start=False
                 ),
                 properties=None,
-                cell_data_function_spec=gtkpwx.CellDataFunctionSpec(
+                cell_data_function_spec=tlview.CellDataFunctionSpec(
                     function=paint_cell_data_func,
                     user_data=tns.attr
                 ),
@@ -805,14 +806,14 @@ def generate_colour_list_spec(model):
     """
     Generate the specification for a paint colour list
     """
-    return gtkpwx.ViewSpec(
+    return tlview.ViewSpec(
         properties={},
         selection_mode=gtk.SELECTION_MULTIPLE,
         columns=colour_attribute_column_specs(model)
     )
 # END_DEF: generate_colour_list_spec
 
-class ColourListView(gtkpwx.View, actions.CAGandUIManager):
+class ColourListView(tlview.View, actions.CAGandUIManager):
     Model = ColourListStore
     specification = generate_colour_list_spec(ColourListStore)
     UI_DESCR = '''
@@ -823,7 +824,7 @@ class ColourListView(gtkpwx.View, actions.CAGandUIManager):
     </ui>
     '''
     def __init__(self, *args, **kwargs):
-        gtkpwx.View.__init__(self, *args, **kwargs)
+        tlview.View.__init__(self, *args, **kwargs)
         actions.CAGandUIManager.__init__(self, selection=self.get_selection(), popup='/colour_list_popup')
     # END_DEF: __init__
 
@@ -850,7 +851,7 @@ class ColourListView(gtkpwx.View, actions.CAGandUIManager):
         """
         Return the currently selected colours as a list.
         """
-        return [row.colour for row in gtkpwx.NamedTreeModel.get_selected_rows(self.get_selection())]
+        return [row.colour for row in tlview.NamedTreeModel.get_selected_rows(self.get_selection())]
     # END_DEF: get_selected_colours
 # END_CLASS: ColourListView
 

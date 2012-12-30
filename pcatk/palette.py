@@ -27,6 +27,7 @@ import gobject
 
 from pcatk import recollect
 from pcatk import actions
+from pcatk import tlview
 from pcatk import gtkpwx
 from pcatk import gpaint
 from pcatk import paint
@@ -590,14 +591,14 @@ def generate_colour_parts_list_spec(model):
     """
     Generate the specification for a paint colour parts list
     """
-    parts_col_spec = gtkpwx.ColumnSpec(
+    parts_col_spec = tlview.ColumnSpec(
         title =_('Parts'),
         properties={},
         sort_key_function=lambda row: row.parts,
         cells=[
-            gtkpwx.CellSpec(
-                cell_renderer_spec=gtkpwx.CellRendererSpec(
-                    cell_renderer=gtkpwx.CellRendererSpin,
+            tlview.CellSpec(
+                cell_renderer_spec=tlview.CellRendererSpec(
+                    cell_renderer=tlview.CellRendererSpin,
                     expand=None,
                     start=False
                 ),
@@ -607,19 +608,19 @@ def generate_colour_parts_list_spec(model):
             ),
         ]
     )
-    notes_col_spec = gtkpwx.ColumnSpec(
+    notes_col_spec = tlview.ColumnSpec(
         title =_('Notes'),
         properties={'resizable' : True},
         sort_key_function=lambda row: row.colour.notes,
         cells=[
-            gtkpwx.CellSpec(
-                cell_renderer_spec=gtkpwx.CellRendererSpec(
+            tlview.CellSpec(
+                cell_renderer_spec=tlview.CellRendererSpec(
                     cell_renderer=gtk.CellRendererText,
                     expand=None,
                     start=False
                 ),
                 properties={'editable' : True, },
-                cell_data_function_spec=gtkpwx.CellDataFunctionSpec(
+                cell_data_function_spec=tlview.CellDataFunctionSpec(
                     function=notes_cell_data_func,
                 ),
                 attributes={}
@@ -628,7 +629,7 @@ def generate_colour_parts_list_spec(model):
     )
     name_col_spec = gpaint.colour_attribute_column_spec(gpaint.TNS(_('Name'), 'name', {}, lambda row: row.colour.name))
     attr_cols_specs = [gpaint.colour_attribute_column_spec(tns) for tns in gpaint.COLOUR_ATTRS[1:]]
-    return gtkpwx.ViewSpec(
+    return tlview.ViewSpec(
         properties={},
         selection_mode=gtk.SELECTION_MULTIPLE,
         columns=[parts_col_spec, name_col_spec, notes_col_spec] + attr_cols_specs
