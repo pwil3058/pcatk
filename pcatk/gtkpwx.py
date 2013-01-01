@@ -264,7 +264,7 @@ class Choice(gtk.ComboBox):
     # END_DEF: set_selection
 # END_CLASS: Choice
 
-class ColouredLabel(gtk.EventBox):
+class ColourableLabel(gtk.EventBox):
     def __init__(self, label=''):
         gtk.EventBox.__init__(self)
         self.label = gtk.Label(label)
@@ -286,6 +286,24 @@ class ColouredLabel(gtk.EventBox):
         gtk.EventBox.modify_fg(self, state, colour)
         self.label.modify_fg(state, colour)
     # END_DEF: modify_fg
+# END_CLASS: ColourableLabel
+
+class ColouredLabel(ColourableLabel):
+    def __init__(self, label, colour=None):
+        ColourableLabel.__init__(self, label=label)
+        if colour is not None:
+            self.set_colour(colour)
+    # END_DEF: __init__()
+
+    def set_colour(self, colour):
+        bg_colour = self.get_colormap().alloc_color(gtk.gdk.Color(*colour))
+        fg_colour = self.get_colormap().alloc_color(best_foreground(colour))
+        for state in [gtk.STATE_NORMAL, gtk.STATE_PRELIGHT, gtk.STATE_ACTIVE]:
+            self.modify_base(state, bg_colour)
+            self.modify_bg(state, bg_colour)
+            self.modify_fg(state, fg_colour)
+            self.modify_text(state, fg_colour)
+    # END_DEF: set_colour
 # END_CLASS: ColouredLabel
 
 class ColouredButton(gtk.Button):
@@ -302,7 +320,7 @@ class ColouredButton(gtk.Button):
         if sys.platform[:3] == 'win':
             # Crude workaround for Windows 7
             label = self.get_children()[0]
-            clabel = ColouredLabel(label.get_text())
+            clabel = ColourableLabel(label.get_text())
             self.remove(label)
             self.add(clabel)
         self.label =  self.get_children()[0]

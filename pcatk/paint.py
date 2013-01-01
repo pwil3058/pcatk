@@ -194,6 +194,14 @@ class MappedFloat(object):
         raise  self.BadValue(_('Invalid rating: {0}').format(self.val))
     # END_DEF: __str__
 
+    def description(self):
+        rval = round(self.val, 0)
+        for mapi in self.MAP:
+            if rval == mapi.rval:
+                return mapi.descr
+        raise  self.BadValue(_('Invalid rating: {0}').format(self.val))
+    # END_DEF: __str__
+
     # Enough operators to facilitate weighted averaging
     def __mul__(self, multiplier):
         return self.__class__(self.val * multiplier)

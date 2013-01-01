@@ -399,6 +399,11 @@ class ValueDisplay(GenericAttrDisplay):
 
 class ChromaDisplay(ValueDisplay):
     LABEL = _('Chroma')
+    def __init__(self, colour=None, size=(100, 15)):
+        ValueDisplay.__init__(self, colour=colour, size=size)
+        if colour is not None:
+            self._set_colour(colour)
+    # END_DEF: __init__
 
     def _set_colour(self, colour):
         """
