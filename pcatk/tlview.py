@@ -212,6 +212,7 @@ class View(gtk.TreeView):
         for col_d in self.specification.columns:
             self._view_add_column(col_d)
         self.connect("button_press_event", self._handle_button_press_cb)
+        self.connect("key_press_event", self._handle_key_press_cb)
         self._connect_model_changed_cbs()
         self._modified_cbs = []
     # END_DEF: __init__()
@@ -314,6 +315,14 @@ class View(gtk.TreeView):
                 return True
         return False
     # END_DEF: _handle_button_press_cb()
+
+    def _handle_key_press_cb(self, widget, event):
+        if event.type == gtk.gdk.KEY_PRESS:
+            if event.keyval == gtk.gdk.keyval_from_name('Escape'):
+                self.get_selection().unselect_all()
+                return True
+        return False
+    # END_DEF: _handle_key_press_cb()
 
     def _cell_text_edited_cb(self, cell, path, new_text, index):
         # TODO: need to do type cast on ALL tree editable cells

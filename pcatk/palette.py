@@ -646,15 +646,27 @@ def generate_colour_parts_list_spec(model):
 # END_DEF: generate_colour_parts_list_spec
 
 class PartsColourListView(gpaint.ColourListView):
+    UI_DESCR = '''
+    <ui>
+        <popup name='colour_list_popup'>
+            <menuitem action='show_colour_details'/>
+            <menuitem action='remove_selected_colours'/>
+        </popup>
+    </ui>
+    '''
     Model = PartsColourListStore
     specification = generate_colour_parts_list_spec(PartsColourListStore)
     def __init__(self, *args, **kwargs):
         gpaint.ColourListView.__init__(self, *args, **kwargs)
+        self._set_cell_connections()
+    # END_DEF: __init__
+
+    def _set_cell_connections(self):
         parts_cell = self.get_cell_with_title(_('Parts'))
         parts_cell.connect('value-changed', self._value_changed_cb)
         notes_cell = self.get_cell_with_title(_('Notes'))
         notes_cell.connect('edited', self._notes_edited_cb, self.Model.col_index('colour'))
-    # END_DEF: __init__
+    # END_DEF: _set_cell_connections
 
     def _notes_edited_cb(self, cell, path, new_text, index):
         self.get_model()[path][index].notes = new_text
@@ -665,6 +677,13 @@ class PartsColourListView(gpaint.ColourListView):
         """
         Populate action groups ready for UI initialization.
         """
+        self.action_groups[actions.AC_SELN_UNIQUE].add_actions(
+            [
+                ('show_colour_details', gtk.STOCK_INFO, None, None,
+                 _('Show a detailed description of the selected colour.'),
+                self._show_colour_details_cb),
+            ],
+        )
         self.action_groups[actions.AC_SELN_MADE].add_actions(
             [
                 ('remove_selected_colours', gtk.STOCK_REMOVE, None, None,
@@ -682,6 +701,14 @@ class PartsColourListView(gpaint.ColourListView):
         row = model.get_row(model.get_iter(path))
         model.process_parts_change(paint.BLOB(colour=row.colour, parts=new_parts))
     # END_DEF: _value_changed_cb
+
+    def _show_colour_details_cb(self, _action):
+        colour = self.get_selected_colours()[0]
+        if isinstance(colour, paint.NamedMixedColour):
+            MixedColourInformationDialogue(colour).show()
+        else:
+            TubeColourInformationDialogue(colour).show()
+    # END_DEF: _show_colour_details_cb
 # END_CLASS: PartsColourListView
 
 class SelectColourListView(gpaint.ColourListView):
@@ -891,3 +918,74 @@ class TubeColourInformationDialogue(gtk.Dialog):
         vbox.show_all()
     # END_DEF: __init__()
 # END_CLASS: TubeColourInformationDialogue
+
+def generate_components_list_spec(model):
+    """
+    Generate the specification for a mixed colour components list
+    """
+    parts_col_spec = tlview.ColumnSpec(
+        title =_('Parts'),
+        properties={},
+        sort_key_function=lambda row: row.parts,
+        cells=[
+            tlview.CellSpec(
+                cell_renderer_spec=tlview.CellRendererSpec(
+                    cell_renderer=gtk.CellRendererText,
+                    expand=None,
+                    start=False
+                ),
+                properties={'width-chars' : 8},
+                cell_data_function_spec=None,
+                attributes={'text' : model.col_index('parts')}
+            ),
+        ]
+    )
+    name_col_spec = gpaint.colour_attribute_column_spec(gpaint.TNS(_('Name'), 'name', {}, lambda row: row.colour.name))
+    attr_cols_specs = [gpaint.colour_attribute_column_spec(tns) for tns in gpaint.COLOUR_ATTRS[1:]]
+    return tlview.ViewSpec(
+        properties={},
+        selection_mode=gtk.SELECTION_SINGLE,
+        columns=[parts_col_spec, name_col_spec] + attr_cols_specs
+    )
+# END_DEF: generate_components_list_spec
+
+class ComponentsListView(PartsColourListView):
+    UI_DESCR = '''
+    <ui>
+        <popup name='colour_list_popup'>
+            <menuitem action='show_colour_details'/>
+        </popup>
+    </ui>
+    '''
+    Model = PartsColourListStore
+    specification = generate_components_list_spec(PartsColourListStore)
+
+    def _set_cell_connections(self):
+        pass
+    # END_DEF: _set_cell_connections
+# END_CLASS: ComponentsListView
+
+class MixedColourInformationDialogue(gtk.Dialog):
+    """
+    A dialog to display the detailed information for a mixed colour
+    """
+
+    def __init__(self, colour, parent=None):
+        gtk.Dialog.__init__(self, title=_('Mixed Colour: {}').format(colour.name), parent=parent)
+        vbox = self.get_content_area()
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.name, colour), expand=False)
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.notes, colour), expand=False)
+        vbox.pack_start(gpaint.HCVWDisplay(colour), expand=False)
+        vbox.pack_start(gtk.Label(colour.transparency.description()), expand=False)
+        vbox.pack_start(gtk.Label(colour.permanence.description()), expand=False)
+        self.cview = ComponentsListView()
+        for component in colour.blobs:
+            self.cview.model.append(component)
+        vbox.pack_start(self.cview, expand=False)
+        vbox.show_all()
+    # END_DEF: __init__()
+
+    def unselect_all(self):
+        self.cview.get_selection().unselect_all()
+    # END_DEF: unselect_all
+# END_CLASS: MixedColourInformationDialogue
