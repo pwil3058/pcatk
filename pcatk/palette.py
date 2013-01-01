@@ -387,6 +387,7 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
     UI_DESCR = '''
         <ui>
             <popup name='colour_spinner_popup'>
+                <menuitem action='tube_colour_info'/>
                 <menuitem action='remove_me'/>
             </popup>
         </ui>
@@ -405,6 +406,10 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
         """
         self.action_groups[actions.AC_DONT_CARE].add_actions(
             [
+                ('tube_colour_info', gtk.STOCK_INFO, None, None,
+                 _('Detailed information for this tube colour.'),
+                 self._tube_colour_info_cb
+                ),
                 ('remove_me', gtk.STOCK_REMOVE, None, None,
                  _('Remove this tube colour from the palette.'),
                 ),
@@ -415,6 +420,9 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
     def get_blob(self):
         return paint.BLOB(self.colour, self.get_value_as_int())
     # END_DEF: get_blob
+    def _tube_colour_info_cb(self, _action):
+        TubeColourInformationDialogue(self.colour).show()
+    # END_DEF: _tube_colour_info_cb
 # END_CLASS: ColourPartsSpinButton
 
 class ColourPartsSpinButtonBox(gtk.VBox):
@@ -858,3 +866,21 @@ class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
         self.get_toplevel().destroy()
     # END_DEF: _close_analysed_image_viewer_cb
 # END_CLASS: AnalysedImageViewer
+
+class TubeColourInformationDialogue(gtk.Dialog):
+    """
+    A dialog to display the detailed information for a tube colour
+    """
+
+    def __init__(self, colour, parent=None):
+        gtk.Dialog.__init__(self, title=_('Tube Colour: {}').format(colour.name), parent=parent)
+        vbox = self.get_content_area()
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.name, colour), expand=False)
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.name, colour), expand=False)
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.maker, colour), expand=False)
+        vbox.pack_start(gpaint.HCVWDisplay(colour), expand=False)
+        vbox.pack_start(gtk.Label(colour.transparency.description()), expand=False)
+        vbox.pack_start(gtk.Label(colour.permanence.description()), expand=False)
+        vbox.show_all()
+    # END_DEF: __init__()
+# END_CLASS: TubeColourInformationDialogue
