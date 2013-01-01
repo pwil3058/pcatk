@@ -420,6 +420,7 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
     def get_blob(self):
         return paint.BLOB(self.colour, self.get_value_as_int())
     # END_DEF: get_blob
+
     def _tube_colour_info_cb(self, _action):
         TubeColourInformationDialogue(self.colour).show()
     # END_DEF: _tube_colour_info_cb
@@ -729,6 +730,7 @@ class TubeColourSelector(gtk.VBox):
         maker = gtk.Label(_('Manufacturer: {0}'.format(tube_series.series_id.maker)))
         sname = gtk.Label(_('Series Name: {0}'.format(tube_series.series_id.name)))
         # make connections
+        self.tube_colours_view.action_groups.connect_activate('show_colour_details', self._show_colour_details_cb)
         self.tube_colours_view.action_groups.connect_activate('add_colours_to_palette', self._add_colours_to_palette_cb)
         # lay the components out
         self.pack_start(sname, expand=False)
@@ -739,6 +741,11 @@ class TubeColourSelector(gtk.VBox):
         self.pack_start(hbox, expand=True, fill=True)
         self.show_all()
     # END_DEF: __init__()
+
+    def _show_colour_details_cb(self, _action):
+        colour = self.tube_colours_view.get_selected_colours()[0]
+        TubeColourInformationDialogue(colour).show()
+    # END_DEF: _tube_colour_info_cb
 
     def _add_colours_to_palette_cb(self, _action):
         """
