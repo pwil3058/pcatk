@@ -626,8 +626,8 @@ class ColourWheel(gtk.DrawingArea):
         def __init__(self, parent, colour):
             self.parent = parent
             self.colour = colour
-            self.x = None
-            self.y = None
+            self.x = 0
+            self.y = 0
             self.pen_width = 2
             self.predraw_setup()
         # END_DEF: __init__
