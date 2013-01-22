@@ -350,41 +350,6 @@ class ColouredButton(gtk.Button):
     # END_DEF: set_colour
 # END_CLASS: ColouredButton
 
-class ColouredSpinButton(gtk.SpinButton):
-    def __init__(self, *args, **kwargs):
-        if 'colour' in kwargs:
-            colour = kwargs['colour']
-            del kwargs['colour']
-        else:
-            colour = None
-        gtk.SpinButton.__init__(self, *args, **kwargs)
-        style = self.get_style()
-        self._ratio = {}
-        self._ratio[gtk.STATE_NORMAL] = 1
-        nbg = sum(gdk_color_to_rgb(style.bg[gtk.STATE_NORMAL]))
-        for state in [gtk.STATE_ACTIVE, gtk.STATE_PRELIGHT]:
-            sbg = sum(gdk_color_to_rgb(style.bg[state]))
-            self._ratio[state] = fractions.Fraction(sbg, nbg)
-        if colour is not None:
-            self.set_colour(colour)
-    # END_DEF: __init__()
-
-    def set_colour(self, colour):
-        """
-        Set the background colour.
-        colour: an rgb value describing the required background colour
-        """
-        for state in [gtk.STATE_NORMAL, gtk.STATE_PRELIGHT, gtk.STATE_ACTIVE]:
-            rgb = [min(int(colour[i] * self._ratio[state]), 65535) for i in range(3)]
-            bg_colour = self.get_colormap().alloc_color(gtk.gdk.Color(*rgb))
-            fg_colour = self.get_colormap().alloc_color(best_foreground(rgb))
-            self.modify_base(state, bg_colour)
-            self.modify_bg(state, bg_colour)
-            self.modify_fg(state, fg_colour)
-            self.modify_text(state, fg_colour)
-    # END_DEF: ColouredSpinButton
-# END_CLASS: ColouredSpinButton
-
 ### Dialogues
 
 class ScrolledMessageDialog(gtk.Dialog):

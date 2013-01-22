@@ -64,6 +64,33 @@ class PermanenceChoice(MappedFloatChoice):
     MFDC = paint.Permanence
 # END_CLASS: PermanenceChoice
 
+class ColouredRectangle(gtk.DrawingArea):
+    def __init__(self, colour, size_request=None):
+        gtk.DrawingArea.__init__(self)
+        if size_request is not None:
+            self.set_size_request(*size_request)
+        self.colour = self.new_colour(paint.RGB_WHITE) if colour is None else self.new_colour(colour)
+        self.connect('expose-event', self.expose_cb)
+    # END_DEF: __init__()
+
+    def expose_cb(self, _widget, _event):
+        self.gc = self.window.new_gc()
+        self.gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
+        self.gc.set_background(self.colour)
+        self.window.set_background(self.colour)
+        self.window.clear()
+        return True
+    # END_DEF: expose_cb
+
+    def new_colour(self, arg):
+        if isinstance(arg, paint.Colour):
+            colour = gtk.gdk.Color(*arg.rgb)
+        else:
+            colour = gtk.gdk.Color(*arg)
+        return self.get_colormap().alloc_color(colour)
+    # END_DEF: new_colour
+# END_CLASS: ColouredRectangle
+
 class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
     """
     A coloured drawing area onto which samples can be dropped.
