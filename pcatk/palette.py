@@ -383,7 +383,7 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
 def colour_parts_adjustment():
     return gtk.Adjustment(0, 0, 999, 1, 10, 0)
 
-class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
+class ColourPartsSpinButton(gtk.EventBox, actions.CAGandUIManager):
     UI_DESCR = '''
         <ui>
             <popup name='colour_spinner_popup'>
@@ -393,11 +393,29 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
         </ui>
         '''
     def __init__(self, colour, *kwargs):
-        self.colour = colour
-        gtkpwx.ColouredSpinButton.__init__(self, colour=colour.rgb)
+        gtk.EventBox.__init__(self)
         actions.CAGandUIManager.__init__(self, popup='/colour_spinner_popup')
-        self.set_adjustment(colour_parts_adjustment())
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK|gtk.gdk.BUTTON_RELEASE_MASK)
+        self.set_size_request(85, 40)
+        self.colour = colour
+        self.entry = gtk.SpinButton()
+        self.entry.set_adjustment(colour_parts_adjustment())
+        self.entry.set_numeric(True)
+        self.entry.connect('button_press_event', self._button_press_cb)
         self.set_tooltip_text(str(colour))
+        frame = gtk.Frame()
+        frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        hbox = gtk.HBox()
+        hbox.pack_start(gpaint.ColouredRectangle(self.colour), expand=True, fill=True)
+        vbox = gtk.VBox()
+        vbox.pack_start(gpaint.ColouredRectangle(self.colour), expand=True, fill=True)
+        vbox.pack_start(self.entry, expand=False)
+        vbox.pack_start(gpaint.ColouredRectangle(self.colour), expand=True, fill=True)
+        hbox.pack_start(vbox, expand=False)
+        hbox.pack_start(gpaint.ColouredRectangle(self.colour, (5, -1)), expand=False)
+        frame.add(hbox)
+        self.add(frame)
+        self.show_all()
     # END_DEF: __init__()
 
     def populate_action_groups(self):
@@ -417,8 +435,16 @@ class ColourPartsSpinButton(gtkpwx.ColouredSpinButton, actions.CAGandUIManager):
         )
     # END_DEF: populate_action_groups
 
+    def get_parts(self):
+        return self.entry.get_value_as_int()
+    # END_DEF: get_parts
+
+    def set_parts(self, parts):
+        return self.entry.set_value(parts)
+    # END_DEF: set_parts
+
     def get_blob(self):
-        return paint.BLOB(self.colour, self.get_value_as_int())
+        return paint.BLOB(self.colour, self.get_parts())
     # END_DEF: get_blob
 
     def _tube_colour_info_cb(self, _action):
@@ -436,7 +462,7 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         self.__spinbuttons = []
         self.__hboxes = []
         self.__count = 0
-        self.__ncols = 12
+        self.__ncols = 8
     # END_DEF: __init__()
 
     def add_colour(self, colour):
@@ -445,7 +471,7 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         """
         spinbutton = ColourPartsSpinButton(colour)
         spinbutton.action_groups.connect_activate('remove_me', self._remove_me_cb, spinbutton)
-        spinbutton.connect('value-changed', self._spinbutton_value_changed_cb)
+        spinbutton.entry.connect('value-changed', self._spinbutton_value_changed_cb)
         self.__spinbuttons.append(spinbutton)
         self._pack_append(spinbutton)
         self.show_all()
@@ -515,7 +541,7 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         """
         Return a list of tube colours with non zero parts
         """
-        return [spinbutton.get_blob() for spinbutton in self.__spinbuttons if spinbutton.get_value_as_int() > 0]
+        return [spinbutton.get_blob() for spinbutton in self.__spinbuttons if spinbutton.get_parts() > 0]
     # END_DEF: get_contributions
 
     def reset_parts(self):
@@ -523,7 +549,7 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         Reset all spinbutton values to zero
         """
         for spinbutton in self.__spinbuttons:
-            spinbutton.set_value(0)
+            spinbutton.set_parts(0)
     # END_DEF: reset_parts
 gobject.signal_new('remove-colour', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('contributions-changed', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
