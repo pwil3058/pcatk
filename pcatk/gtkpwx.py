@@ -306,48 +306,74 @@ class ColouredLabel(ColourableLabel):
     # END_DEF: set_colour
 # END_CLASS: ColouredLabel
 
-class ColouredButton(gtk.Button):
-    def __init__(self, *args, **kwargs):
-        if 'label' not in kwargs:
-            # The label child won't be created until the label is set
-            kwargs['label'] = ''
-        if 'colour' in kwargs:
-            colour = kwargs['colour']
-            del kwargs['colour']
-        else:
-            colour = None
-        gtk.Button.__init__(self, *args, **kwargs)
-        if sys.platform[:3] == 'win':
-            # Crude workaround for Windows 7
-            label = self.get_children()[0]
-            clabel = ColourableLabel(label.get_text())
-            self.remove(label)
-            self.add(clabel)
-        self.label =  self.get_children()[0]
-        style = self.get_style()
-        self._ratio = {}
-        self._ratio[gtk.STATE_NORMAL] = fractions.Fraction(1)
-        nbg = sum(gdk_color_to_rgb(style.bg[gtk.STATE_NORMAL]))
-        for state in [gtk.STATE_ACTIVE, gtk.STATE_PRELIGHT]:
-            sbg = sum(gdk_color_to_rgb(style.bg[state]))
-            self._ratio[state] = fractions.Fraction(sbg, nbg)
+class ColouredButton(gtk.EventBox):
+    prelit_width = 2
+    unprelit_width = 0
+    state_value_ratio = {
+        gtk.STATE_NORMAL: fractions.Fraction(1),
+        gtk.STATE_ACTIVE: fractions.Fraction(1, 2),
+        gtk.STATE_PRELIGHT: fractions.Fraction(1),
+        gtk.STATE_SELECTED: fractions.Fraction(1),
+        gtk.STATE_INSENSITIVE: fractions.Fraction(1, 4)
+    }
+    def __init__(self, colour=None, label=None):
+        self.label = gtk.Label(label)
+        gtk.EventBox.__init__(self)
+        self.set_size_request(25, 25)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK|gtk.gdk.BUTTON_RELEASE_MASK|gtk.gdk.LEAVE_NOTIFY_MASK|gtk.gdk.FOCUS_CHANGE_MASK)
+        self.connect('button-press-event', self._button_press_cb)
+        self.connect('button-release-event', self._button_release_cb)
+        self.connect('enter-notify-event', self._enter_notify_cb)
+        self.connect('leave-notify-event', self._leave_notify_cb)
+        self.frame = gtk.Frame()
+        self.frame.set_shadow_type(gtk.SHADOW_NONE)
+        self.frame.set_border_width(self.unprelit_width)
+        self.frame.add(self.label)
+        self.add(self.frame)
         if colour is not None:
             self.set_colour(colour)
+        self.show_all()
     # END_DEF: __init__
 
+    def _button_press_cb(self, widget, event):
+        if event.button != 1:
+            return False
+        self.frame.set_shadow_type(gtk.SHADOW_IN)
+        self.set_state(gtk.STATE_ACTIVE)
+    # END_DEF: _button_press_cb
+
+    def _button_release_cb(self, widget, event):
+        if event.button != 1:
+            return False
+        self.frame.set_shadow_type(gtk.SHADOW_OUT)
+        self.set_state(gtk.STATE_PRELIGHT)
+        self.emit('clicked')
+    # END_DEF: _button_release_cb
+
+    def _enter_notify_cb(self, widget, event):
+        self.frame.set_shadow_type(gtk.SHADOW_OUT)
+        self.frame.set_border_width(self.prelit_width)
+        self.set_state(gtk.STATE_PRELIGHT)
+    # END_DEF: _enter_notify_cb
+
+    def _leave_notify_cb(self, widget, event):
+        self.frame.set_shadow_type(gtk.SHADOW_NONE)
+        self.frame.set_border_width(self.unprelit_width)
+        self.set_state(gtk.STATE_NORMAL)
+    # END_DEF: _leave_notify_cb
+
     def set_colour(self, colour):
-        for state in [gtk.STATE_NORMAL, gtk.STATE_PRELIGHT, gtk.STATE_ACTIVE]:
-            rgb = [min(int(colour[i] * self._ratio[state]), 65535) for i in range(3)]
-            bg_gcolour = gtk.gdk.Color(*rgb)
-            fg_gcolour = best_foreground(rgb)
-            for widget in [self, self.label]:
-                bg_colour = widget.get_colormap().alloc_color(bg_gcolour)
-                fg_colour = widget.get_colormap().alloc_color(fg_gcolour)
-                widget.modify_base(state, bg_colour)
-                widget.modify_bg(state, bg_colour)
-                widget.modify_fg(state, fg_colour)
-                widget.modify_text(state, fg_colour)
+        self.colour = colour
+        for state, value_ratio in self.state_value_ratio.items():
+            rgb = [min(int(colour[i] * value_ratio), 65535) for i in range(3)]
+            bg_gcolour = self.get_colormap().alloc_color(gtk.gdk.Color(*rgb))
+            fg_gcolour = self.get_colormap().alloc_color(best_foreground(rgb))
+            self.modify_base(state, bg_gcolour)
+            self.modify_bg(state, bg_gcolour)
+            self.modify_fg(state, fg_gcolour)
+            self.modify_text(state, fg_gcolour)
     # END_DEF: set_colour
+gobject.signal_new('clicked', ColouredButton, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
 # END_CLASS: ColouredButton
 
 ### Dialogues
