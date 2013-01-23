@@ -326,7 +326,7 @@ class ColouredButton(gtk.EventBox):
         self.connect('enter-notify-event', self._enter_notify_cb)
         self.connect('leave-notify-event', self._leave_notify_cb)
         self.frame = gtk.Frame()
-        self.frame.set_shadow_type(gtk.SHADOW_NONE)
+        self.frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         self.frame.set_border_width(self.unprelit_width)
         self.frame.add(self.label)
         self.add(self.frame)
@@ -357,7 +357,7 @@ class ColouredButton(gtk.EventBox):
     # END_DEF: _enter_notify_cb
 
     def _leave_notify_cb(self, widget, event):
-        self.frame.set_shadow_type(gtk.SHADOW_NONE)
+        self.frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         self.frame.set_border_width(self.unprelit_width)
         self.set_state(gtk.STATE_NORMAL)
     # END_DEF: _leave_notify_cb
