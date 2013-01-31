@@ -265,7 +265,6 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
 
     def _accept_colour_changes_cb(self, _widget):
         edited_colour = self.tube_editor.get_colour()
-        print edited_colour, self.current_colour
         if edited_colour.name != self.current_colour.name:
             # there's a name change so check for duplicate names
             other_colour = self.tube_colours.get_colour_with_name(edited_colour.name)
@@ -709,18 +708,26 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: auto_match_sample
 
     # TODO: implement matcher's colour fiddler functions in paint module
-    def _incr_channel(self, rgb, channel, denom=None):
+    def _incr_channel(self, rgb, channel, denom=None, frac=None):
+        assert frac is None or denom is None
         if denom is None:
-            rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta)
+            if frac is None:
+                rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta)
+            else:
+                rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta * frac.numerator / frac.denominator)
         else:
             rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta * rgb[channel] / denom)
     # END_DEF: _incr_channel
 
-    def _decr_channel(self, rgb, channel, denom=None):
+    def _decr_channel(self, rgb, channel, denom=None, frac=None):
+        assert frac is None or denom is None
         if denom is None:
-            rgb[channel] = max(0, rgb[channel] - self._delta)
+            if frac is None:
+                rgb[channel] = max(0, rgb[channel] - self._delta)
+            else:
+                rgb[channel] = max(0, rgb[channel] - self._delta * frac.numerator / frac.denominator)
         else:
-            rgb[channel] = min(paint.RGB.ONE, rgb[channel] - self._delta * rgb[channel] / denom)
+            rgb[channel] = max(0, rgb[channel] - self._delta * rgb[channel] / denom)
     # END_DEF: _decr_channel
 
     def incr_grayness_cb(self, event):
@@ -747,30 +754,33 @@ class ColourSampleMatcher(gtk.VBox):
     # END_DEF: incr_grayness_cb
 
     def decr_grayness_cb(self, event):
-        # TODO: investigate hue angle changes during decr greyness
         new_colour = list(self.colour.rgb)
         if self.colour.hue.is_grey():
             # we're colourless so a change to any channel will do
             if new_colour[0] < paint.RGB.ONE:
                 self._incr_channel(new_colour, 0)
+                self._decr_channel(new_colour, 1, frac=fractions.Fraction(1, 2))
+                self._decr_channel(new_colour, 2, frac=fractions.Fraction(1, 2))
             else:
-                self._decr_channel(new_colour, 0)
+                self._decr_channel(new_colour, 1, frac=fractions.Fraction(1, 2))
+                self._decr_channel(new_colour, 2, frac=fractions.Fraction(1, 2))
         else:
             ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
             if ncomps != 3:
                 # if we have less than 3 comps then we have no grayness
                 gtk.gdk.beep()
                 return
+            elif new_colour[io[1]] == new_colour[io[2]]:
+                for i in io[1:]:
+                    self._decr_channel(new_colour, i, frac=fractions.Fraction(1, 2))
+                self._incr_channel(new_colour, io[0])
             else:
-                if new_colour[io[0]] < paint.RGB.ONE:
-                    self._incr_channel(new_colour, io[0])
-                if new_colour[io[1]] == new_colour[io[2]]:
-                    for i in io[1:]:
-                        self._decr_channel(new_colour, i)
-                else:
-                    if new_colour[io[1]] < paint.RGB.ONE:
-                        self._incr_channel(new_colour, io[1])
-                    self._decr_channel(new_colour, io[2])
+                old_min = new_colour[io[2]]
+                self._decr_channel(new_colour, io[2])
+                delta_min = old_min - new_colour[io[2]]
+                sum_rest = sum([new_colour[i] for i in io[1:]])
+                for i in io[1:]:
+                    self._incr_channel(new_colour, i, frac=fractions.Fraction(new_colour[i], sum_rest))
         self.set_colour(new_colour)
     # END_DEF: decr_grayness_cb
 
@@ -796,7 +806,7 @@ class ColourSampleMatcher(gtk.VBox):
             else:
                 # denom should help maintain the hue angle
                 for i in io[:2]:
-                    self._incr_channel(new_colour, i, denom)
+                    self._incr_channel(new_colour, i, denom=denom)
         self.set_colour(new_colour)
     # END_DEF: incr_value_cb
 
