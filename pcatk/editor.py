@@ -778,9 +778,8 @@ class ColourSampleMatcher(gtk.VBox):
                 old_min = new_colour[io[2]]
                 self._decr_channel(new_colour, io[2])
                 delta_min = old_min - new_colour[io[2]]
-                sum_rest = sum([new_colour[i] for i in io[:2]])
                 for i in io[:2]:
-                    self._incr_channel(new_colour, i, frac=fractions.Fraction(new_colour[i] * delta_min, sum_rest * self._delta))
+                    self._incr_channel(new_colour, i, frac=fractions.Fraction(delta_min, self._delta))
         self.set_colour(new_colour)
     # END_DEF: decr_grayness_cb
 
