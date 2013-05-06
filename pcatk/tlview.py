@@ -72,7 +72,7 @@ class NamedTreeModel(gtk.TreeModel):
                 col_values.append(self.col_index(label_values[index]))
             else:
                 col_values.append(label_values[index])
-        self.set_values(model_iter, *col_values)
+        self.set(model_iter, *col_values)
     # END_DEF: set_named()
 
     def named(self):
@@ -101,6 +101,13 @@ class NamedListStore(gtk.ListStore, NamedTreeModel):
     def __init__(self):
         gtk.ListStore.__init__(*[self] + list(self.types))
     # END_DEF: __init__()
+    def append_contents(self, rows):
+        for row in rows:
+            self.append(row)
+    def set_contents(self, rows):
+        self.clear()
+        for row in rows:
+            self.append(row)
 # END_CLASS: NamedListStore
 
 class NamedTreeStore(gtk.TreeStore, NamedTreeModel):
@@ -229,7 +236,7 @@ class View(gtk.TreeView):
         self._change_cb_ids = [model.connect(sig_name, self._model_changed_cb) for sig_name in sig_names]
         self.last_sort_column = None
         self.sort_order = gtk.SORT_ASCENDING
-    # END_DEF: 
+    # END_DEF:
 
     @staticmethod
     def _create_cell(column, cell_renderer_spec):
@@ -363,7 +370,7 @@ class View(gtk.TreeView):
         if self.last_sort_column is not None:
             self.last_sort_column.set_sort_indicator(False)
             self.last_sort_column = None
-    # END_DEF: 
+    # END_DEF:
 
     def _column_clicked_cb(self, column, sort_key_function):
         """Sort the rows based on the given column"""
