@@ -43,7 +43,6 @@ def pango_rgb_str(rgb, bits_per_channel=16):
     for i in range(3):
         string += '{0:02X}'.format(rgb[i] >> (bits_per_channel - 8))
     return string
-# END_DEF: pango_rgb_str
 
 class Palette(gtk.VBox, actions.CAGandUIManager):
     UI_DESCR = '''
@@ -109,8 +108,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         self.pack_start(gtkpwx.wrap_in_scrolled_window(self.mixed_colours_view), expand=True, fill=True)
         self.show_all()
         self.recalculate_colour([])
-    # END_DEF: __init__
-
     def populate_action_groups(self):
         """
         Set up the actions for this component
@@ -143,8 +140,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             _('Add this colour to the palette as a mixed colour.'),
             self._add_mixed_colour_cb),
         ])
-    # END_DEF: populate_action_groups
-
     def __str__(self):
         tube_colours = self.tube_colours.get_colours()
         if len(tube_colours) == 0:
@@ -165,7 +160,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
                 else:
                     string += '\t {0}:\t{1}\n'.format(parts, cc.name)
         return string
-
     def pango_markup_chunks(self):
         """
         Format the palette description as a list of pango markup chunks
@@ -197,16 +191,10 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             chunks.append(string)
             string = '' # Necessary because we put header in the first chunk
         return chunks
-    # END_DEF: pango_markup_chunks
-
     def _contributions_changed_cb(self, _widget, contributions):
         self.recalculate_colour(contributions + self.mixed_colours.get_contributions())
-    # END_DEF: _contributions_changed_cb
-
     def _mixed_contributions_changed_cb(self, _treemodel, contributions):
         self.recalculate_colour(contributions + self.tube_colours.get_contributions())
-    # END_DEF: _mixed_contributions_changed_cb
-
     def recalculate_colour(self, contributions):
         new_colour = paint.MixedColour(contributions)
         self.mixpanel.set_bg_colour(new_colour.rgb)
@@ -215,8 +203,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             self.action_groups.update_condns(actions.MaskedConds(self.AC_HAVE_MIXTURE, self.AC_MASK))
         else:
             self.action_groups.update_condns(actions.MaskedConds(0, self.AC_MASK))
-    # END_DEF: recalculate_colour
-
     def _add_mixed_colour_cb(self,_action):
         tube_contribs = self.tube_colours.get_contributions()
         mixed_contribs = self.mixed_colours.get_contributions()
@@ -243,19 +229,13 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
     def del_tube(self, tube):
         self.tube_colours.del_colour(tube)
         self.wheels.del_colour(tube)
-    # END_DEF: del_tube
-
     def del_mixed(self, mixed):
         self.mixed_colours.remove_colour(mixed)
         self.wheels.del_colour(mixed)
-    # END_DEF: del_mixed
-
     def _add_colours_to_palette_cb(self, selector, colours):
         for tc in colours:
             if not self.tube_colours.has_colour(tc):
                 self.add_tube(tc)
-    # END_DEF: _add_colours_to_palette_cb
-
     def _remove_tube_colour_cb(self, widget, colour):
         """
         Respond to a request from a tube colour to be removed
@@ -271,8 +251,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             dlg.destroy()
         else:
             self.del_tube(colour)
-    # END_DEF: _remove_tube_colour_cb
-
     def _remove_mixed_colours_cb(self, _action):
         colours = self.mixed_colours_view.get_selected_colours()
         being_used = {}
@@ -292,26 +270,18 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             gtk.gdk.beep()
             dlg.run()
             dlg.destroy()
-    # END_DEF: _remove_mixed_colours_cb
-
     def _remove_unused_tubes_cb(self, _action):
         colours = self.tube_colours.get_colours()
         for colour in colours:
             if len(self.mixed_colours.get_colour_users(colour)) == 0:
                 self.del_tube(colour)
-    # END_DEF: _remove_unused_tubes_cb
-
     def report_io_error(self, edata):
         msg = '{0}: {1}'.format(edata.strerror, edata.filename)
         gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
         return False
-    # END_DEF: report_io_error
-
     def report_format_error(self, msg):
         gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
         return False
-    # END_DEF: report_format_error
-
     def launch_selector(self, filepath):
         try:
             fobj = open(filepath, 'r')
@@ -333,8 +303,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         window.add(selector)
         window.show()
         return True
-    # END_DEF: load_fm_file
-
     def _open_tube_series_selector_cb(self, _action):
         """
         Open a tool for adding tube colours to the palette
@@ -354,31 +322,23 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             if self.launch_selector(filepath):
                 self._last_dir = os.path.dirname(filepath)
         dlg.destroy()
-    # END_DEF: _open_tube_series_selector_cb
-
     def _print_palette_cb(self, _action):
         """
         Print the palette as simple text
         """
         # TODO: make printing more exotic
         printer.print_markup_chunks(self.pango_markup_chunks())
-    # END_DEF: _exit_palette_cb
-
     def _open_analysed_image_viewer_cb(self, _action):
         """
         Launch a window containing an analysed image viewer
         """
         AnalysedImageViewer(self.get_toplevel()).show()
-    # END_DEF: _open_analysed_image_viewer_cb
-
     def _quit_palette_cb(self, _action):
         """
         Exit the program
         """
         # TODO: add checks for unsaved work in palette before exiting
         gtk.main_quit()
-    # END_DEF: _exit_palette_cb
-# END_CLASS: Palette
 
 def colour_parts_adjustment():
     return gtk.Adjustment(0, 0, 999, 1, 10, 0)
@@ -416,8 +376,6 @@ class ColourPartsSpinButton(gtk.EventBox, actions.CAGandUIManager):
         frame.add(hbox)
         self.add(frame)
         self.show_all()
-    # END_DEF: __init__()
-
     def populate_action_groups(self):
         """
         Populate action groups ready for UI initialization.
@@ -433,38 +391,25 @@ class ColourPartsSpinButton(gtk.EventBox, actions.CAGandUIManager):
                 ),
             ]
         )
-    # END_DEF: populate_action_groups
-
     def get_parts(self):
         return self.entry.get_value_as_int()
-    # END_DEF: get_parts
-
     def set_parts(self, parts):
         return self.entry.set_value(parts)
-    # END_DEF: set_parts
-
     def get_blob(self):
         return paint.BLOB(self.colour, self.get_parts())
-    # END_DEF: get_blob
-
     def _tube_colour_info_cb(self, _action):
         TubeColourInformationDialogue(self.colour).show()
-    # END_DEF: _tube_colour_info_cb
-# END_CLASS: ColourPartsSpinButton
 
 class ColourPartsSpinButtonBox(gtk.VBox):
     """
     A dynamic array of coloured spinners
     """
-
     def __init__(self):
         gtk.VBox.__init__(self)
         self.__spinbuttons = []
         self.__hboxes = []
         self.__count = 0
         self.__ncols = 8
-    # END_DEF: __init__()
-
     def add_colour(self, colour):
         """
         Add a spinner for the given colour to the box
@@ -475,16 +420,12 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         self.__spinbuttons.append(spinbutton)
         self._pack_append(spinbutton)
         self.show_all()
-    # END_DEF: add_colour
-
     def _pack_append(self, spinbutton):
         if self.__count % self.__ncols == 0:
             self.__hboxes.append(gtk.HBox())
             self.pack_start(self.__hboxes[-1], expand=False)
         self.__hboxes[-1].pack_start(spinbutton, expand=False)
         self.__count += 1
-    # END_DEF: _pack_append
-
     def _unpack_all(self):
         """
         Unpack all the spinbuttons and hboxes
@@ -495,22 +436,16 @@ class ColourPartsSpinButtonBox(gtk.VBox):
             self.remove(hbox)
         self.__hboxes = []
         self.__count = 0
-    # END_DEF: _unpack_all
-
     def _remove_me_cb(self, _action, spinbutton):
         """
         Signal anybody who cares that spinbutton.colour should be removed
         """
         self.emit('remove-colour', spinbutton.colour)
-    # END_DEF: _remove_me_cb
-
     def _spinbutton_value_changed_cb(self, spinbutton):
         """
         Signal those interested that our contributions have changed
         """
         self.emit('contributions-changed', self.get_contributions())
-    # END_DEF: _spinbutton_value_changed_cb
-
     def del_colour(self, colour):
         # do this the easy way by taking them all out and putting back
         # all but the one to be deleted
@@ -521,12 +456,8 @@ class ColourPartsSpinButtonBox(gtk.VBox):
             else:
                 self._pack_append(spinbutton)
         self.show_all()
-    # END_DEF: del_colour
-
     def get_colours(self):
         return [spinbutton.colour for spinbutton in self.__spinbuttons]
-    # END_DEF: get_colours
-
     def has_colour(self, colour):
         """
         Do we already contain the given colour?
@@ -535,25 +466,19 @@ class ColourPartsSpinButtonBox(gtk.VBox):
             if spinbutton.colour == colour:
                 return True
         return False
-    # END_DEF: has_colour
-
     def get_contributions(self):
         """
         Return a list of tube colours with non zero parts
         """
         return [spinbutton.get_blob() for spinbutton in self.__spinbuttons if spinbutton.get_parts() > 0]
-    # END_DEF: get_contributions
-
     def reset_parts(self):
         """
         Reset all spinbutton values to zero
         """
         for spinbutton in self.__spinbuttons:
             spinbutton.set_parts(0)
-    # END_DEF: reset_parts
 gobject.signal_new('remove-colour', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('contributions-changed', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-# END_CLASS: ColourPartsSpinButtonBox
 
 class PartsColourListStore(gpaint.ColourListStore):
     Row = paint.BLOB
@@ -561,8 +486,6 @@ class PartsColourListStore(gpaint.ColourListStore):
 
     def append_colour(self, colour):
         self.append(self.Row(parts=0, colour=colour))
-    # END_DEF: append_colour
-
     def get_parts(self, colour):
         """
         Return the number of parts selected for the given colour
@@ -571,8 +494,6 @@ class PartsColourListStore(gpaint.ColourListStore):
         if model_iter is None:
             raise LookupError()
         return self.get_value_named(model_iter, 'parts')
-    # END_DEF: get_parts
-
     def reset_parts(self):
         """
         Reset the number of parts for all colours to zero
@@ -582,19 +503,13 @@ class PartsColourListStore(gpaint.ColourListStore):
             self.set_value_named(model_iter, 'parts', 0)
             model_iter = self.iter_next(model_iter)
         self.emit('contributions-changed', [])
-    # END_DEF: reset_parts
-
     def get_contributions(self):
         """
         Return a list of Model.Row() tuples where parts is greater than zero
         """
         return [row for row in self.named() if row.parts > 0]
-    # END_DEF: get_contributions
-
     def get_colour_users(self, colour):
         return [row.colour for row in self.named() if row.colour.contains_colour(colour)]
-    # END_DEF: get_colour_users
-
     def process_parts_change(self, blob):
         """
         Work out contributions with modifications in blob.
@@ -611,16 +526,13 @@ class PartsColourListStore(gpaint.ColourListStore):
             elif row.parts > 0:
                 contributions.append(row)
         self.emit('contributions-changed', contributions)
-    # END_DEF: process_parts_change
 gobject.signal_new('contributions-changed', PartsColourListStore, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT, ))
-# END_CLASS: PartsColourListStore
 
 def notes_cell_data_func(column, cell, model, model_iter, *args):
     colour = model.get_value_named(model_iter, 'colour')
     cell.set_property('text', colour.notes)
     cell.set_property('background', gtk.gdk.Color(*colour.rgb))
     cell.set_property('foreground', gtkpwx.best_foreground(colour.rgb))
-# END_DEF: paint_cell_data_func
 
 def generate_colour_parts_list_spec(model):
     """
@@ -669,7 +581,6 @@ def generate_colour_parts_list_spec(model):
         selection_mode=gtk.SELECTION_MULTIPLE,
         columns=[parts_col_spec, name_col_spec, notes_col_spec] + attr_cols_specs
     )
-# END_DEF: generate_colour_parts_list_spec
 
 class PartsColourListView(gpaint.ColourListView):
     UI_DESCR = '''
@@ -685,20 +596,14 @@ class PartsColourListView(gpaint.ColourListView):
     def __init__(self, *args, **kwargs):
         gpaint.ColourListView.__init__(self, *args, **kwargs)
         self._set_cell_connections()
-    # END_DEF: __init__
-
     def _set_cell_connections(self):
         parts_cell = self.get_cell_with_title(_('Parts'))
         parts_cell.connect('value-changed', self._value_changed_cb)
         notes_cell = self.get_cell_with_title(_('Notes'))
         notes_cell.connect('edited', self._notes_edited_cb, self.Model.col_index('colour'))
-    # END_DEF: _set_cell_connections
-
     def _notes_edited_cb(self, cell, path, new_text, index):
         self.get_model()[path][index].notes = new_text
         self._notify_modification()
-    # END_DEF: _cell_text_edited_cb()
-
     def populate_action_groups(self):
         """
         Populate action groups ready for UI initialization.
@@ -716,8 +621,6 @@ class PartsColourListView(gpaint.ColourListView):
                  _('Remove the selected colours from the list.'), ),
             ]
         )
-    # END_DEF: populate_action_groups
-
     def _value_changed_cb(self, cell, path, spinbutton):
         """
         Let the model know about a change to a spinbutton value
@@ -726,16 +629,12 @@ class PartsColourListView(gpaint.ColourListView):
         new_parts = spinbutton.get_value_as_int()
         row = model.get_row(model.get_iter(path))
         model.process_parts_change(paint.BLOB(colour=row.colour, parts=new_parts))
-    # END_DEF: _value_changed_cb
-
     def _show_colour_details_cb(self, _action):
         colour = self.get_selected_colours()[0]
         if isinstance(colour, paint.NamedMixedColour):
             MixedColourInformationDialogue(colour).show()
         else:
             TubeColourInformationDialogue(colour).show()
-    # END_DEF: _show_colour_details_cb
-# END_CLASS: PartsColourListView
 
 class SelectColourListView(gpaint.ColourListView):
     UI_DESCR = '''
@@ -762,14 +661,11 @@ class SelectColourListView(gpaint.ColourListView):
                  _('Add the selected colours to the palette.'),),
             ]
         )
-    # END_DEF: populate_action_groups
-# END_CLASS: SelectColourListView
 
 class TubeColourSelector(gtk.VBox):
     """
     A widget for adding tube colours to the palette
     """
-
     def __init__(self, tube_series):
         gtk.VBox.__init__(self)
         # components
@@ -793,27 +689,20 @@ class TubeColourSelector(gtk.VBox):
         hbox.pack_start(gtkpwx.wrap_in_scrolled_window(self.tube_colours_view), expand=True, fill=True)
         self.pack_start(hbox, expand=True, fill=True)
         self.show_all()
-    # END_DEF: __init__()
-
     def _show_colour_details_cb(self, _action):
         colour = self.tube_colours_view.get_selected_colours()[0]
         TubeColourInformationDialogue(colour).show()
-    # END_DEF: _tube_colour_info_cb
-
     def _add_colours_to_palette_cb(self, _action):
         """
         Add the currently selected colours to the palette.
         """
         self.emit('add-tube-colours', self.tube_colours_view.get_selected_colours())
-    # END_DEF: _add_colours_to_palette_cb
 gobject.signal_new('add-tube-colours', TubeColourSelector, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-# END_CLASS: TubeColourSelector
 
 class TopLevelWindow(gtk.Window):
     """
     A top level window wrapper around a palette
     """
-
     def __init__(self):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         self.set_icon_from_file(icons.APP_ICON_FILE)
@@ -822,8 +711,6 @@ class TopLevelWindow(gtk.Window):
         self.connect("destroy", self.palette._quit_palette_cb)
         self.add(self.palette)
         self.show_all()
-    # END_DEF: __init__()
-# END_CLASS: TopLevelWindow
 
 class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
     """
@@ -840,7 +727,6 @@ class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
     </ui>
     '''
     TITLE_TEMPLATE = _('pcatk: Analysed Image: {}')
-
     def __init__(self, parent):
         gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
         actions.CAGandUIManager.__init__(self)
@@ -873,8 +759,6 @@ class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
         self.show_all()
         if pixbuf is not None:
             self.analyser.set_pixbuf(pixbuf)
-    # END_DEF: __init__()
-
     def populate_action_groups(self):
         self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('analysed_image_file_menu', None, _('File')),
@@ -885,8 +769,6 @@ class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
             _('Close this window.'),
             self._close_analysed_image_viewer_cb),
         ])
-    # END_DEF: populate_action_groups
-
     def _open_analysed_image_file_cb(self, _action):
         """
         Ask the user for the name of the file then open it.
@@ -920,18 +802,13 @@ class AnalysedImageViewer(gtk.Window, actions.CAGandUIManager):
             self.analyser.set_pixbuf(pixbuf)
         else:
             dlg.destroy()
-    # END_DEF: _open_analysed_image_file_cb
-
     def _close_analysed_image_viewer_cb(self, _action):
         self.get_toplevel().destroy()
-    # END_DEF: _close_analysed_image_viewer_cb
-# END_CLASS: AnalysedImageViewer
 
 class TubeColourInformationDialogue(gtk.Dialog):
     """
     A dialog to display the detailed information for a tube colour
     """
-
     def __init__(self, colour, parent=None):
         gtk.Dialog.__init__(self, title=_('Tube Colour: {}').format(colour.name), parent=parent)
         vbox = self.get_content_area()
@@ -942,8 +819,6 @@ class TubeColourInformationDialogue(gtk.Dialog):
         vbox.pack_start(gtk.Label(colour.transparency.description()), expand=False)
         vbox.pack_start(gtk.Label(colour.permanence.description()), expand=False)
         vbox.show_all()
-    # END_DEF: __init__()
-# END_CLASS: TubeColourInformationDialogue
 
 def generate_components_list_spec(model):
     """
@@ -973,7 +848,6 @@ def generate_components_list_spec(model):
         selection_mode=gtk.SELECTION_SINGLE,
         columns=[parts_col_spec, name_col_spec] + attr_cols_specs
     )
-# END_DEF: generate_components_list_spec
 
 class ComponentsListView(PartsColourListView):
     UI_DESCR = '''
@@ -988,8 +862,6 @@ class ComponentsListView(PartsColourListView):
 
     def _set_cell_connections(self):
         pass
-    # END_DEF: _set_cell_connections
-# END_CLASS: ComponentsListView
 
 class MixedColourInformationDialogue(gtk.Dialog):
     """
@@ -1009,9 +881,5 @@ class MixedColourInformationDialogue(gtk.Dialog):
             self.cview.model.append(component)
         vbox.pack_start(self.cview, expand=False)
         vbox.show_all()
-    # END_DEF: __init__()
-
     def unselect_all(self):
         self.cview.get_selection().unselect_all()
-    # END_DEF: unselect_all
-# END_CLASS: MixedColourInformationDialogue

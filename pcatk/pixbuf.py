@@ -39,16 +39,12 @@ class RGB(rgbh.RGB8):
     def scaled_to_sum(cls, rgb, new_sum):
         cur_sum = sum(rgb)
         return array.array(cls.TYPECODE, (int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)))
-    # END_DEF: scaled_to_sum
-
     @classmethod
     def to_mono(cls, rgb):
         val = (sum(rgb) + 1) / 3
         return array.array(cls.TYPECODE, (val, val, val))
-    # END_DEF: to_mono
 WHITE = array.array(RGB.TYPECODE, (RGB.ONE, RGB.ONE, RGB.ONE))
 BLACK = array.array(RGB.TYPECODE, (0, 0, 0))
-# END_CLASS: RGB
 
 class Hue(rgbh.Hue8):
     pass
@@ -59,11 +55,9 @@ def calc_rowstride(bytes_per_row):
     """
     rem = bytes_per_row % 4
     return bytes_per_row + (0 if rem == 0 else 4 - rem)
-# END_DEF: calc_rowstride
 
 class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values', 'c_totals', 'value_rgbs']), rgbh.BPC8):
     __slots__ = ()
-
     @classmethod
     def create(cls, n_values):
         """
@@ -75,8 +69,6 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         c_totals = tuple([int(cls.THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
         value_rgbs = tuple([array.array(cls.TYPECODE, (int((total + 0.5) / 3),) * 3) for total in c_totals])
         return ValueLimitCriteria(n_values, c_totals, value_rgbs)
-    # END_DEF: create
-
     def get_value_index(self, rgb):
         """
         Return the index of rgb value w.r.t. the specified ValueLimitCriteria
@@ -89,12 +81,9 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         2
         """
         return (sum(rgb) * (self.n_values - 1) * 2 + self.THREE) / self.SIX
-    # END_DEF: get_value_index
-# END_CLASS: ValueLimitCriteria
 
 class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hues', 'step'])):
     __slots__ = ()
-
     @classmethod
     def create(cls, n_hues):
         '''
@@ -115,8 +104,6 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         angles = [utils.Angle.normalize(step * i) for i in range(n_hues)]
         hues = [Hue.from_angle(angle) for angle in angles]
         return HueLimitCriteria(n_hues, hues, step)
-    # END_DEF: create
-
     def get_hue_index(self, hue):
         """
         Return the index of hue w.r.t. the specified HueLevelCriteria
@@ -136,66 +123,46 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
             if index == self.n_hues:
                 index = 0
         return index
-    # END_DEF: get_hue_index
-# END_CLASS: HueLimitCriteria
 
 class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hlc', 'vlc', 'hv_rgbs'])):
     __slots__ = ()
-
     @classmethod
     def create(cls, n_hues, n_values):
         hlc = HueLimitCriteria.create(n_hues)
         vlc = ValueLimitCriteria.create(n_values)
         hv_rgbs = [[hue.rgb_with_total(total) for total in vlc.c_totals] for hue in hlc.hues]
         return HueValueLimitCriteria(hlc, vlc, hv_rgbs)
-    # END_DEF: create
-
     def get_hue_index(self, hue):
         return self.hlc.get_hue_index(hue)
-    # END_DEF: get_hue_index
-
     def get_value_index(self, rgb):
         return self.vlc.get_value_index(rgb)
-    # END_DEF: get_value_index
-# END_CLASS: HueValueLimitCriteria
 
 class PixBufRow(rgbh.BPC8):
     def __init__(self, data, start, end, nc=3):
         self.rgbs = [array.array(self.TYPECODE, (data[i], data[i+1], data[i+2])) for i in xrange(start, end, nc)]
         self.hues = [Hue.from_rgb(rgb) for rgb in self.rgbs]
-
     def __iter__(self):
         for rgb, hue in zip(self.rgbs, self.hues):
             yield (rgb, hue)
-    # END_DEF: __iter__
-
     @property
     def width(self):
         return len(self.pixels)
-    # END_DEF: width
-
     @property
     def has_alpha(self):
         return False
-    # END_DEF: has_alpha
-# END_CLASS: PixBufRow
 
 def transform_row_raw(pbr):
     return pbr.rgbs
-# END_DEF: transform_row_raw
 
 def transform_row_mono(pbr):
     return [RGB.to_mono(rgb) for rgb in pbr.rgbs]
-# END_DEF: transform_row_mono
 
 def transform_row_notan(pbr, threshold):
     sum_thr = RGB.THREE * threshold.numerator / threshold.denominator
     return [BLACK if sum(rgb) <= sum_thr else WHITE for rgb in pbr.rgbs]
-# END_DEF: transform_row_notan
 
 def transform_row_high_chroma(pbr):
     return [hue.rgb_with_total(sum(rgb)) for rgb, hue in pbr]
-# END_DEF: transform_row_notan
 
 def transform_row_limited_value(pbr, vlc):
     def transform_limited_value(rgb, hue, vlc):
@@ -209,13 +176,10 @@ def transform_row_limited_value(pbr, vlc):
         except OverflowError:
             rgb = hue.rgb_with_total(vlc.c_totals[index])
         return rgb
-    # END_DEF: transform_limited_value
     return [transform_limited_value(rgb, hue, vlc) for rgb, hue in pbr]
-# END_DEF: transform_row_limited_value
 
 def transform_row_limited_value_mono(pbr, vlc):
     return [vlc.value_rgbs[vlc.get_value_index(rgb)] for rgb in pbr.rgbs]
-# END_DEF: transform_row_limited_value_mono
 
 def transform_row_limited_hue(pbr, hlc):
     def transform_limited_hue(rgb, hue, hlc):
@@ -227,9 +191,7 @@ def transform_row_limited_hue(pbr, hlc):
         else:
             rgb = RGB.rotated(rgb, hlc.hues[index].angle - hue.angle)
         return rgb
-    # END_DEF: transform_limited_hue
     return [transform_limited_hue(rgb, hue, hlc) for rgb, hue in pbr]
-# END_DEF: transform_limited_hue
 
 def transform_row_limited_hue_value(pbr, hvlc):
     def transform_limited_hue_value(rgb, hue, hvlc):
@@ -251,46 +213,36 @@ def transform_row_limited_hue_value(pbr, hvlc):
             except OverflowError:
                 rgb = hvlc.hv_rgbs[h_index][v_index]
         return rgb
-    # END_DEF: transform_limited_hue
     return [transform_limited_hue_value(rgb, hue, hvlc) for rgb, hue in pbr]
-# END_DEF: transform_limited_hue_value
 
 def rgb_row_to_string(rgb_row):
     result = array.array('B')
     for rgb in rgb_row:
         result.extend(rgb)
     return result.tostring()
-# END_DEF: rgb_row_to_string
 
 class RGBHImage(gobject.GObject):
     """
     An object containing a RGB and Hue array representing a Pixbuf
     """
     NPR = 50 # the number of progress reports to make during a loop
-
     def __init__(self, pixbuf=None):
         gobject.GObject.__init__(self)
         self.__size = gtkpwx.WH(width=0, height=0)
         self.__pixel_rows = None
         if pixbuf is not None:
             self.set_from_pixbuf(pixbuf)
-    # END_DEF: __init__
-
     @property
     def size(self):
         """
         The size of this image as an instance gtkpwx.WH
         """
         return self.__size
-    # END_DEF: size
-
     def __getitem__(self, index):
         """
         Get the row with the given index
         """
         return self.__pixel_rows[index]
-    # END_DEF: __getitem__
-
     def set_from_pixbuf(self, pixbuf):
         size = pixbuf.get_width() * pixbuf.get_height()
         if size > 640 * 640:
@@ -321,8 +273,6 @@ class RGBHImage(gobject.GObject):
             start = j * rs
             self.__pixel_rows.append(PixBufRow(data, start, start + w * nc, nc))
         self.emit('progress-made', fractions.Fraction(1))
-    # END_DEF: set_from_pixbuf
-
     def get_mapped_pixbuf(self, map_to_flat_row):
         if self.__pixel_rows is None:
             return None
@@ -348,8 +298,6 @@ class RGBHImage(gobject.GObject):
             height=self.__size.height,
             rowstride=rowstride
         )
-    # END_DEF: get_mapped_pixbuf
-
     def get_pixbuf(self):
         """
         Return a gtk.gdk.Pixbuf representation of the image
@@ -359,117 +307,73 @@ class RGBHImage(gobject.GObject):
                 for component in pixel.rgb:
                     yield component
         return self.get_mapped_pixbuf(map_to_flat_row)
-    # END_DEF: get_pixbuf
 gobject.type_register(RGBHImage)
 gobject.signal_new('progress-made', RGBHImage, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
-# END_CLASS: RGBHImage
 
 class Transformer(object):
     """
     A wrapper for an artistic analytical view of an image
     """
     LABEL = ''
-
     def __init__(self):
         self.initialize_parameters()
-    # END_DEF: __init__()
-
     def initialize_parameters(self):
         pass
-    # END_DEF: initialize_parameters
-
     def transformed_pixbuf(self, rgbh_image):
         return rgbh_image.get_mapped_pixbuf(self.transform_row)
-    # END_DEF: transformed_pixbuf
-# END_CLASS: Transformer
 
 class TransformerRaw(Transformer):
     LABEL = _('Raw')
 
     def transform_row(self, row):
         return transform_row_raw(row)
-    # END_DEF: transform_row
-# END_CLASS: TransformerRaw
 
 class TransformerNotan(Transformer):
     LABEL = _('Notan')
-
     def initialize_parameters(self):
         self._threshold = fractions.Fraction(2, 10)
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_notan(row, self._threshold)
-    # END_DEF: transform_row
-# END_CLASS: TransformerNotan
 
 class TransformerValue(Transformer):
     LABEL = _('Monotone')
-
     def transform_row(self, row):
         return transform_row_mono(row)
-    # END_DEF: transform_row
-# END_CLASS: TransformerValue
 
 class TransformerRestrictedValue(Transformer):
     LABEL = _('Restricted Value (Monotone)')
-
     def initialize_parameters(self):
         self.__vlc = ValueLimitCriteria.create(11)
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_limited_value_mono(row, self.__vlc)
-    # END_DEF: transform_row
-# END_CLASS: TransformerRestrictedValue
 
 class TransformerColourRestrictedValue(Transformer):
     LABEL = _('Restricted Value')
-
     def initialize_parameters(self):
         self.__vlc = ValueLimitCriteria.create(11)
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_limited_value(row, self.__vlc)
-    # END_DEF: transform_row
-# END_CLASS: TransformerColourRestrictedValue
 
 class TransformerRestrictedHue(Transformer):
     LABEL = _('Restricted Hue')
-
     def initialize_parameters(self):
         self.__hlc = HueLimitCriteria.create(6)
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_limited_hue(row, self.__hlc)
-    # END_DEF: transform_row
-# END_CLASS: TransformerRestrictedHue
 
 class TransformerRestrictedHueValue(Transformer):
     LABEL = _('Restricted Hue and Value')
-
     def initialize_parameters(self):
         self.__hvlc = HueValueLimitCriteria.create(6, 11)
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_limited_hue_value(row, self.__hvlc)
-    # END_DEF: transform_row
-# END_CLASS: TransformerRestrictedHueValue
 
 class TransformerHighChroma(Transformer):
     LABEL = _('High Chroma')
-
     def initialize_parameters(self):
         pass
-    # END_DEF: initialize_parameters
-
     def transform_row(self, row):
         return transform_row_high_chroma(row)
-    # END_DEF: transform_row
-# END_CLASS: TransformerHighChroma
 
 if __name__ == '__main__':
     doctest.testmod()

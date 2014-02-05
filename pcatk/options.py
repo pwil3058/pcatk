@@ -71,7 +71,6 @@ def load_user_options():
     except configparser.ParsingError as edata:
         return Result(False, _('Error reading user options: {0}\n').format(str(edata)))
     return OK
-# END_DEF: load_user_options
 
 def reload_user_options():
     global USER_OPTIONS
@@ -82,7 +81,6 @@ def reload_user_options():
         return Result(False, _('Error reading user options: {0}\n').format(str(edata)))
     USER_OPTIONS = new_version
     return OK
-# END_DEF: reload_user_options
 
 class DuplicateDefn(Exception): pass
 
@@ -97,7 +95,6 @@ def define(section, oname, odefn):
         raise DuplicateDefn('{0}:{1} already defined'.format(section, oname))
     else:
         DEFINITIONS[section][oname] = odefn
-# END_DEF: define
 
 def str_to_bool(string):
     lowstr = string.lower()
@@ -107,7 +104,6 @@ def str_to_bool(string):
         return False
     else:
         return None
-# END_DEF: str_to_bool
 
 def get(section, oname):
     # This should cause an exception if section:oname is not known
@@ -117,7 +113,6 @@ def get(section, oname):
     if USER_OPTIONS.has_option(section, oname):
         value = str_to_val(USER_OPTIONS.get(section, oname))
     return value if value is not None else DEFINITIONS[section][oname].default
-# END_DEF: get
 
 def set(section, oname, val):
     # This should cause an exception if section:oname is not known
@@ -129,7 +124,6 @@ def set(section, oname, val):
             raise LookupError('{0}:{1}'.format(section, oname))
     USER_OPTIONS.set(section, oname, val)
     USER_OPTIONS.write(open(_USER_CFG_FILE_PATH, 'w'))
-# END_DEF: set
 
 def get_help(section, oname):
     # This should cause an exception if section:oname is not known
@@ -139,7 +133,6 @@ def get_help(section, oname):
     if USER_OPTIONS.has_option(section, oname):
         value = str_to_val(USER_OPTIONS.get(section, oname))
     return value if value is not None else DEFINITIONS[section][oname].default
-# END_DEF: get_help
 
 define('user', 'name', Defn(str, None, _('User\'s display name e.g. Fred Bloggs')))
 define('user', 'email', Defn(str, None, _('User\'s email address e.g. fred@bloggs.com')))

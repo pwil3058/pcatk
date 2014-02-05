@@ -39,7 +39,6 @@ def best_foreground(rgb, threshold=0.5):
         return gtk.gdk.Color(0, 0, 0)
     else:
         return gtk.gdk.Color(ONE, ONE, ONE)
-# END_DEF: best_foreground
 
 def gdk_color_to_rgb(gcol):
     gcol_str = gcol.to_string()[1:]
@@ -48,7 +47,6 @@ def gdk_color_to_rgb(gcol):
     elif len(gcol_str) == 6:
         return [int(gcol_str[i*2:(i+1) * 2] * 2, 16) for i in range(3)]
     return [int(gcol_str[i*4:(i+1) * 4], 16) for i in range(3)]
-# END_DEF: gdk_color_to_rgb
 
 def wrap_in_scrolled_window(widget, policy=(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC), with_frame=True, label=None):
     scrw = gtk.ScrolledWindow()
@@ -65,7 +63,6 @@ def wrap_in_scrolled_window(widget, policy=(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUT
     else:
         scrw.show_all()
         return scrw
-# END_DEF: wrap_in_scrolled_window
 
 def wrap_in_frame(widget, shadow_type=gtk.SHADOW_NONE):
     """
@@ -75,54 +72,37 @@ def wrap_in_frame(widget, shadow_type=gtk.SHADOW_NONE):
     frame.set_shadow_type(shadow_type)
     frame.add(widget)
     return frame
-# END_DEF: 
 
 ### Useful Named Tuples
 
 class WH(collections.namedtuple('WH', ['width', 'height'])):
     __slots__ = ()
-
     # These operations are compatible with gtk.gdk.Rectangle
     def __sub__(self, other):
         # don't assume other is WH just that it has width and height attributes
         return WH(width=self.width - other.width, height=self.height - other.height)
-    # END_DEF: __sub__
-
     def __rsub__(self, other):
         # don't assume other is WH just that it has width and height attributes
         return WH(width=other.width - self.width, height=other.height - self.height)
-    # END_DEF: __sub__
-
     def __eq__(self, other):
         # don't assume other is WH just that it has width and height attributes
         return other.width == self.width and other.height == self.height
-    # END_DEF: __eq__
-# END_CLASS: WH
 
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     __slots__ = ()
-
     # These operations are compatible with gtk.gdk.Rectangle
     def __sub__(self, other):
         # don't assume other is XY just that it has x and y attributes
         return XY(x=self.x - other.x, y=self.y - other.y)
-    # END_DEF: __sub__
-
     def __rsub__(self, other):
         # don't assume other is XY just that it has x and y attributes
         return XY(x=other.x - self.x, y=other.y - self.y)
-    # END_DEF: __sub__
-
     def __mul__(self, other):
         # allow scaling
         return XY(x=self.x * other, y=self.y * other)
-    # END_DEF: __mul__
-
     def __eq__(self, other):
         # don't assume other is XY just that it has x and y attributes
         return other.x == self.x and other.y == self.y
-    # END_DEF: __eq__
-# END_CLASS: XY
 
 # A named tuple compatible with gtk.gdk.Rectangle
 class RECT(collections.namedtuple('XY', ['x', 'y', 'width', 'height'])):
@@ -130,8 +110,6 @@ class RECT(collections.namedtuple('XY', ['x', 'y', 'width', 'height'])):
     @staticmethod
     def from_xy_wh(xy, wh):
         return RECT(x=xy.x, y=xy.y, width=wh.width, height=wh.height)
-    # END_DEF: from_xy_wh
-# END_CLASS: RECT
 
 ### Text Entry
 
@@ -139,7 +117,6 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
     """
     Extend EntryCompletion to handle mult-word text.
     """
-
     def __init__(self, model=None):
         """
         model: an argument to allow the TreeModel to be set at creation.
@@ -150,8 +127,6 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
         self.set_match_func(self.match_func)
         self.connect("match-selected", self.match_selected_cb)
         self.set_popup_set_width(False)
-    # END_DEF: __init__()
-
     @staticmethod
     def match_func(completion, key_string, model_iter, _data=None):
         """
@@ -166,8 +141,6 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
         model = completion.get_model()
         mword = model.get_value(model_iter, text_col)
         return mword and mword.lower().startswith(pword)
-    # END_DEF: match_func
- 
     @staticmethod
     def match_selected_cb(completion, model, model_iter):
         """
@@ -177,7 +150,7 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
         cursor_index = entry.get_position()
         # just in case get_text() is overloaded e.g. to add learning
         text = gtk.Entry.get_text(entry)
-
+        #
         text_col = completion.get_text_column()
         mword = model.get_value(model_iter, text_col)
         new_text = utils.replace_last_word(text=text, new_word=mword, before=cursor_index)
@@ -185,8 +158,6 @@ class EntryCompletionMultiWord(gtk.EntryCompletion):
         # move the cursor behind the new word
         entry.set_position(cursor_index + len(new_text) - len(text))
         return True
-    # END_DEF: match_selected_cb
-# END_CLASS EntryCompletionMultiword
 
 class TextEntryAutoComplete(gtk.Entry):
     def __init__(self, lexicon=None, learn=True, multiword=True, **kwargs):
@@ -205,20 +176,14 @@ class TextEntryAutoComplete(gtk.Entry):
         completion.set_text_column(0)
         self.set_lexicon(lexicon)
         self.set_learn(learn)
-    # END_DEF: __init__
-
     def set_lexicon(self, lexicon):
         if lexicon is not None:
             self.get_completion().set_model(lexicon)
-    # END_DEF: set_lexicon
-
     def set_learn(self, enable):
         """
         Set whether learning should happen
         """
         self.learn = enable
-    # END_DEF: set_learn
-
     def get_text(self):
         text = gtk.Entry.get_text(self)
         if self.learn:
@@ -239,8 +204,6 @@ class TextEntryAutoComplete(gtk.Entry):
                 if text not in lexicon:
                     model.append([text])
         return text
-    # END_DEF: get_text
-# END_CLASS: TextEntryAutoComplete
 
 ### Miscellaneous Data Entry
 
@@ -252,17 +215,11 @@ class Choice(gtk.ComboBox):
         self.add_attribute(cell, 'text', 0)
         for choice in choices:
             self.get_model().append([choice])
-    # END_DEF: __init__
-
     def get_selection(self):
         index = self.get_active()
         return index if index >= 0 else None
-    # END_DEF: get_selection
-
     def set_selection(self, index):
         self.set_active(index if index is not None else -1)
-    # END_DEF: set_selection
-# END_CLASS: Choice
 
 class ColourableLabel(gtk.EventBox):
     def __init__(self, label=''):
@@ -270,31 +227,21 @@ class ColourableLabel(gtk.EventBox):
         self.label = gtk.Label(label)
         self.add(self.label)
         self.show_all()
-    # END_DEF: __init__()
-
     def modify_base(self, state, colour):
         gtk.EventBox.modify_base(self, state, colour)
         self.label.modify_base(state, colour)
-    # END_DEF: modify_base
-
     def modify_text(self, state, colour):
         gtk.EventBox.modify_text(self, state, colour)
         self.label.modify_text(state, colour)
-    # END_DEF: modify_text
-
     def modify_fg(self, state, colour):
         gtk.EventBox.modify_fg(self, state, colour)
         self.label.modify_fg(state, colour)
-    # END_DEF: modify_fg
-# END_CLASS: ColourableLabel
 
 class ColouredLabel(ColourableLabel):
     def __init__(self, label, colour=None):
         ColourableLabel.__init__(self, label=label)
         if colour is not None:
             self.set_colour(colour)
-    # END_DEF: __init__()
-
     def set_colour(self, colour):
         bg_colour = self.get_colormap().alloc_color(gtk.gdk.Color(*colour))
         fg_colour = self.get_colormap().alloc_color(best_foreground(colour))
@@ -303,8 +250,6 @@ class ColouredLabel(ColourableLabel):
             self.modify_bg(state, bg_colour)
             self.modify_fg(state, fg_colour)
             self.modify_text(state, fg_colour)
-    # END_DEF: set_colour
-# END_CLASS: ColouredLabel
 
 class ColouredButton(gtk.EventBox):
     prelit_width = 2
@@ -333,35 +278,25 @@ class ColouredButton(gtk.EventBox):
         if colour is not None:
             self.set_colour(colour)
         self.show_all()
-    # END_DEF: __init__
-
     def _button_press_cb(self, widget, event):
         if event.button != 1:
             return False
         self.frame.set_shadow_type(gtk.SHADOW_IN)
         self.set_state(gtk.STATE_ACTIVE)
-    # END_DEF: _button_press_cb
-
     def _button_release_cb(self, widget, event):
         if event.button != 1:
             return False
         self.frame.set_shadow_type(gtk.SHADOW_OUT)
         self.set_state(gtk.STATE_PRELIGHT)
         self.emit('clicked')
-    # END_DEF: _button_release_cb
-
     def _enter_notify_cb(self, widget, event):
         self.frame.set_shadow_type(gtk.SHADOW_OUT)
         self.frame.set_border_width(self.prelit_width)
         self.set_state(gtk.STATE_PRELIGHT)
-    # END_DEF: _enter_notify_cb
-
     def _leave_notify_cb(self, widget, event):
         self.frame.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         self.frame.set_border_width(self.unprelit_width)
         self.set_state(gtk.STATE_NORMAL)
-    # END_DEF: _leave_notify_cb
-
     def set_colour(self, colour):
         self.colour = colour
         for state, value_ratio in self.state_value_ratio.items():
@@ -372,9 +307,7 @@ class ColouredButton(gtk.EventBox):
             self.modify_bg(state, bg_gcolour)
             self.modify_fg(state, fg_gcolour)
             self.modify_text(state, fg_gcolour)
-    # END_DEF: set_colour
 gobject.signal_new('clicked', ColouredButton, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
-# END_CLASS: ColouredButton
 
 ### Dialogues
 
@@ -391,12 +324,9 @@ class ScrolledMessageDialog(gtk.Dialog):
         gtk.MESSAGE_QUESTION: _('Question'),
         gtk.MESSAGE_ERROR: _('Error'),
     }
-
     @staticmethod
     def copy_cb(tview):
         tview.get_buffer().copy_clipboard(gtk.clipboard_get())
-    # END_DEF: copy_cb
-
     def __init__(self, parent=None, flags=gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT, type=gtk.MESSAGE_INFO, buttons=None, message_format=None):
         gtk.Dialog.__init__(self, title='{0}: {1}'.format(sys.argv[0], self.labels[type]), parent=parent, flags=flags, buttons=buttons)
         hbox = gtk.HBox()
@@ -418,16 +348,12 @@ class ScrolledMessageDialog(gtk.Dialog):
         self.get_content_area().pack_end(sbw, expand=True, fill=True)
         self.show_all()
         self.set_resizable(True)
-    # END_DEF: __init__
-# END_CLASS: ScrolledMessageDialog
 
 class CancelOKDialog(gtk.Dialog):
     def __init__(self, title=None, parent=None):
         flags = gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OK, gtk.RESPONSE_OK)
         gtk.Dialog.__init__(self, title, parent, flags, buttons)
-    # END_DEF: __init__
-# END_CLASS: CancelOKDialog
 
 class TextEntryDialog(CancelOKDialog):
     def __init__(self, title=None, prompt=None, suggestion="", parent=None):
@@ -442,13 +368,10 @@ class TextEntryDialog(CancelOKDialog):
         self.entry.set_text(suggestion)
         self.hbox.pack_start(self.entry)
         self.show_all()
-    # END_DEF: __init__
-# END_CLASS: TextEntryDialog
 
 class UnsavedChangesDialogue(gtk.Dialog):
     # TODO: make a better UnsavedChangesDialogue()
     SAVE_AND_CONTINUE, CONTINUE_UNSAVED = range(1, 3)
-
     def __init__(self, parent, message):
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         buttons += (_('Save and Continue'), UnsavedChangesDialogue.SAVE_AND_CONTINUE)
@@ -460,5 +383,3 @@ class UnsavedChangesDialogue(gtk.Dialog):
         )
         self.vbox.pack_start(gtk.Label(message))
         self.show_all()
-    # END_DEF: __init__
-# END_CLASS: UnsavedChangesDialogue
