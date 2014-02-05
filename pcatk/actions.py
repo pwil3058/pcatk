@@ -20,6 +20,7 @@ Conditionally enabled GTK action groups
 import collections
 
 import gtk
+import gobject
 
 def create_flag_generator():
     """
@@ -30,11 +31,11 @@ def create_flag_generator():
         yield 2 ** next_flag_num
         next_flag_num += 1
 
-class MaskedConds(collections.namedtuple('MaskedConds', ['condns', 'mask'])):
+class MaskedCondns(collections.namedtuple('MaskedCondns', ['condns', 'mask'])):
     __slots__ = ()
 
     def __or__(self, other):
-        return MaskedConds(self.condns | other.condns, self.mask | other.mask)
+        return MaskedCondns(self.condns | other.condns, self.mask | other.mask)
 
 class ActionCondns(object):
     _flag_generator = create_flag_generator()
@@ -57,16 +58,16 @@ AC_SELN_MASK = ActionCondns.new_flags_and_mask(4)
 
 def get_masked_seln_conditions(seln):
     if seln is None:
-        return MaskedConds(AC_DONT_CARE, AC_SELN_MASK)
+        return MaskedCondns(AC_DONT_CARE, AC_SELN_MASK)
     selsz = seln.count_selected_rows()
     if selsz == 0:
-        return MaskedConds(AC_SELN_NONE, AC_SELN_MASK)
+        return MaskedCondns(AC_SELN_NONE, AC_SELN_MASK)
     elif selsz == 1:
-        return MaskedConds(AC_SELN_MADE + AC_SELN_UNIQUE, AC_SELN_MASK)
+        return MaskedCondns(AC_SELN_MADE + AC_SELN_UNIQUE, AC_SELN_MASK)
     elif selsz == 2:
-        return MaskedConds(AC_SELN_MADE + AC_SELN_PAIR, AC_SELN_MASK)
+        return MaskedCondns(AC_SELN_MADE + AC_SELN_PAIR, AC_SELN_MASK)
     else:
-        return MaskedConds(AC_SELN_MADE, AC_SELN_MASK)
+        return MaskedCondns(AC_SELN_MADE, AC_SELN_MASK)
 
 class ActionButton(gtk.Button):
     def __init__(self, action, use_underline=True):
@@ -113,6 +114,7 @@ class ActionHButtonBox(gtk.HBox):
         self.button_list = ActionButtonList(action_group_list, action_name_list, use_underline)
         for button in self.button_list.list:
             self.pack_start(button, expand, fill, padding)
+        return self
 
 class ConditionalActionGroups(object):
     class UnknownAction(Exception): pass
@@ -153,13 +155,15 @@ class ConditionalActionGroups(object):
     def update_condns(self, changed_condns):
         """
         Update the current condition state
-        changed_condns: is a MaskedConds instance
+        changed_condns: is a MaskedCondns instance
         """
         condns = changed_condns.condns | (self.current_condns & ~changed_condns.mask)
         for key_condns, group in self.groups.items():
             if changed_condns.mask & key_condns:
                 group.set_sensitive((key_condns & condns) == key_condns)
         self.current_condns = condns
+    def set_visibility_for_condns(self, condns, visible):
+        self.groups[condns].set_visible(visible)
     def add_ui_mgr(self, ui_mgr):
         self.ui_mgrs.append(ui_mgr)
         for agrp in self.groups.values():
@@ -213,10 +217,11 @@ class UIManager(gtk.UIManager):
         if isinstance(widget, gtk.MenuItem) and tooltip:
             widget.set_tooltip_text(tooltip)
 
-class CAGandUIManager(object):
+class CAGandUIManager(gobject.GObject):
     '''This is a "mix in" class and needs to be merged with a gtk.Window() descendant'''
     UI_DESCR = '''<ui></ui>'''
     def __init__(self, selection=None, popup=None):
+        gobject.GObject.__init__(self)
         self.ui_manager = UIManager()
         CLASS_INDEP_AGS.add_ui_mgr(self.ui_manager)
         name = '{0}:{1:x}'.format(self.__class__.__name__, self.__hash__())
@@ -227,10 +232,11 @@ class CAGandUIManager(object):
         self.set_popup(popup)
     def populate_action_groups(self):
         assert False, 'should be derived in subclass'
-    def _button_press_cb(self, widget, event):
+    @staticmethod
+    def _button_press_cb(widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS:
-            if event.button == 3 and self._popup:
-                menu = self.ui_manager.get_widget(self._popup)
+            if event.button == 3 and widget._popup:
+                menu = widget.ui_manager.get_widget(widget._popup)
                 menu.popup(None, None, None, event.button, event.time)
                 return True
         return False
@@ -250,3 +256,5 @@ class CAGandUIManager(object):
                 self.handler_unblock(self._popup_cb_id)
             else:
                 self.handler_block(self._popup_cb_id)
+    def set_visibility_for_condns(self, condns, visible):
+        self.action_groups.set_visibility_for_condns(condns, visible)

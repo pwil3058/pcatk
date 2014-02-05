@@ -129,7 +129,7 @@ class ColumnSpec(object):
         self.title = title
         self.properties = properties if properties is not None else dict()
         self.cells = cells if cells is not None else list()
-        self.sort_key_function = lambda x: sort_key_function(x[1])
+        self.sort_key_function = sort_key_function
 
 class CellRendererSpec(object):
     __slots__ = ('cell_renderer', 'properties', 'expand', 'start')
@@ -170,8 +170,8 @@ class View(gtk.TreeView):
         self._columns = collections.OrderedDict()
         for col_d in self.specification.columns:
             self._view_add_column(col_d)
-        self.connect("button_press_event", self._handle_button_press_cb)
-        self.connect("key_press_event", self._handle_key_press_cb)
+        self.connect("button_press_event", self._handle_clear_selection_cb)
+        self.connect("key_press_event", self._handle_clear_selection_cb)
         self._connect_model_changed_cbs()
         self._modified_cbs = []
     def _connect_model_changed_cbs(self):
@@ -210,7 +210,7 @@ class View(gtk.TreeView):
         for cell_d in col_d.cells:
             self._view_add_cell(col, cell_d)
         if col_d.sort_key_function is not None:
-            col.connect('clicked', self._column_clicked_cb, col_d.sort_key_function)
+            col.connect('clicked', self._column_clicked_cb, lambda x: col_d.sort_key_function(x[1]))
             col.set_clickable(True)
     def _view_add_cell(self, col, cell_d):
         cell = self._create_cell(col, cell_d.cell_renderer_spec)
@@ -247,14 +247,12 @@ class View(gtk.TreeView):
                 cbk(data)
     def register_modification_callback(self, cbk, data=None):
         self._modified_cbs.append([cbk, data])
-    def _handle_button_press_cb(self, widget, event):
+    def _handle_clear_selection_cb(self, widget, event):
         if event.type == gtk.gdk.BUTTON_PRESS:
             if event.button == 2:
                 self.get_selection().unselect_all()
                 return True
-        return False
-    def _handle_key_press_cb(self, widget, event):
-        if event.type == gtk.gdk.KEY_PRESS:
+        elif event.type == gtk.gdk.KEY_PRESS:
             if event.keyval == gtk.gdk.keyval_from_name('Escape'):
                 self.get_selection().unselect_all()
                 return True
