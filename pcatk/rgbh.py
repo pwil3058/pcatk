@@ -74,8 +74,6 @@ class RGBNG:
                 return (1, 2, 0)
         else:
             return (2, 1, 0)
-    # END_DEF: indices_value_order
-
     @staticmethod
     def ncomps(rgb):
         '''
@@ -92,8 +90,6 @@ class RGBNG:
         1
         '''
         return len(rgb) - rgb.count(0)
-    # END_DEF: ncomps
-
     @classmethod
     def ncomps_and_indices_value_order(cls, rgb):
         '''
@@ -110,8 +106,6 @@ class RGBNG:
         (1, (1, 2, 0))
         '''
         return (cls.ncomps(rgb), cls.indices_value_order(rgb))
-    # END_DEF: ncomps_and_indices_value_order
-
     @classmethod
     def rotated(cls, rgb, delta_hue_angle):
         """
@@ -150,7 +144,6 @@ class RGBNG:
             k1 = b / c
             k2 = a / c
             return (k1, k2)
-        # END_DEF: calc_ks
         f = lambda c1, c2: int((rgb[c1] * k1 + rgb[c2] * k2) + 0.5)
         if delta_hue_angle > 0:
             if delta_hue_angle > utils.PI_120:
@@ -168,8 +161,6 @@ class RGBNG:
                 return array.array(cls.TYPECODE, (f(0, 1), f(1, 2), f(2, 0)))
         else:
             return rgb
-    # END_DEF: rotated
-# END_CLASS: RGBNG
 
 class RGB8(RGBNG, BPC8):
     pass
@@ -197,41 +188,25 @@ class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
             other = calc_other(aha - utils.PI_120)
             io = (1, 2, 0) if angle >= 0 else (2, 1, 0)
         return cls(io=io, other=other, angle=utils.Angle(angle))
-    # END_DEF: from_angle
-
     @classmethod
     def from_rgb(cls, rgb):
         return cls.from_angle(XY.from_rgb(rgb).get_angle())
-    # END_DEF: from_rgb
-
     def __eq__(self, other):
         if math.isnan(self.angle):
             return math.isnan(other.angle)
         return self.angle.__eq__(other.angle)
-    # END_DEF: __eq__
-
     def __ne__(self, other):
         return not self.__eq__(other.angle)
-    # END_DEF: __ne__
-
     def __lt__(self, other):
         if math.isnan(self.angle):
             return not math.isnan(other.angle)
         return self.angle.__lt__(other.angle)
-    # END_DEF: __lt__
-
     def __le__(self, other):
         return self.__lt__(other.angle) or self.__eq__(other.angle)
-    # END_DEF: __le__
-
     def __gt__(self, other):
         return not self.__le__(other.angle)
-    # END_DEF: __gt__
-
     def __ge__(self, other):
         return not self.__lt__(other.angle)
-    # END_DEF: __ge__
-
     @property
     def rgb(self):
         if math.isnan(self.angle):
@@ -240,8 +215,6 @@ class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
         result[self.io[0]] = self.ONE
         result[self.io[1]] = self.other
         return result
-    # END_DEF: rgb
-
     def rgb_with_total(self, req_total):
         '''
         return the RGB for this hue with the specified component total
@@ -268,8 +241,6 @@ class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
             result[self.io[2]] = (shortfall * self.ONE) / (2 * self.ONE - self.other)
             result[self.io[1]] = self.other + shortfall - result[self.io[2]]
         return result
-    # END_DEF: rgb_with_total
-
     def rgb_with_value(self, value):
         '''
         return the RGB for this hue with the specified value
@@ -279,8 +250,6 @@ class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
         as our rgb
         '''
         return self.rgb_with_total(int(value * max(self.rgb) * 3 + 0.5))
-    # END_DEF: rgb_with_value
-
     def get_chroma_correction(self):
         if math.isnan(self.angle):
             return 1.0
@@ -289,12 +258,8 @@ class HueNG(collections.namedtuple('Hue', ['io', 'other', 'angle'])):
         if a == b or b == 0: # avoid floating point inaccuracies near 1
             return 1.0
         return a / math.sqrt(a * a + b * b - a * b)
-    # END_DEF: get_chroma_correction
-
     def is_grey(self):
         return math.isnan(self.angle)
-    # END_DEF: is_grey
-# END_CLASS: HueNG
 
 class Hue8(HueNG, BPC8):
     pass
@@ -309,7 +274,6 @@ COS_120 = -0.5 # math.cos(utils.PI_120) is slightly out
 class XY(collections.namedtuple('XY', ['x', 'y'])):
     X_VECTOR = (1.0, COS_120, COS_120)
     Y_VECTOR = (0.0, SIN_120, -SIN_120)
-
     @classmethod
     def from_rgb(cls, rgb):
         """
@@ -320,15 +284,11 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         x = sum(cls.X_VECTOR[i] * rgb[i] for i in range(3))
         y = sum(cls.Y_VECTOR[i] * rgb[i] for i in range(1, 3))
         return cls(x=x, y=y)
-    # END_DEF: from_rgb
-
     def get_angle(self):
         if self.x == 0.0 and self.y == 0.0:
             return float('nan')
         else:
             return math.atan2(self.y, self.x)
-    # END_DEF: get_hue
-
     def get_hypot(self):
         """
         Return the hypotenuse as an instance of Fraction
@@ -346,8 +306,6 @@ class XY(collections.namedtuple('XY', ['x', 'y'])):
         87.0
         """
         return math.hypot(self.x, self.y)
-    # END_DEF: get_hypot
-# END_CLASS: XY
 
 if __name__ == '__main__':
     doctest.testmod()

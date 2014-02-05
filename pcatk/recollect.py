@@ -41,7 +41,6 @@ def load_recollections():
     except configparser.ParsingError as edata:
         return Result(False, _('Error reading user options: {0}\n').format(str(edata)))
     return OK
-# END_DEF: load_recollections
 
 def reload_recollections():
     global RECOLLECTIONS
@@ -52,7 +51,6 @@ def reload_recollections():
         return Result(False, _('Error reading user options: {0}\n').format(str(edata)))
     RECOLLECTIONS = new_version
     return OK
-# END_DEF: reload_recollections
 
 class DuplicateDefn(Exception): pass
 
@@ -67,7 +65,6 @@ def define(section, oname, odefn):
         raise DuplicateDefn('{0}:{1} already defined'.format(section, oname))
     else:
         DEFINITIONS[section][oname] = odefn
-# END_DEF: define
 
 def get(section, oname):
     # This should cause an exception if section:oname is not known
@@ -77,7 +74,6 @@ def get(section, oname):
     if RECOLLECTIONS.has_option(section, oname):
         value = str_to_val(RECOLLECTIONS.get(section, oname))
     return value if value is not None else DEFINITIONS[section][oname].default
-# END_DEF: get
 
 def set(section, oname, val):
     # This should cause an exception if section:oname is not known
@@ -89,7 +85,6 @@ def set(section, oname, val):
             raise LookupError('{0}:{1}'.format(section, oname))
     RECOLLECTIONS.set(section, oname, val)
     RECOLLECTIONS.write(open(_RECOLLECTIONS_PATH, 'w'))
-# END_DEF: set
 
 define('sample_viewer', 'last_file', Defn(str, os.path.join(options.get_sys_samples_dir(), 'example.jpg')))
 define('analysed_image_viewer', 'last_file', Defn(str, ''))

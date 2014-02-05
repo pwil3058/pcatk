@@ -30,71 +30,52 @@ class ZoomedPixbuf(object):
     """
     A scaled gtk.gdk.Pixbuf and some handy methods
     """
-
     def __init__(self, pixbuf):
         """
         pixbuf: an instance of gtk.gdk.Pixbuf
         """
         self.__uz_pixbuf = self.__z_pixbuf = pixbuf
         self.__zoom = fractions.Fraction(1)
-    # END_DEF: __init__()
-
     @property
     def zoomed_pixbuf(self):
         return self.__z_pixbuf
-    # END_DEF: zoomed_pixbuf
-
     @property
     def unzoomed_pixbuf(self):
         return self.__uz_pixbuf
-    # END_DEF: unzoomed_pixbuf
-
     @property
     def aspect_ratio(self):
         """
         Return the aspect ratio for this Pixbuf
         """
         return fractions.Fraction(self.__uz_pixbuf.get_width(), self.__uz_pixbuf.get_height())
-    # END_DEF: aspect_ratio
-
     @property
     def wzoom(self):
         """
         Return the zoom in factor the width dimension
         """
         return fractions.Fraction(self.__z_pixbuf.get_width(), self.__uz_pixbuf.get_width())
-    # END_DEF: wzoom
-
     @property
     def hzoom(self):
         """
         Return the zoom factor in the height dimension
         """
         return fractions.Fraction(self.__z_pixbuf.get_height(), self.__uz_pixbuf.get_height())
-    # END_DEF: hzoom
-
     @property
     def zoom(self):
         """
         Return the zoom factor
         """
         return self.__zoom
-    # END_DEF: zoom
-
     def get_unzoomed_size(self):
         """
         Return a WH tuple with the unzoomed size of the Pixbuf
         """
         return gtkpwx.WH(self.__uz_pixbuf.get_width(), self.__uz_pixbuf.get_height())
-    # END_DEF: get_unzoomed_size
-
     def get_zoomed_size(self):
         """
         Return a WH tuple with the zoomed size of the Pixbuf
         """
         return gtkpwx.WH(self.__z_pixbuf.get_width(), self.__z_pixbuf.get_height())
-    # END_DEF: get_zoomed_size
-
     def aspect_ratio_matches(self, wharg):
         """
         Does our Pixbuf's aspect ratio match the dimensions in wharg
@@ -103,8 +84,6 @@ class ZoomedPixbuf(object):
             return round(wharg.height * self.aspect_ratio) == wharg.width
         else:
             return round(wharg.width / self.aspect_ratio) == wharg.height
-    # END_DEF: aspect_ratio_matches
-
     def set_zoom(self, zoom):
         """
         Zoom the Pixbuf by the specified amount
@@ -115,8 +94,6 @@ class ZoomedPixbuf(object):
         # make sure reported zoom matches what was set so user code doesn't
         # get stuck in endless loops
         self.__zoom = zoom
-    # END_DEF: set_zoom
-
     def set_zoomed_size(self, new_zsize):
         """
         Set the size of the zoomed Pixbuf to the specified sie
@@ -124,8 +101,6 @@ class ZoomedPixbuf(object):
         assert self.aspect_ratio_matches(new_zsize)
         self.__z_pixbuf = self.__uz_pixbuf.scale_simple(new_zsize.width, new_zsize.height, gtk.gdk.INTERP_BILINEAR)
         self.__zoom = (self.hzoom + self.wzoom) / 2
-    # END_DEF: set_zoomed_size
-
     def calc_zooms_for(self, wharg):
         """
         Calculate the width and height zooms needed to match wharg
@@ -134,8 +109,6 @@ class ZoomedPixbuf(object):
         wzoom = fractions.Fraction(wharg.width, usize.width)
         hzoom = fractions.Fraction(wharg.height, usize.height)
         return gtkpwx.WH(wzoom, hzoom)
-    # END_DEF: calc_zooms_for
-# END_CLASS: ZoomedPixbuf
 
 class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
     UI_DESCR = '''
@@ -164,10 +137,10 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
         self.__size_allocate_cb_id = self.connect('size-allocate', self._size_allocate_cb)
         self.add_with_viewport(self.__da)
         self.__last_alloc = None
-
+        #
         self.add_events(gtk.gdk.SCROLL_MASK)
         self.connect('scroll_event', self._scroll_ecb)
-
+        #
         self.__seln = XYSelection(self.__da)
         self.__seln.connect('status-changed', self._seln_status_change_cb)
         self.__seln.connect('motion_notify', self._seln_motion_cb)
@@ -178,8 +151,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
         self.__cb_ids.append(self.__da.connect('leave_notify_event', self._da_leave_notify_cb))
         for cb_id in self.__cb_ids:
             self.__da.handler_block(cb_id)
-    # END_DEF: __init__
-
     def populate_action_groups(self):
         self.action_groups[self.AC_SELN_MADE].add_actions(
             [
@@ -205,16 +176,12 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
                 ),
             ]
         )
-    # END_DEF: populate_action_groups
-
     @property
     def window(self):
         """
         The drawing area's window
         """
         return self.__da.window
-    # END_DEF: window
-
     def _resize_da(self):
         """
         Resize the drawable area to match the zoomed pixbuf size
@@ -228,8 +195,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
         else:
             self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.handler_unblock(self.__size_allocate_cb_id)
-    # END_DEF: _resize_da
-
     def set_pixbuf(self, pixbuf):
         """
         pixbuf: a gtk.gdk.Pixbuf instance (to be displayed) or None.
@@ -250,8 +215,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
         else:
             self.__pixbuf = None
             self.action_groups.update_condns(actions.MaskedConds(0, self.AC_PICBUF_MASK))
-    # END_DEF: set_pixbuf
-
     def _expose_cb(self, _widget, _event):
         """
         Repaint the drawing area
@@ -270,8 +233,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
                     gc.set_values(line_style=gtk.gdk.LINE_ON_OFF_DASH, function=gtk.gdk.INVERT)
                 self.window.draw_rectangle(gc, False, *rect)
         return True
-    # END_DEF: expose_cb
-
     def _size_allocate_cb(self, _widget, _event):
         """
         Handle a resize incident
@@ -320,8 +281,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
                 self.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
             else:
                 self.set_policy(gtk.POLICY_NEVER, gtk.POLICY_NEVER)
-    # END_DEF: size_allocate_cb
-
     def _seln_status_change_cb(self, _widget, seln_made):
         """
         Record the "zoom" value at the time of status change so that
@@ -334,15 +293,11 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             self.__seln_zoom = None
         self.action_groups.update_condns(actions.MaskedConds(self.AC_SELN_MADE if seln_made else 0, self.AC_SELN_MASK))
         self.__da.queue_draw()
-    # END_DEF: _seln_status_change_cb
-
     def _seln_motion_cb(self, _widget):
         """
         Trigger repaint to show updated selection rectangle
         """
         self.__da.queue_draw()
-    # END_DEF: _seln_motion_cb
-
     # TODO: make 'zoom in' smoother
     def zoom_in(self, _action=None):
         if self.__pixbuf is not None:
@@ -352,8 +307,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             for dim, adj in enumerate([self.get_hadjustment(), self.get_vadjustment()]):
                 new_val = adj.get_value() * self.ZOOM_FACTOR + self.__zin_adj[dim]
                 adj.set_value(new_val)
-    # END_DEF: zoom_in
-
     # TODO: make 'zoom out' smoother
     def zoom_out(self, _action=None):
         if self.__pixbuf is not None:
@@ -367,8 +320,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
                 for dim, adj in enumerate([self.get_hadjustment(), self.get_vadjustment()]):
                     new_val = adj.get_value() / self.ZOOM_FACTOR + self.__zout_adj[dim]
                     adj.set_value(max(0, new_val))
-    # END_DEF: zoom_out
-
     def _scroll_ecb(self, _widget, event):
         """
         Manage use of the scroll wheel for zooming and scrolling
@@ -386,8 +337,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             elif event.direction == gtk.gdk.SCROLL_DOWN:
                 self.emit('scroll-child', gtk.SCROLL_STEP_BACKWARD, True)
             return True
-    # END_DEF: _scroll_ecb
-
     # Careful not to override CAGandUIManager method
     def _da_button_press_cb(self, widget, event):
         if event.button == 1 and event.state & gtk.gdk.CONTROL_MASK:
@@ -395,8 +344,6 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             for cb_id in self.__cb_ids:
                 widget.handler_unblock(cb_id)
             return True
-    # END_DEF: _da_button_press_cb
-
     def _da_motion_notify_cb(self, widget, event):
         this_xy = gtkpwx.XY(event.x, event.y)
         delta_xy = this_xy - self.__last_xy
@@ -407,22 +354,16 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             adj.set_value(min(max(new_val, 0), adj.upper - adj.page_size))
         widget.queue_draw()
         return True
-    # END_DEF: _da_motion_notify_cb
-
     def _da_button_release_cb(self, widget, event):
         if event.button != 1:
             return
         for cb_id in self.__cb_ids:
             widget.handler_block(cb_id)
         return True
-    # END_DEF: _da_button_release_cb
-
     def _da_leave_notify_cb(self, widget, event):
         for cb_id in self.__cb_ids:
             widget.handler_block(cb_id)
         return True
-    # END_DEF: _da_button_release_cb
-
     def _copy_to_clipboard_acb(self, _action):
         """
         Copy the selection to the system clipboard
@@ -432,21 +373,16 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
         pixbuf = self.__pixbuf.zoomed_pixbuf.subpixbuf(*rect)
         cbd = gtk.clipboard_get()
         cbd.set_image(pixbuf)
-    # END_DEF: _copy_to_clipboard_acb
-
     def _print_pixbuf_acb(self, _action):
         """
         Print this pixbuf
         """
         printer.print_pixbuf(self.__pixbuf.unzoomed_pixbuf)
-    # END_DEF: _print_pixbuf_acb
-# END_CLASS: PixbufView
 
 class XYSelection(gobject.GObject):
     """
     A generic XY selection widget
     """
-
     def __init__(self, source):
         """
         source: the widget on which the selection is to be made
@@ -463,26 +399,16 @@ class XYSelection(gobject.GObject):
         self.__cb_ids.append(source.connect('leave_notify_event', self._leave_notify_cb))
         for cb_id in self.__cb_ids:
             source.handler_block(cb_id)
-    # END_DEF: __init__()
-
     def in_progress(self):
         return self.__start_xy is not None and not self.__seln_made
-    # END_DEF: in_progress
-
     def seln_made(self):
         return self.__seln_made
-    # END_DEF: in_progress
-
     @property
     def start_xy(self):
         return self.__start_xy
-    # END_DEF: start_xy
-
     @property
     def end_xy(self):
         return self.__end_xy
-    # END_DEF: end_xy
-
     def get_scaled_rectangle(self, scale=1.0):
         """
         Return a gtkpwx.RECT with integer values suitable for drawable
@@ -510,20 +436,14 @@ class XYSelection(gobject.GObject):
             yy = rint(end.y)
             hh = rint(-delta.y)
         return gtkpwx.RECT(x=xx, y=yy, width=ww, height=hh)
-    # END_DEF: get_scaled_rectangle
-
     def _clear(self):
         self.__seln_made = False
         self.__start_xy = self.__end_xy = None
         self.emit('status-changed', False)
-    # END_DEF: clear
-
     def clear(self):
         if self.in_progress():
             raise Exception('clear while selection in progress')
         self._clear()
-    # END_DEF: clear
-
     def _button_press_cb(self, widget, event):
         """
         Start the selection
@@ -543,8 +463,6 @@ class XYSelection(gobject.GObject):
             elif self.__seln_made:
                 self.clear()
             return True
-    # END_DEF: _button_press_cb
-
     def _motion_notify_cb(self, widget, event):
         """
         Record the position and pass on the "motion-notify" signal
@@ -552,8 +470,6 @@ class XYSelection(gobject.GObject):
         self.__end_xy = gtkpwx.XY(event.x, event.y)
         self.emit('motion-notify')
         return True
-    # END_DEF: _motion_notify_cb
-
     def _leave_notify_cb(self, widget, event):
         """
         Start the selection
@@ -562,8 +478,6 @@ class XYSelection(gobject.GObject):
             widget.handler_block(cb_id)
         self._clear()
         return True
-    # END_DEF: _motion_notify_cb
-
     def _button_release_cb(self, widget, event):
         """
         Start the selection
@@ -576,8 +490,6 @@ class XYSelection(gobject.GObject):
             widget.handler_block(cb_id)
         self.emit('status-changed', True)
         return True
-    # END_DEF: _button_release_cb
 gobject.type_register(XYSelection)
 gobject.signal_new('status-changed', XYSelection, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_BOOLEAN,))
 gobject.signal_new('motion-notify', XYSelection, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
-# END_CLASS: XYSelection

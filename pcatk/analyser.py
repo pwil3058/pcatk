@@ -29,7 +29,6 @@ class Analysis(object):
     A wrapper for an artistic analytical view of an image
     """
     TRANSFORMER = None
-
     def __init__(self, image):
         """
         image: an instance of Image() for which this wrapper provides a
@@ -39,62 +38,46 @@ class Analysis(object):
         self.pixbuf_view = iview.PixbufView()
         self.transformer = self.TRANSFORMER()
         self.update_pixbuf()
-    # END_DEF: __init__()
-
     def get_label(self):
         return self.transformer.LABEL
-    # END_DEF: get_label
-
     def initialize_parameters(self):
         pass
-    # END_DEF: initialize_parameters
-
     def update_pixbuf(self):
         self.pixbuf_view.set_pixbuf(self.transformer.transformed_pixbuf(self.__image))
-    # END_DEF: update_pixbuf
-# END_CLASS: Analysis
 
 ANALYSES = []
 
 class AnalysisRaw(Analysis):
     TRANSFORMER = pixbuf.TransformerRaw
 ANALYSES.append(AnalysisRaw)
-# END_CLASS: AnalysisRaw
 
 class AnalysisNotan(Analysis):
     TRANSFORMER = pixbuf.TransformerNotan
 ANALYSES.append(AnalysisNotan)
-# END_CLASS: AnalysisNotan
 
 class AnalysisValue(Analysis):
     TRANSFORMER = pixbuf.TransformerValue
 ANALYSES.append(AnalysisValue)
-# END_CLASS: AnalysisValue
 
 class AnalysisRestrictedValue(Analysis):
     TRANSFORMER = pixbuf.TransformerRestrictedValue
 ANALYSES.append(AnalysisRestrictedValue)
-# END_CLASS: AnalysisRestrictedValue
 
 class AnalysisColourRestrictedValue(Analysis):
     TRANSFORMER = pixbuf.TransformerColourRestrictedValue
 ANALYSES.append(AnalysisColourRestrictedValue)
-# END_CLASS: AnalysisColourRestrictedValue
 
 class AnalysisRestrictedHue(Analysis):
     TRANSFORMER = pixbuf.TransformerRestrictedHue
 ANALYSES.append(AnalysisRestrictedHue)
-# END_CLASS: AnalysisRestrictedHue
 
 class AnalysisRestrictedHueValue(Analysis):
     TRANSFORMER = pixbuf.TransformerRestrictedHueValue
 ANALYSES.append(AnalysisRestrictedHueValue)
-# END_CLASS: AnalysisRestrictedHueValue
 
 class AnalysisHighChroma(Analysis):
     TRANSFORMER = pixbuf.TransformerHighChroma
 ANALYSES.append(AnalysisHighChroma)
-# END_CLASS: AnalysisHighChroma
 
 class Analyser(gtk.VBox):
     def __init__(self):
@@ -112,8 +95,6 @@ class Analyser(gtk.VBox):
         self.pack_start(self.notebook, expand=True, fill=True)
         # Leave packing of the progress_bar to the user
         self.show_all()
-    # END_DEF: __init__
-
     def set_pixbuf(self, pixbuf):
         self.progress_bar.set_text(_('Analysing Image'))
         self.__image.set_from_pixbuf(pixbuf)
@@ -122,8 +103,6 @@ class Analyser(gtk.VBox):
             analysis.update_pixbuf()
         self.progress_bar.set_text(_(''))
         self.progress_bar.set_fraction(0)
-    # END_DEF: set_pixbuf
-
     def _progress_made_cb(self, _widget, progress):
         """
         Report progress made by anal
@@ -131,9 +110,5 @@ class Analyser(gtk.VBox):
         self.progress_bar.set_fraction(progress)
         while gtk.events_pending():
             gtk.main_iteration()
-    # END_DEF: _progress_made_cb
-
     def get_image_size(self):
         return self.__image.size
-    # END_DEF: get_image_size
-# END_CLASS: Analyser

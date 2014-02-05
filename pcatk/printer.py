@@ -69,7 +69,6 @@ def print_text(text, parent=None):
         settings = prop.get_print_settings()
         if settings.to_file(_USER_SETTINGS_FILE):
             SETTINGS.load_file(_USER_SETTINGS_FILE)
-# END_DEF: print_text
 
 def begin_print_text(operation, context, data):
     """
@@ -85,7 +84,6 @@ def begin_print_text(operation, context, data):
     lpp = int(pheight / lheight)
     data['lines_per_page'] = lpp
     operation.set_n_pages(int(math.ceil(float(layout.get_line_count()) / lpp)))
-# END_DEF: begin_print_text
 
 def draw_page_text(operation, context, page_num, data):
     """
@@ -105,7 +103,6 @@ def draw_page_text(operation, context, page_num, data):
 
     cc.move_to(0, 0)
     cc.show_layout(layout)
-# END_DEF: draw_page_text
 
 def print_markup_chunks(chunks, parent=None):
     """
@@ -113,17 +110,17 @@ def print_markup_chunks(chunks, parent=None):
     chunk unless the chunk itself is too big for one page.
     """
     prop = gtk.PrintOperation()
-
+    #
     prop.set_print_settings(SETTINGS)
     prop.set_unit(gtk.UNIT_MM)
-
+    #
     data = {'chunks' : chunks}
-
+    #
     prop.connect( "begin-print", begin_print_markup_chunks, data)
     prop.connect("draw-page", draw_page_markup_chunks, data)
-
+    #
     res = prop.run(gtk.PRINT_OPERATION_ACTION_PRINT_DIALOG, parent)
-
+    #
     if res == gtk.PRINT_OPERATION_RESULT_ERROR:
         emsg = prop.get_error()
         error_dialog = gtk.MessageDialog(parent,
@@ -137,7 +134,6 @@ def print_markup_chunks(chunks, parent=None):
         settings = prop.get_print_settings()
         if settings.to_file(_USER_SETTINGS_FILE):
             SETTINGS.load_file(_USER_SETTINGS_FILE)
-# END_DEF: print_markup_chunks
 
 def begin_print_markup_chunks(operation, context, data):
     """
@@ -167,7 +163,6 @@ def begin_print_markup_chunks(operation, context, data):
         pages.append(page)
     data['pages'] = pages
     operation.set_n_pages(len(pages))
-# END_DEF: begin_print_markup_chunks
 
 def draw_page_markup_chunks(operation, context, page_num, data):
     """
@@ -180,24 +175,23 @@ def draw_page_markup_chunks(operation, context, page_num, data):
         cc.show_layout(layout)
         _w, h = layout.get_pixel_size()
         y += h
-# END_DEF: draw_page_markup_chunks
 
 def print_pixbuf(pixbuf, parent=None):
     """
     Print a single pixbuf on one page.
     """
     prop = gtk.PrintOperation()
-
+    #
     prop.set_print_settings(SETTINGS)
     prop.set_unit(gtk.UNIT_MM)
-
+    #
     data = {'pixbuf' : pixbuf}
-
+    #
     prop.connect( "begin-print", begin_print_pixbuf, data)
     prop.connect("draw-page", draw_page_pixbuf, data)
-
+    #
     res = prop.run(gtk.PRINT_OPERATION_ACTION_PRINT_DIALOG, parent)
-
+    #
     if res == gtk.PRINT_OPERATION_RESULT_ERROR:
         emsg = prop.get_error()
         error_dialog = gtk.MessageDialog(parent,
@@ -211,7 +205,6 @@ def print_pixbuf(pixbuf, parent=None):
         settings = prop.get_print_settings()
         if settings.to_file(_USER_SETTINGS_FILE):
             SETTINGS.load_file(_USER_SETTINGS_FILE)
-# END_DEF: print_pixbuf
 
 def begin_print_pixbuf(operation, context, data):
     """
@@ -236,7 +229,6 @@ def begin_print_pixbuf(operation, context, data):
         new_height = int(round(pheight * wscale))
     data['pixbuf'] = data['pixbuf'].scale_simple(new_width, new_height, gtk.gdk.INTERP_BILINEAR)
     operation.set_n_pages(1)
-# END_DEF: begin_print_pixbuf
 
 def draw_page_pixbuf(operation, context, page_num, data):
     """
@@ -245,4 +237,3 @@ def draw_page_pixbuf(operation, context, page_num, data):
     cc = context.get_cairo_context()
     cc.set_source_pixbuf(data['pixbuf'], 0, 0)
     cc.paint()
-# END_DEF: draw_page_pixbuf

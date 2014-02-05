@@ -44,7 +44,5 @@ class LexiconListStore(gtk.ListStore):
         gtk.ListStore.__init__(self, str)
         for word in lexicon:
             self.append([word])
-    # END_DEF: __init__
-# END_CLASS: LexiconListStore
 
 COLOUR_NAME_LEXICON = LexiconListStore(_COLOUR_NAME_LEXICON)
