@@ -72,6 +72,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             'accept_colour_changes',
             'reset_colour_editor',
             'automatch_sample_images',
+            'automatch_sample_images_raw',
         ])
         self.tube_colours = TubeColourNotebook()
         self.tube_colours.set_size_request(480, 480)
@@ -101,10 +102,14 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.show_all()
     def populate_action_groups(self):
         self.action_groups[gpaint.ColourSampleArea.AC_SAMPLES_PASTED].add_actions([
-            ('automatch_sample_images', None, _('Auto Match'), None,
+            ('automatch_sample_images', None, _('Auto Match (A)'), None,
             _('Auto matically match the colour to the sample images adjusted to minimise greyness.'
               'This is appropriate for matching Artists\' Paints which tend to be pure pigments intended for mixing.'),
             self._automatch_sample_images_cb),
+            ('automatch_sample_images_raw', None, _('Auto Match (M)'), None,
+            _('Auto matically match the colour to the sample images assuming colour has been produced by mixing.'
+              'This is appropriate for matching Modellers\' Paints which tend to be already mixed to match commonly used colours.'),
+            self._automatch_sample_images_raw_cb),
         ])
         self.action_groups[TubeEditor.AC_READY|self.AC_NOT_HAS_COLOUR].add_actions([
             ('add_colour_into_series', None, _('Add'), None,
@@ -287,6 +292,8 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             self.set_current_colour(new_colour)
     def _automatch_sample_images_cb(self, _widget):
         self.tube_editor.auto_match_sample()
+    def _automatch_sample_images_raw_cb(self, _widget):
+        self.tube_editor.auto_match_sample(raw=True)
     def report_io_error(self, edata):
         msg = '{0}: {1}'.format(edata.strerror, edata.filename)
         gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
@@ -452,8 +459,8 @@ class TubeEditor(gtk.VBox):
         self.colour_name.set_text(name)
         self.colour_permanence.set_selection(str(permanence))
         self.colour_transparency.set_selection(str(transparency))
-    def auto_match_sample(self):
-        self.colour_matcher.auto_match_sample()
+    def auto_match_sample(self, raw=False):
+        self.colour_matcher.auto_match_sample(raw)
     def get_masked_condns(self):
         if self.colour_name.get_text_length() == 0:
             return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
@@ -571,7 +578,7 @@ class ColourSampleMatcher(gtk.VBox):
         self.incr_grayness_button.set_colour(self.colour)
         self.decr_grayness_button.set_colour(self.colour)
         self.hcv_display.set_colour(self.colour)
-    def _auto_match_sample(self, samples):
+    def _auto_match_sample(self, samples, raw):
         total = [0, 0, 0]
         npixels = 0
         for sample in samples:
@@ -589,11 +596,14 @@ class ColourSampleMatcher(gtk.VBox):
                         total[i] += data[offset + i]
             npixels += width * n_rows
         rgb = paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
-        self.set_colour(paint.HCVW(rgb).hue_rgb_for_value())
-    def auto_match_sample(self):
+        if raw:
+            self.set_colour(rgb)
+        else:
+            self.set_colour(paint.HCVW(rgb).hue_rgb_for_value())
+    def auto_match_sample(self, raw):
         samples = self.sample_display.get_samples()
         if samples:
-            self._auto_match_sample(samples)
+            self._auto_match_sample(samples, raw)
     # TODO: implement matcher's colour fiddler functions in paint module
     def _incr_channel(self, rgb, channel, denom=None, frac=None):
         assert frac is None or denom is None
@@ -879,6 +889,25 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
             dlg.destroy()
     def _close_colour_sample_viewer_cb(self, _action):
         self.get_toplevel().destroy()
+
+def get_avg_rgb_for_samples(samples):
+    total = [0, 0, 0]
+    npixels = 0
+    for sample in samples:
+        assert sample.get_bits_per_sample() == 8
+        nc = sample.get_n_channels()
+        rs = sample.get_rowstride()
+        width = sample.get_width()
+        n_rows = sample.get_height()
+        data = [ord(b) for b in sample.get_pixels()]
+        for row_num in range(n_rows):
+            row_start = row_num * rs
+            for j in range(width):
+                offset = row_start + j * nc
+                for i in range(3):
+                    total[i] += data[offset + i]
+        npixels += width * n_rows
+    return paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
 
 def get_avg_rgb_for_samples(samples):
     total = [0, 0, 0]
