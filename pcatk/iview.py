@@ -211,10 +211,10 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
                 self.__pixbuf.set_zoom(zoom)
                 self._resize_da()
             self.__seln.clear()
-            self.action_groups.update_condns(actions.MaskedConds(self.AC_PIXBUF_SET, self.AC_PICBUF_MASK))
+            self.action_groups.update_condns(actions.MaskedCondns(self.AC_PIXBUF_SET, self.AC_PICBUF_MASK))
         else:
             self.__pixbuf = None
-            self.action_groups.update_condns(actions.MaskedConds(0, self.AC_PICBUF_MASK))
+            self.action_groups.update_condns(actions.MaskedCondns(0, self.AC_PICBUF_MASK))
     def _expose_cb(self, _widget, _event):
         """
         Repaint the drawing area
@@ -291,7 +291,7 @@ class PixbufView(gtk.ScrolledWindow, actions.CAGandUIManager):
             self.__seln_zoom = self.__pixbuf.zoom
         else:
             self.__seln_zoom = None
-        self.action_groups.update_condns(actions.MaskedConds(self.AC_SELN_MADE if seln_made else 0, self.AC_SELN_MASK))
+        self.action_groups.update_condns(actions.MaskedCondns(self.AC_SELN_MADE if seln_made else 0, self.AC_SELN_MASK))
         self.__da.queue_draw()
     def _seln_motion_cb(self, _widget):
         """

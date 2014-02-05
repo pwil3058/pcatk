@@ -200,9 +200,9 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         self.mixpanel.set_bg_colour(new_colour.rgb)
         self.hcvw_display.set_colour(new_colour)
         if len(contributions) > 1:
-            self.action_groups.update_condns(actions.MaskedConds(self.AC_HAVE_MIXTURE, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedCondns(self.AC_HAVE_MIXTURE, self.AC_MASK))
         else:
-            self.action_groups.update_condns(actions.MaskedConds(0, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedCondns(0, self.AC_MASK))
     def _add_mixed_colour_cb(self,_action):
         tube_contribs = self.tube_colours.get_contributions()
         mixed_contribs = self.mixed_colours.get_contributions()

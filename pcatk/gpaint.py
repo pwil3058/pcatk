@@ -117,9 +117,9 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
             ])
     def get_masked_condns(self):
         if len(self._sample_images) > 0:
-            return actions.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK)
+            return actions.MaskedCondns(self.AC_SAMPLES_PASTED, self.AC_MASK)
         else:
-            return actions.MaskedConds(0, self.AC_MASK)
+            return actions.MaskedCondns(0, self.AC_MASK)
     def _motion_notify_cb(self, widget, event):
         if event.type == gtk.gdk.MOTION_NOTIFY:
             self._ptr_x = event.x
@@ -153,7 +153,7 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
             else:
                 self._sample_images.append((int(posn[0]), int(posn[1]), img))
             self.queue_draw()
-            self.action_groups.update_condns(actions.MaskedConds(self.AC_SAMPLES_PASTED, self.AC_MASK))
+            self.action_groups.update_condns(actions.MaskedCondns(self.AC_SAMPLES_PASTED, self.AC_MASK))
             self.emit('samples-changed', len(self._sample_images))
     def erase_samples(self):
         """
@@ -161,7 +161,7 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
         """
         self._sample_images = []
         self.queue_draw()
-        self.action_groups.update_condns(actions.MaskedConds(0, self.AC_MASK))
+        self.action_groups.update_condns(actions.MaskedCondns(0, self.AC_MASK))
         self.emit('samples-changed', len(self._sample_images))
     def get_samples(self):
         """

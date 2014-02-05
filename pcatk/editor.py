@@ -102,7 +102,8 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
     def populate_action_groups(self):
         self.action_groups[gpaint.ColourSampleArea.AC_SAMPLES_PASTED].add_actions([
             ('automatch_sample_images', None, _('Auto Match'), None,
-            _('Auto matically match the colour to the sample images.'),
+            _('Auto matically match the colour to the sample images adjusted to minimise greyness.'
+              'This is appropriate for matching Artists\' Paints which tend to be pure pigments intended for mixing.'),
             self._automatch_sample_images_cb),
         ])
         self.action_groups[TubeEditor.AC_READY|self.AC_NOT_HAS_COLOUR].add_actions([
@@ -155,7 +156,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             condns |= self.AC_HAS_FILE
         if self.manufacturer_name.get_text_length() > 0 and self.series_name.get_text_length() > 0:
             condns |= self.AC_ID_READY
-        return actions.MaskedConds(condns, self.AC_MASK)
+        return actions.MaskedCondns(condns, self.AC_MASK)
     def unsaved_changes_ok(self):
         """
         Check that the last saved definition is up to date
@@ -205,7 +206,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             condns = 0
         else:
             condns = self.AC_ID_READY
-        self.action_groups.update_condns(actions.MaskedConds(condns, self.AC_ID_READY))
+        self.action_groups.update_condns(actions.MaskedCondns(condns, self.AC_ID_READY))
     def set_current_colour(self, colour):
         """
         Set a reference to the colour currently being edited and
@@ -214,7 +215,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.current_colour = colour
         mask = self.AC_NOT_HAS_COLOUR + self.AC_HAS_COLOUR
         condns = self.AC_NOT_HAS_COLOUR if colour is None else self.AC_HAS_COLOUR
-        self.action_groups.update_condns(actions.MaskedConds(condns, mask))
+        self.action_groups.update_condns(actions.MaskedCondns(condns, mask))
     def set_file_path(self, file_path):
         """
         Set the file path for the tube colour series currently being
@@ -222,7 +223,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         """
         self.file_path = file_path
         condns = 0 if file_path is None else self.AC_HAS_FILE
-        self.action_groups.update_condns(actions.MaskedConds(condns, self.AC_HAS_FILE))
+        self.action_groups.update_condns(actions.MaskedCondns(condns, self.AC_HAS_FILE))
     def _edit_selected_colour_cb(self, _action):
         """
         Load the selected tube colour into the editor
@@ -455,12 +456,12 @@ class TubeEditor(gtk.VBox):
         self.colour_matcher.auto_match_sample()
     def get_masked_condns(self):
         if self.colour_name.get_text_length() == 0:
-            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
+            return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
         if self.colour_transparency.get_active() == -1:
-            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
+            return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
         if self.colour_transparency.get_active() == -1:
-            return actions.MaskedConds(self.AC_NOT_READY, self.AC_MASK)
-        return actions.MaskedConds(self.AC_READY, self.AC_MASK)
+            return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
+        return actions.MaskedCondns(self.AC_READY, self.AC_MASK)
 gobject.signal_new('changed', TubeEditor, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class ColourSampleMatcher(gtk.VBox):
@@ -588,8 +589,7 @@ class ColourSampleMatcher(gtk.VBox):
                         total[i] += data[offset + i]
             npixels += width * n_rows
         rgb = paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
-        hcvw = paint.HCVW(rgb)
-        self.set_colour(hcvw.hue_rgb_for_value())
+        self.set_colour(paint.HCVW(rgb).hue_rgb_for_value())
     def auto_match_sample(self):
         samples = self.sample_display.get_samples()
         if samples:
@@ -597,7 +597,7 @@ class ColourSampleMatcher(gtk.VBox):
     # TODO: implement matcher's colour fiddler functions in paint module
     def _incr_channel(self, rgb, channel, denom=None, frac=None):
         assert frac is None or denom is None
-        if denom is None:
+        if denom is None or denom is 0:
             if frac is None:
                 rgb[channel] = min(paint.RGB.ONE, rgb[channel] + self._delta)
             else:
@@ -879,3 +879,22 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
             dlg.destroy()
     def _close_colour_sample_viewer_cb(self, _action):
         self.get_toplevel().destroy()
+
+def get_avg_rgb_for_samples(samples):
+    total = [0, 0, 0]
+    npixels = 0
+    for sample in samples:
+        assert sample.get_bits_per_sample() == 8
+        nc = sample.get_n_channels()
+        rs = sample.get_rowstride()
+        width = sample.get_width()
+        n_rows = sample.get_height()
+        data = [ord(b) for b in sample.get_pixels()]
+        for row_num in range(n_rows):
+            row_start = row_num * rs
+            for j in range(width):
+                offset = row_start + j * nc
+                for i in range(3):
+                    total[i] += data[offset + i]
+        npixels += width * n_rows
+    return paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
