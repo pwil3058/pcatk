@@ -794,7 +794,7 @@ class TopLevelWindow(gtk.Window):
         self._menubar = self.editor.ui_manager.get_widget('/tube_series_editor_menubar')
         self.connect("destroy", self.editor._exit_colour_editor_cb)
         vbox = gtk.VBox()
-        vbox.pack_start(self._menubar)
+        vbox.pack_start(self._menubar, expand=False)
         vbox.pack_start(self.editor, expand=True, fill=True)
         self.add(vbox)
         self.show_all()
