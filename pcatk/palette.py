@@ -85,6 +85,7 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             'add_mixed_colour',
             'reset_contributions',
             'remove_unused_tubes',
+            'take_screen_sample'
         ])
         menubar = self.ui_manager.get_widget('/palette_menubar')
         # Lay out components
@@ -134,6 +135,9 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             ('print_palette', gtk.STOCK_PRINT, None, None,
             _('Print a text description of the palette.'),
             self._print_palette_cb),
+            ('take_screen_sample', None, _('Take Screen Sample'), None,
+            _('Take a sample of an arbitrary selected section of the screen and add it to the clipboard.'),
+            gtkpwx.take_screen_sample),
         ])
         self.action_groups[self.AC_HAVE_MIXTURE].add_actions([
             ('add_mixed_colour', None, _('Add'), None,
