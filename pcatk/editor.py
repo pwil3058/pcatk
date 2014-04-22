@@ -49,6 +49,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
           <menuitem action='close_colour_editor'/>
         </menu>
         <menu action='tube_series_editor_samples_menu'>
+          <menuitem action='take_screen_sample'/>
           <menuitem action='open_sample_viewer'/>
         </menu>
       </menubar>
@@ -71,6 +72,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             'add_colour_into_series',
             'accept_colour_changes',
             'reset_colour_editor',
+            'take_screen_sample',
             'automatch_sample_images',
             'automatch_sample_images_raw',
         ])
@@ -141,6 +143,9 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             ('open_tube_series_file', gtk.STOCK_OPEN, None, None,
             _('Load a tube series from a file for editing.'),
             self._open_tube_series_file_cb),
+            ('take_screen_sample', None, _('Take Sample'), None,
+            _('Take a sample of an arbitrary selected section of the screen and add it to the clipboard.'),
+            gtkpwx.take_screen_sample),
             ('open_sample_viewer', None, _('Open Sample Viewer'), None,
             _('Open a graphics file containing colour samples.'),
             self._open_sample_viewer_cb),

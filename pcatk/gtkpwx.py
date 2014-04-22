@@ -383,3 +383,112 @@ class UnsavedChangesDialogue(gtk.Dialog):
         )
         self.vbox.pack_start(gtk.Label(message))
         self.show_all()
+
+# Screen Sampling
+# Based on escrotum code (<https://github.com/Roger/escrotum>)
+
+class ScreenSampler(gtk.Window):
+    def __init__(self, clipboard="CLIPBOARD"):
+        gtk.Window.__init__(self, gtk.WINDOW_POPUP)
+        self.started = False
+        self.x = self.y = 0
+        self.start_x = self.start_y = 0
+        self.height = self.width = 0
+        self.clipboard = clipboard
+        self.rgba_supported = self.get_rgba_support()
+        if self.rgba_supported:
+            self.set_opacity(0.4)
+        self.set_keep_above(True)
+        self.root = gtk.gdk.get_default_root_window()
+        self.area = gtk.DrawingArea()
+        self.area.connect("expose-event", self.on_expose)
+        self.add(self.area)
+        self.grab_mouse()
+    def get_rgba_support(self):
+        screen = self.get_screen()
+        colormap = screen.get_rgba_colormap()
+        return colormap is not None and screen.is_composited()
+    def set_rect_size(self, event):
+        if event.x < self.start_x:
+            x = int(event.x)
+            width = self.start_x - x
+        else:
+            x = self.start_x
+            width = int(event.x) - self.start_x
+        self.x = x
+        self.width = width
+        if event.y < self.start_y:
+            y = int(event.y)
+            height = self.start_y - y
+        else:
+            height = int(event.y) - self.start_y
+            y = self.start_y
+        self.y = y
+        self.height = height
+    def take_sample(self):
+        x, y = (self.x, self.y)
+        window = self.root
+        width, height = self.width, self.height
+        if self.height == 0 or self.width == 0:
+            # treat a zero area selection as a user initiated cancellation
+            self.finish()
+            return
+        pb = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, False, 8, width, height)
+        pb = pb.get_from_drawable(window, window.get_colormap(), x, y, 0, 0, width, height)
+        if pb:
+            cbd = gtk.clipboard_get(self.clipboard)
+            cbd.set_image(pb)
+        self.finish()
+    def mouse_event_handler(self, event):
+        if event.type == gtk.gdk.BUTTON_PRESS:
+            if event.button != 1:
+                # treat button 2 or 3 press as a user initiated cancellation
+                self.finish()
+                return
+            self.started = True
+            self.start_x = int(event.x)
+            self.start_y = int(event.y)
+            self.move(self.x, self.y)
+        elif event.type == gtk.gdk.MOTION_NOTIFY:
+            if not self.started:
+                return
+            self.set_rect_size(event)
+            if not self.rgba_supported:
+                self.draw()
+            if self.width > 3 and self.height > 3:
+                self.resize(self.width, self.height)
+                self.move(self.x, self.y)
+                self.show_all()
+        elif event.type == gtk.gdk.BUTTON_RELEASE:
+            if not self.started:
+                return
+            self.set_rect_size(event)
+            gtk.gdk.pointer_ungrab()
+            self.hide()
+            gobject.timeout_add(100, self.take_sample)
+        else:
+            gtk.main_do_event(event)
+    def grab_mouse(self):
+        mask = gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK |  gtk.gdk.POINTER_MOTION_MASK  | gtk.gdk.POINTER_MOTION_HINT_MASK |  gtk.gdk.ENTER_NOTIFY_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
+        self.root.set_events(gtk.gdk.BUTTON_PRESS | gtk.gdk.MOTION_NOTIFY | gtk.gdk.BUTTON_RELEASE)
+        gtk.gdk.pointer_grab(self.root, event_mask=mask, cursor=gtk.gdk.Cursor(gtk.gdk.CROSSHAIR))
+        gtk.gdk.event_handler_set(self.mouse_event_handler)
+    def finish(self):
+        if gtk.gdk.pointer_is_grabbed():
+            gtk.gdk.pointer_ungrab()
+        self.root.set_events(0)
+        gtk.gdk.event_handler_set(gtk.main_do_event)
+        self.destroy()
+    def on_expose(self, widget, event):
+        width, height = self.get_size()
+        white_gc = self.style.white_gc
+        black_gc = self.style.black_gc
+        # actualy paint the window
+        self.area.window.draw_rectangle(white_gc, True, 0, 0, width, height)
+        self.area.window.draw_rectangle(black_gc, True, 1, 1, width-2, height-2)
+        if not self.rgba_supported:
+            self.draw()
+
+
+def take_screen_sample(action=None):
+    ScreenSampler()
