@@ -67,7 +67,7 @@ samples = glob.glob('samples/*.jpg')
 SAMPLES = [(os.path.join('share', NAME, 'samples'), samples)]
 
 if for_windows:
-    SCRIPTS.append('win_post_install.py')
+    SCRIPTS.append('pcatk_win_post_install.py')
     DESKTOP = []
     PIXMAPS = [('share/pixmaps', ['pixmaps/pcatk.png', 'pixmaps/pcatk.ico'])]
 else:
