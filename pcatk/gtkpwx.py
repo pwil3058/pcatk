@@ -372,8 +372,11 @@ class TextEntryDialog(CancelOKDialog):
         self.entry = gtk.Entry()
         self.entry.set_width_chars(32)
         self.entry.set_text(suggestion)
+        self.entry.connect("activate", self._entry_activate_cb)
         self.hbox.pack_start(self.entry)
         self.show_all()
+    def _entry_activate_cb(self, widget):
+        self.response(gtk.RESPONSE_OK)
 
 class UnsavedChangesDialogue(gtk.Dialog):
     # TODO: make a better UnsavedChangesDialogue()
