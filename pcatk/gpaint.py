@@ -20,6 +20,7 @@ Widgets the work with paint colours
 import collections
 import math
 import fractions
+import sys
 
 import gtk
 import gobject
@@ -136,6 +137,8 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
         Paste from the clipboard
         """
         cbd = gtk.clipboard_get()
+        # WORKAROUND: clipboard bug on Windows
+        if sys.platform.startswith("win"): cbd.request_targets(lambda a, b, c: None)
         cbd.request_image(self._image_from_clipboard_cb, (self._ptr_x, self._ptr_y))
     def _image_from_clipboard_cb(self, cbd, img, posn):
         if img is None:
@@ -271,6 +274,8 @@ class GenericAttrDisplay(gtk.DrawingArea):
             colour = gtk.gdk.Color(*arg)
         return self.get_colormap().alloc_color(colour)
     def draw_indicators(self, gc):
+        if self.indicator_val is None:
+            return
         w, h = self.window.get_size()
         indicator_x = int(w * self.indicator_val)
         gc.set_foreground(self.fg_colour)

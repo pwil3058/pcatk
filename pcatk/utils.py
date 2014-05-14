@@ -21,7 +21,7 @@ import math
 DELIMITERS = string.whitespace + string.punctuation.replace("'", '').replace('-', '')
 
 def find_start_last_word(text, before=None):
-    index = before if before is not None else len(text)
+    index = before if before is not None and before < len(text) else len(text)
     while index > 0:
         index -= 1
         if text[index] in DELIMITERS:
@@ -180,3 +180,18 @@ PI_90 = Angle(math.pi / 2)
 PI_120 = PI_60 * 2
 PI_150 = PI_30 * 5
 PI_180 = Angle(math.pi)
+
+def gcd(*args):
+    if len(args) == 0:
+        return None
+    elif len(args) == 1:
+        return args[0]
+    L = list(args)
+    while len(L) > 1:
+        a = L[len(L) - 2]
+        b = L[len(L) - 1]
+        L = L[:len(L) - 2]
+        while a:
+            a, b = b % a, a
+        L.append(b)
+    return abs(b)

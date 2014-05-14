@@ -34,6 +34,7 @@ from pcatk import paint
 from pcatk import printer
 from pcatk import icons
 from pcatk import analyser
+from pcatk import utils
 
 def pango_rgb_str(rgb, bits_per_channel=16):
     """
@@ -65,7 +66,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
     def __init__(self):
         gtk.VBox.__init__(self)
         actions.CAGandUIManager.__init__(self)
-        self._last_dir = None
         # Components
         self.notes = gtk.Entry()
         self.mixpanel = gpaint.ColourSampleArea()
@@ -83,6 +83,7 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         self.wheels.set_size_request(360, 360)
         self.buttons = self.action_groups.create_action_button_box([
             'add_mixed_colour',
+            'simplify_contributions',
             'reset_contributions',
             'remove_unused_tubes',
             'take_screen_sample'
@@ -117,9 +118,6 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             ('palette_file_menu', None, _('File')),
             ('tube_series_menu', None, _('Tube Colour Series')),
             ('reference_resource_menu', None, _('Reference Resources')),
-            ('reset_contributions', None, _('Reset'), None,
-            _('Reset all colour contributions to zero.'),
-            self._reset_contributions_cb),
             ('remove_unused_tubes', None, _('Remove Unused Tubes'), None,
             _('Remove all unused tube colours from the palette.'),
             self._remove_unused_tubes_cb),
@@ -140,6 +138,12 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             gtkpwx.take_screen_sample),
         ])
         self.action_groups[self.AC_HAVE_MIXTURE].add_actions([
+            ('simplify_contributions', None, _('Simplify'), None,
+            _('Simplify all colour contributions (by dividing by their greatest common divisor).'),
+            self._simplify_contributions_cb),
+            ('reset_contributions', None, _('Reset'), None,
+            _('Reset all colour contributions to zero.'),
+            self._reset_contributions_cb),
             ('add_mixed_colour', None, _('Add'), None,
             _('Add this colour to the palette as a mixed colour.'),
             self._add_mixed_colour_cb),
@@ -208,10 +212,15 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         else:
             self.action_groups.update_condns(actions.MaskedCondns(0, self.AC_MASK))
     def _add_mixed_colour_cb(self,_action):
+        # TODO: think about just doing self.simplify_parts() to do simplification
         tube_contribs = self.tube_colours.get_contributions()
         mixed_contribs = self.mixed_colours.get_contributions()
         if len(tube_contribs) + len(mixed_contribs) < 2:
             return
+        gcd = utils.gcd(*[b.parts for b in tube_contribs + mixed_contribs])
+        if gcd is not None and gcd > 1:
+            tube_contribs = [paint.BLOB(colour=tc.colour, parts=tc.parts / gcd) for tc in tube_contribs]
+            mixed_contribs = [paint.BLOB(colour=mc.colour, parts=mc.parts / gcd) for mc in mixed_contribs]
         name = _('Mix #{:03d}').format(self.mixed_count + 1)
         dlg = gtkpwx.TextEntryDialog(title='', prompt= _('Notes for "{0}" :').format(name))
         if dlg.run() == gtk.RESPONSE_OK:
@@ -227,6 +236,14 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
         self.mixed_colours.reset_parts()
     def _reset_contributions_cb(self, _action):
         self.reset_parts()
+    def simplify_parts(self):
+        tube_parts = [blob.parts for blob in self.tube_colours.get_contributions()]
+        mixed_parts = [blob.parts for blob in self.mixed_colours.get_contributions()]
+        gcd = utils.gcd(*(tube_parts + mixed_parts))
+        self.tube_colours.divide_parts(gcd)
+        self.mixed_colours.divide_parts(gcd)
+    def _simplify_contributions_cb(self, _action):
+        self.simplify_parts()
     def add_tube(self, tube):
         self.tube_colours.add_colour(tube)
         self.wheels.add_colour(tube)
@@ -319,12 +336,14 @@ class Palette(gtk.VBox, actions.CAGandUIManager):
             action=gtk.FILE_CHOOSER_ACTION_OPEN,
             buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
         )
-        if self._last_dir:
-            dlg.set_current_folder(self._last_dir)
+        last_paint_file = recollect.get('tube_series_selector', 'last_file')
+        last_paint_dir = None if last_paint_file is None else os.path.dirname(last_paint_file)
+        if last_paint_dir:
+            dlg.set_current_folder(last_paint_dir)
         if dlg.run() == gtk.RESPONSE_OK:
             filepath = dlg.get_filename()
             if self.launch_selector(filepath):
-                self._last_dir = os.path.dirname(filepath)
+                recollect.set('tube_series_selector', 'last_file', filepath)
         dlg.destroy()
     def _print_palette_cb(self, _action):
         """
@@ -399,6 +418,8 @@ class ColourPartsSpinButton(gtk.EventBox, actions.CAGandUIManager):
         return self.entry.get_value_as_int()
     def set_parts(self, parts):
         return self.entry.set_value(parts)
+    def divide_parts(self, divisor):
+        return self.entry.set_value(self.entry.get_value_as_int() / divisor)
     def get_blob(self):
         return paint.BLOB(self.colour, self.get_parts())
     def _tube_colour_info_cb(self, _action):
@@ -414,6 +435,7 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         self.__hboxes = []
         self.__count = 0
         self.__ncols = 8
+        self.__suppress_change_notification = False
     def add_colour(self, colour):
         """
         Add a spinner for the given colour to the box
@@ -449,7 +471,8 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         """
         Signal those interested that our contributions have changed
         """
-        self.emit('contributions-changed', self.get_contributions())
+        if not self.__suppress_change_notification:
+            self.emit('contributions-changed', self.get_contributions())
     def del_colour(self, colour):
         # do this the easy way by taking them all out and putting back
         # all but the one to be deleted
@@ -462,6 +485,8 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         self.show_all()
     def get_colours(self):
         return [spinbutton.colour for spinbutton in self.__spinbuttons]
+    def get_colours_with_zero_parts(self):
+        return [spinbutton.colour for spinbutton in self.__spinbuttons if spinbutton.get_parts() == 0]
     def has_colour(self, colour):
         """
         Do we already contain the given colour?
@@ -475,12 +500,22 @@ class ColourPartsSpinButtonBox(gtk.VBox):
         Return a list of tube colours with non zero parts
         """
         return [spinbutton.get_blob() for spinbutton in self.__spinbuttons if spinbutton.get_parts() > 0]
+    def divide_parts(self, divisor):
+        if divisor is not None and divisor > 1:
+            self.__suppress_change_notification = True
+            for spinbutton in self.__spinbuttons:
+                spinbutton.divide_parts(divisor)
+            self.__suppress_change_notification = False
+            self.emit('contributions-changed', self.get_contributions())
     def reset_parts(self):
         """
         Reset all spinbutton values to zero
         """
+        self.__suppress_change_notification = True
         for spinbutton in self.__spinbuttons:
             spinbutton.set_parts(0)
+        self.__suppress_change_notification = False
+        self.emit('contributions-changed', self.get_contributions())
 gobject.signal_new('remove-colour', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 gobject.signal_new('contributions-changed', ColourPartsSpinButtonBox, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
@@ -507,6 +542,17 @@ class PartsColourListStore(gpaint.ColourListStore):
             self.set_value_named(model_iter, 'parts', 0)
             model_iter = self.iter_next(model_iter)
         self.emit('contributions-changed', [])
+    def divide_parts(self, divisor):
+        """
+        Reset the number of parts for all colours to zero
+        """
+        if divisor is not None and divisor > 1:
+            model_iter = self.get_iter_first()
+            while model_iter is not None:
+                parts = self.get_value_named(model_iter, 'parts')
+                self.set_value_named(model_iter, 'parts', parts / divisor)
+                model_iter = self.iter_next(model_iter)
+            self.emit('contributions-changed', self.get_contributions())
     def get_contributions(self):
         """
         Return a list of Model.Row() tuples where parts is greater than zero
