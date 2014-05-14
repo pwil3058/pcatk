@@ -234,6 +234,9 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.file_path = file_path
         condns = 0 if file_path is None else self.AC_HAS_FILE
         self.action_groups.update_condns(actions.MaskedCondns(condns, self.AC_HAS_FILE))
+        if condns:
+            recollect.set('tube_series_editor', 'last_file', file_path)
+        self.emit("file_changed", self.file_path)
     def _edit_selected_colour_cb(self, _action):
         """
         Load the selected tube colour into the editor
@@ -344,6 +347,11 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         if self.file_path:
             lastdir = os.path.dirname(self.file_path)
             dlg.set_current_folder(lastdir)
+        else:
+            last_file = recollect.get('tube_series_editor', 'last_file')
+            if last_file:
+                lastdir = os.path.dirname(last_file)
+                dlg.set_current_folder(lastdir)
         if dlg.run() == gtk.RESPONSE_OK:
             filepath = dlg.get_filename()
             self.load_fm_file(filepath)
@@ -394,6 +402,11 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         if self.file_path:
             lastdir = os.path.dirname(self.file_path)
             dlg.set_current_folder(lastdir)
+        else:
+            last_file = recollect.get('tube_series_editor', 'last_file')
+            if last_file:
+                lastdir = os.path.dirname(last_file)
+                dlg.set_current_folder(lastdir)
         if dlg.run() == gtk.RESPONSE_OK:
             filepath = dlg.get_filename()
             self.save_to_file(filepath)
@@ -412,6 +425,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         if not self.unsaved_changes_ok():
             return
         gtk.main_quit()
+gobject.signal_new('file_changed', TubeSeriesEditor, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
 
 class TubeEditor(gtk.VBox):
     AC_READY, AC_NOT_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(2)
@@ -481,6 +495,7 @@ class ColourSampleMatcher(gtk.VBox):
     VALUE_DISPLAY_INCR = fractions.Fraction(1, 10)
     DEFAULT_COLOUR = paint.Colour(paint.RGB_WHITE / 2)
     DELTA_HUE = utils.Angle(math.pi / 100)
+    DEFAULT_AUTO_MATCH_RAW = False
     class HueClockwiseButton(gtkpwx.ColouredButton):
         def __init__(self):
             gtkpwx.ColouredButton.__init__(self, label='->')
@@ -521,10 +536,10 @@ class ColourSampleMatcher(gtk.VBox):
             gtkpwx.ColouredButton.__init__(self, label=_('Grayness') + '--')
         def set_colour(self, colour):
             gtkpwx.ColouredButton.set_colour(self, colour.hcvw.hue_rgb_for_value())
-    def __init__(self):
+    def __init__(self, auto_match_on_paste=False):
         gtk.VBox.__init__(self)
         self._delta = 256 # must be a power of two
-        self.auto_match_on_paste = False
+        self.auto_match_on_paste = auto_match_on_paste
         self.hcv_display = gpaint.HCVDisplay()
         self.pack_start(self.hcv_display, expand=False)
         # Add value modification buttons
@@ -541,6 +556,7 @@ class ColourSampleMatcher(gtk.VBox):
         self.hue_acw_button.connect('clicked', self.modify_hue_acw_cb)
         # Add the sample display panel
         self.sample_display = gpaint.ColourSampleArea()
+        self.sample_display.connect("samples_changed", self._sample_change_cb)
         hbox.pack_start(self.sample_display, expand=True, fill=True)
         # Add anti clockwise hue angle modification button
         self.hue_cw_button = self.HueClockwiseButton()
@@ -609,6 +625,9 @@ class ColourSampleMatcher(gtk.VBox):
         samples = self.sample_display.get_samples()
         if samples:
             self._auto_match_sample(samples, raw)
+    def _sample_change_cb(self, widget, *args):
+        if self.auto_match_on_paste:
+            self.auto_match_sample(raw=self.DEFAULT_AUTO_MATCH_RAW)
     # TODO: implement matcher's colour fiddler functions in paint module
     def _incr_channel(self, rgb, channel, denom=None, frac=None):
         assert frac is None or denom is None
@@ -796,6 +815,8 @@ class TopLevelWindow(gtk.Window):
         self.set_title('pcatk: Tube Series Editor')
         self.editor = TubeSeriesEditor()
         self.editor.action_groups.get_action('close_colour_editor').set_visible(False)
+        self.editor.connect("file_changed", self._file_changed_cb)
+        self.editor.set_file_path(None)
         self._menubar = self.editor.ui_manager.get_widget('/tube_series_editor_menubar')
         self.connect("destroy", self.editor._exit_colour_editor_cb)
         vbox = gtk.VBox()
@@ -803,6 +824,8 @@ class TopLevelWindow(gtk.Window):
         vbox.pack_start(self.editor, expand=True, fill=True)
         self.add(vbox)
         self.show_all()
+    def _file_changed_cb(self, widget, file_path):
+        self.set_title(_('pcatk: Tube Series Editor: {0}').format(file_path))
 
 class SampleViewer(gtk.Window, actions.CAGandUIManager):
     """
