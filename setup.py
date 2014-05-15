@@ -24,7 +24,7 @@ for_windows = sys.platform in ['win32', 'cygwin'] or 'bdist_wininst' in sys.argv
 
 NAME = 'PaintersColourAssistant'
 
-VERSION = '0.07'
+VERSION = '0.08'
 
 DESCRIPTION = 'A set of tools for painters to experiment with mixing colours.'
 
