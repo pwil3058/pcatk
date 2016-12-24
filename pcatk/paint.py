@@ -22,13 +22,13 @@ import math
 import re
 import fractions
 
-from pcatk import rgbh
+from . import rgbh
 
 if __name__ == '__main__':
     import doctest
     _ = lambda x: x
 
-class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB16):
+class RGB(rgbh.RGB16):
     __slots__ = ()
     def __add__(self, other):
         '''
@@ -74,8 +74,6 @@ class RGB(collections.namedtuple('RGB', ['red', 'green', 'blue']), rgbh.RGB16):
         return RGB(*(int(self[i] / div + 0.5) for i in range(3)))
     def __str__(self):
         return 'RGB(0x{0:X}, 0x{1:X}, 0x{2:X})'.format(*self)
-    def get_value(self):
-        return fractions.Fraction(sum(self), self.THREE)
     @staticmethod
     def rotated(rgb, delta_hue_angle):
         return RGB(*rgbh.RGB16.rotated(rgb, delta_hue_angle))
@@ -105,12 +103,28 @@ class HCVW(object):
         xy = rgbh.XY.from_rgb(self.rgb)
         self.warmth = fractions.Fraction.from_float(xy.x / RGB.ONE)
         self.hue = Hue.from_angle(xy.get_angle())
-        self.chroma = xy.get_hypot() * self.hue.get_chroma_correction() / RGB.ONE
+        self.chroma = xy.get_hypot() * self.hue.chroma_correction / RGB.ONE
+    def value_rgb(self):
+        return RGB_WHITE * self.value
     def hue_rgb_for_value(self, value=None):
         if value is None:
             # i.e. same hue and value but without any unnecessary grey
             value = self.value
         return RGB(*self.hue.rgb_with_value(value))
+    def zero_chroma_rgb(self):
+        # get the rgb for the grey which would result from this colour
+        # having white or black (whichever is quicker) added until the
+        # chroma value is zero (useful for displaying chroma values)
+        if self.hue.is_grey():
+            return self.value_rgb()
+        mcv = self.hue.max_chroma_value()
+        dc = 1.0 - self.chroma
+        if dc != 0.0:
+            return RGB_WHITE * ((self.value - mcv * self.chroma) / dc)
+        elif mcv < 0.5:
+            return RGB_BLACK
+        else:
+            return RGB_WHITE
     def chroma_side(self):
         # Is it darker or lighter than max chroma for the hue?
         if sum(self.rgb) > sum(self.hue.rgb):
@@ -133,7 +147,7 @@ class HCVW(object):
             # Simple rotation is the correct solution for 1 or 3 components
             return RGB.rotated(self.rgb, delta_hue_angle)
     def __str__(self):
-        string = '(HUE = {0}, '.format(self.hue.rgb)
+        string = '(HUE = {0}, '.format(str(self.hue.rgb))
         string += 'VALUE = {0}, '.format(round(self.value, 2))
         string += 'CHROMA = {0}, '.format(round(self.chroma, 2))
         string += 'WARMTH = {0})'.format(round(self.warmth, 2))
@@ -254,7 +268,7 @@ class Colour(object):
     def value(self):
         return self.hcvw.value
     def value_rgb(self):
-        return RGB_WHITE * self.hcvw.value
+        return self.hcvw.value_rgb()
     @property
     def chroma(self):
         return self.hcvw.chroma
