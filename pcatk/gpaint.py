@@ -21,16 +21,20 @@ import collections
 import math
 import fractions
 import sys
+import cairo
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
 
-from pcatk import options
-from pcatk import utils
-from pcatk import actions
-from pcatk import tlview
-from pcatk import gtkpwx
-from pcatk import paint
+from . import options
+from . import utils
+from . import actions
+from . import tlview
+from . import gtkpwx
+from . import paint
+from . import recollect
+from . import rgbh
 
 if __name__ == '__main__':
     _ = lambda x: x
@@ -57,28 +61,25 @@ class TransparencyChoice(MappedFloatChoice):
 class PermanenceChoice(MappedFloatChoice):
     MFDC = paint.Permanence
 
-class ColouredRectangle(gtk.DrawingArea):
+def get_colour(arg):
+    if isinstance(arg, paint.Colour):
+        return arg.rgb
+    else:
+        return arg
+
+class ColouredRectangle(Gtk.DrawingArea):
     def __init__(self, colour, size_request=None):
-        gtk.DrawingArea.__init__(self)
+        Gtk.DrawingArea.__init__(self)
         if size_request is not None:
             self.set_size_request(*size_request)
-        self.colour = self.new_colour(paint.RGB_WHITE) if colour is None else self.new_colour(colour)
-        self.connect('expose-event', self.expose_cb)
-    def expose_cb(self, _widget, _event):
-        self.gc = self.window.new_gc()
-        self.gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
-        self.gc.set_background(self.colour)
-        self.window.set_background(self.colour)
-        self.window.clear()
+        self.colour = get_colour(paint.RGB_WHITE) if colour is None else get_colour(colour)
+        self.connect("draw", self.expose_cb)
+    def expose_cb(self, _widget, cairo_ctxt):
+        cairo_ctxt.set_source_rgb(*self.colour)
+        cairo_ctxt.paint()
         return True
-    def new_colour(self, arg):
-        if isinstance(arg, paint.Colour):
-            colour = gtk.gdk.Color(*arg.rgb)
-        else:
-            colour = gtk.gdk.Color(*arg)
-        return self.get_colormap().alloc_color(colour)
 
-class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
+class ColourSampleArea(Gtk.DrawingArea, actions.CAGandUIManager):
     """
     A coloured drawing area onto which samples can be dropped.
     """
@@ -92,28 +93,28 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
     '''
     AC_SAMPLES_PASTED, AC_MASK = actions.ActionCondns.new_flags_and_mask(1)
     def __init__(self, single_sample=False, default_bg=None):
-        gtk.DrawingArea.__init__(self)
+        Gtk.DrawingArea.__init__(self)
 
         self.set_size_request(200, 200)
         self._ptr_x = self._ptr_y = 100
         self._sample_images = []
         self._single_sample = single_sample
-        self.default_bg_colour = self.bg_colour = self.new_colour(paint.RGB_WHITE) if default_bg is None else self.new_colour(default_bg)
+        self.default_bg_colour = self.bg_colour = get_colour(paint.RGB_WHITE) if default_bg is None else get_colour(default_bg)
 
-        self.add_events(gtk.gdk.POINTER_MOTION_MASK|gtk.gdk.BUTTON_PRESS_MASK)
-        self.connect('expose-event', self.expose_cb)
+        self.add_events(Gdk.EventMask.POINTER_MOTION_MASK|Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.connect("draw", self.expose_cb)
         self.connect('motion_notify_event', self._motion_notify_cb)
 
         actions.CAGandUIManager.__init__(self, popup='/colour_sample_popup')
     def populate_action_groups(self):
         self.action_groups[actions.AC_DONT_CARE].add_actions(
             [
-                ('paste_sample_image', gtk.STOCK_PASTE, None, None,
+                ('paste_sample_image', Gtk.STOCK_PASTE, None, None,
                  _('Paste an image from clipboard at this position.'), self._paste_fm_clipboard_cb),
             ])
         self.action_groups[self.AC_SAMPLES_PASTED].add_actions(
             [
-                ('remove_sample_images', gtk.STOCK_REMOVE, None, None,
+                ('remove_sample_images', Gtk.STOCK_REMOVE, None, None,
                  _('Remove all sample images from from the sample area.'), self._remove_sample_images_cb),
             ])
     def get_masked_condns(self):
@@ -122,7 +123,7 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
         else:
             return actions.MaskedCondns(0, self.AC_MASK)
     def _motion_notify_cb(self, widget, event):
-        if event.type == gtk.gdk.MOTION_NOTIFY:
+        if event.type == Gdk.EventType.MOTION_NOTIFY:
             self._ptr_x = event.x
             self._ptr_y = event.y
             return True
@@ -136,16 +137,16 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
         """
         Paste from the clipboard
         """
-        cbd = gtk.clipboard_get()
+        cbd = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         # WORKAROUND: clipboard bug on Windows
         if sys.platform.startswith("win"): cbd.request_targets(lambda a, b, c: None)
         cbd.request_image(self._image_from_clipboard_cb, (self._ptr_x, self._ptr_y))
     def _image_from_clipboard_cb(self, cbd, img, posn):
         if img is None:
-            dlg = gtk.MessageDialog(
+            dlg = Gtk.MessageDialog(
                 parent=self.get_toplevel(),
-                flags=gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
-                buttons=gtk.BUTTONS_OK,
+                flags=Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                buttons=Gtk.ButtonsType.OK,
                 message_format=_('No image data on clipboard.')
             )
             dlg.run()
@@ -171,31 +172,24 @@ class ColourSampleArea(gtk.DrawingArea, actions.CAGandUIManager):
         Return a list containing all samples from the drawing area
         """
         return [sample[2] for sample in self._sample_images]
-    def new_colour(self, arg):
-        if isinstance(arg, paint.Colour):
-            colour = gtk.gdk.Color(*arg.rgb)
-        else:
-            colour = gtk.gdk.Color(*arg)
-        return self.get_colormap().alloc_color(colour)
     def set_bg_colour(self, colour):
         """
         Set the drawing area to the specified colour
         """
-        self.bg_colour = self.new_colour(colour)
+        self.bg_colour = get_colour(colour)
         self.queue_draw()
-    def expose_cb(self, _widget, _event):
+    def expose_cb(self, _widget, cairo_ctxt):
         """
         Repaint the drawing area
         """
-        self.gc = self.window.new_gc()
-        self.gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
-        self.gc.set_background(self.bg_colour)
-        self.window.set_background(self.bg_colour)
-        self.window.clear()
+        cairo_ctxt.set_source_rgb(*self.bg_colour.converted_to(rgbh.RGBPN))
+        cairo_ctxt.paint()
         for sample in self._sample_images:
-            self.window.draw_pixbuf(self.gc, sample[2], 0, 0, sample[0], sample[1])
+            sfc = Gdk.cairo_surface_create_from_pixbuf(sample[2], 0, None)
+            cairo_ctxt.set_source_surface(sfc, sample[0], sample[1])
+            cairo_ctxt.paint()
         return True
-gobject.signal_new('samples-changed', ColourSampleArea, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_INT,))
+GObject.signal_new('samples-changed', ColourSampleArea, GObject.SignalFlags.RUN_LAST, None, (GObject.TYPE_INT,))
 
 def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     """
@@ -221,6 +215,19 @@ def generate_spectral_rgb_buf(hue, spread, width, height, backwards=False):
     buf = row * height
     return buffer(buf)
 
+def gdk_color_to_rgb(colour):
+    return paint.RGB(*gtkpwx.gdk_color_to_rgb(colour))
+
+def get_rgb(colour):
+    if isinstance(colour, Gdk.Color):
+        return gdk_color_to_rgb(colour)
+    elif isinstance(colour, paint.Colour) or isinstance(colour, paint.HCV):
+        return colour.rgb
+    elif isinstance(colour, paint.RGB):
+        return colour
+    else:
+        return paint.RGB(*colour)
+
 def generate_graded_rgb_buf(start_colour, end_colour, width, height):
     # TODO: deprecate this function in favour of the one in pixbuf
     """
@@ -231,13 +238,6 @@ def generate_graded_rgb_buf(start_colour, end_colour, width, height):
     width: the required width of the rectangle in pixels
     height: the required height of the rectangle in pixels
     """
-    def get_rgb(colour):
-        if isinstance(colour, gtk.gdk.Color):
-            return gdk_color_to_rgb(colour)
-        elif isinstance(colour, paint.Colour):
-            return colour.rgb
-        else:
-            return colour
     start_rgb = get_rgb(start_colour)
     end_rgb = get_rgb(end_colour)
     # Use Fraction() to eliminate rounding errors causing chr() range problems
@@ -249,17 +249,39 @@ def generate_graded_rgb_buf(start_colour, end_colour, width, height):
     buf = row * height
     return buffer(buf)
 
-class GenericAttrDisplay(gtk.DrawingArea):
+def draw_line(cairo_ctxt, x0, y0, x1, y1):
+    cairo_ctxt.move_to(x0, y0)
+    cairo_ctxt.line_to(x1, y1)
+    cairo_ctxt.stroke()
+
+def draw_polygon(cairo_ctxt, polygon, filled=True):
+    cairo_ctxt.move_to(*polygon[0])
+    for index in range(1, len(polygon)):
+        cairo_ctxt.line_to(*polygon[index])
+    cairo_ctxt.close_path()
+    if filled:
+        cairo_ctxt.fill()
+    else:
+        cairo_ctxt.stroke()
+
+def draw_circle(cairo_ctxt, cx, cy, radius, filled=False):
+    cairo_ctxt.arc(cx, cy, radius, 0.0, 2 * math.pi)
+    if filled:
+        cairo_ctxt.fill()
+    else:
+        cairo_ctxt.stroke()
+
+class GenericAttrDisplay(Gtk.DrawingArea):
     LABEL = None
 
     def __init__(self, colour=None, size=(100, 15)):
-        gtk.DrawingArea.__init__(self)
+        Gtk.DrawingArea.__init__(self)
         self.set_size_request(size[0], size[1])
         self.colour = colour
-        self.fg_colour = gtkpwx.best_foreground(colour)
+        self.fg_colour = gtkpwx.best_foreground_rgb(colour)
         self.indicator_val = 0.5
         self._set_colour(colour)
-        self.connect('expose-event', self.expose_cb)
+        self.connect('draw', self.expose_cb)
         self.show()
     @staticmethod
     def indicator_top(x, y):
@@ -267,32 +289,28 @@ class GenericAttrDisplay(gtk.DrawingArea):
     @staticmethod
     def indicator_bottom(x, y):
         return [(ind[0] + x, ind[1] + y) for ind in ((0, -5), (-5, 0), (5, 0))]
-    def new_colour(self, arg):
-        if isinstance(arg, paint.Colour):
-            colour = gtk.gdk.Color(*arg.rgb)
-        else:
-            colour = gtk.gdk.Color(*arg)
-        return self.get_colormap().alloc_color(colour)
-    def draw_indicators(self, gc):
+    def draw_indicators(self, cairo_ctxt):
         if self.indicator_val is None:
             return
-        w, h = self.window.get_size()
-        indicator_x = int(w * self.indicator_val)
-        gc.set_foreground(self.fg_colour)
-        gc.set_background(self.fg_colour)
-        # TODO: fix bottom indicator
-        self.window.draw_polygon(gc, True, self.indicator_top(indicator_x, 0))
-        self.window.draw_polygon(gc, True, self.indicator_bottom(indicator_x, h - 1))
-    def draw_label(self, gc):
+        width = self.get_allocated_width()
+        height = self.get_allocated_height()
+        indicator_x = int(width * self.indicator_val)
+        cairo_ctxt.set_source_rgb(*self.fg_colour)
+        draw_polygon(cairo_ctxt, self.indicator_top(indicator_x, 0), True)
+        draw_polygon(cairo_ctxt, self.indicator_bottom(indicator_x, height - 1), True)
+    def draw_label(self, cairo_ctxt):
         if self.LABEL is None:
             return
-        w, h = self.window.get_size()
-        layout = self.create_pango_layout(self.LABEL)
-        tw, th = layout.get_pixel_size()
-        x, y = ((w - tw) / 2, (h - th) / 2)
-        gc.set_foreground(self.fg_colour)
-        self.window.draw_layout(gc, x, y, layout, self.fg_colour)
-    def expose_cb(self, _widget, _event):
+        width = self.get_allocated_width()
+        height = self.get_allocated_height()
+        cairo_ctxt.set_font_size(15)
+        tw, th = cairo_ctxt.text_extents(self.LABEL)[2:4]
+        x = (width - tw + 0.5) / 2
+        y = (height + th - 0.5) / 2
+        cairo_ctxt.move_to(x, y)
+        cairo_ctxt.set_source_rgb(*self.fg_colour)
+        cairo_ctxt.show_text(self.LABEL)
+    def expose_cb(self, _widget, _cr):
         pass
     def _set_colour(self, colour):
         """
@@ -308,56 +326,67 @@ class GenericAttrDisplay(gtk.DrawingArea):
 class HueDisplay(GenericAttrDisplay):
     LABEL = _('Hue')
 
-    def expose_cb(self, _widget, _event):
-        if self.colour is None:
-            self.window.set_background(gtk.gdk.Color(0, 0, 0))
+    def expose_cb(self, widget, cairo_ctxt):
+        if self.colour is None and self.target_val is None:
+            cairo_ctxt.set_source_rgb(0, 0, 0)
+            cairo_ctxt.paint()
             return
-        gc = self.window.new_gc()
-        gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
         #
         if self.colour.hue.is_grey():
-            self.window.set_background(self.new_colour(self.colour.hue_rgb))
-            self.draw_label(gc)
+            cairo_ctxt.set_source_rgb(*self.colour.hue_rgb)
+            self.draw_label(cairo_ctxt)
             return
         #
         backwards = options.get('colour_wheel', 'red_to_yellow_clockwise')
-        w, h = self.window.get_size()
-        spectral_buf = generate_spectral_rgb_buf(self.colour.hue, 2 * math.pi, w, h, backwards)
-        self.window.draw_rgb_image(gc, x=0, y=0, width=w, height=h,
-            dith=gtk.gdk.RGB_DITHER_NONE,
-            rgb_buf=spectral_buf)
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
+        spread = 2 * math.pi
+        if backwards:
+            start_hue_angle = self.colour.hue.angle - spread / 2
+            delta_hue_angle = spread / width
+        else:
+            start_hue_angle = self.colour.hue.angle + spread / 2
+            delta_hue_angle = -spread / width
+        linear_gradient = cairo.LinearGradient(0, 0, width, height)
+        for i in range(width):
+            hue = paint.Hue.from_angle(start_hue_angle + delta_hue_angle * i)
+            linear_gradient.add_color_stop_rgb(float(i) / width, *hue.rgb_converted_to(rgbh.RGBPN))
+        cairo_ctxt.rectangle(0, 0, width, height)
+        cairo_ctxt.set_source(linear_gradient)
+        cairo_ctxt.fill()
 
-        self.draw_indicators(gc)
-        self.draw_label(gc)
+        self.draw_indicators(cairo_ctxt)
+        self.draw_label(cairo_ctxt)
     def _set_colour(self, colour):
-        self.fg_colour = self.get_colormap().alloc_color(gtkpwx.best_foreground(colour.hue_rgb))
+        self.fg_colour = gtkpwx.best_foreground_rgb(colour.hue_rgb)
 
 class ValueDisplay(GenericAttrDisplay):
     LABEL = _('Value')
     def __init__(self, colour=None, size=(100, 15)):
-        GenericAttrDisplay.__init__(self, colour=colour, size=size)
         self.start_colour = paint.BLACK
         self.end_colour = paint.WHITE
-    def expose_cb(self, _widget, _event):
+        GenericAttrDisplay.__init__(self, colour=colour, size=size)
+    def expose_cb(self, widget, cairo_ctxt):
         if self.colour is None:
-            self.window.set_background(gtk.gdk.Color(0, 0, 0))
+            cairo_ctxt.set_source_rgb(0, 0, 0)
+            cairo_ctxt.paint()
             return
-        gc = self.window.new_gc()
-        gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
-        w, h = self.window.get_size()
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
+        linear_gradient = cairo.LinearGradient(0, 0, width, height)
+        linear_gradient.add_color_stop_rgb(0.0, *self.start_colour)
+        linear_gradient.add_color_stop_rgb(1.0, *self.end_colour)
+        cairo_ctxt.rectangle(0, 0, width, height)
+        cairo_ctxt.set_source(linear_gradient)
+        cairo_ctxt.fill()
 
-        graded_buf = generate_graded_rgb_buf(self.start_colour, self.end_colour, w, h)
-        self.window.draw_rgb_image(gc, x=0, y=0, width=w, height=h,
-            dith=gtk.gdk.RGB_DITHER_NONE,
-            rgb_buf=graded_buf)
-
-        self.draw_indicators(gc)
-        self.draw_label(gc)
+        self.draw_indicators(cairo_ctxt)
+        self.draw_label(cairo_ctxt)
     def _set_colour(self, colour):
         """
         Set values that only change when the colour changes
         """
-        self.fg_colour = self.get_colormap().alloc_color(gtkpwx.best_foreground(colour))
+        self.fg_colour = gtkpwx.best_foreground_rgb(colour)
         self.indicator_val = colour.value
 
 class ChromaDisplay(ValueDisplay):
@@ -372,7 +401,7 @@ class ChromaDisplay(ValueDisplay):
         """
         self.start_colour = self.colour.hcvw.chroma_side()
         self.end_colour = colour.hue_rgb
-        self.fg_colour = self.get_colormap().alloc_color(gtkpwx.best_foreground(self.start_colour))
+        self.fg_colour = self.start_colour
         self.indicator_val = colour.chroma
 
 class WarmthDisplay(ValueDisplay):
@@ -385,20 +414,20 @@ class WarmthDisplay(ValueDisplay):
         """
         Set values that only change when the colour changes
         """
-        self.fg_colour = self.get_colormap().alloc_color(gtkpwx.best_foreground(colour.warmth_rgb()))
+        self.fg_colour = gtkpwx.best_foreground_rgb(colour.warmth_rgb())
         self.indicator_val = (1 + colour.warmth) / 2
 
-class HCVDisplay(gtk.VBox):
-    def __init__(self, colour=paint.WHITE, size=(256, 120), stype = gtk.SHADOW_ETCHED_IN):
-        gtk.VBox.__init__(self)
+class HCVDisplay(Gtk.VBox):
+    def __init__(self, colour=paint.WHITE, size=(256, 120), stype = Gtk.ShadowType.ETCHED_IN):
+        Gtk.VBox.__init__(self)
         #
         w, h = size
         self.hue = HueDisplay(colour=colour, size=(w, h / 4))
-        self.pack_start(gtkpwx.wrap_in_frame(self.hue, stype), expand=False)
+        self.pack_start(gtkpwx.wrap_in_frame(self.hue, stype), expand=False, fill=True, padding=0)
         self.value = ValueDisplay(colour=colour, size=(w, h / 4))
-        self.pack_start(gtkpwx.wrap_in_frame(self.value, stype), expand=False)
+        self.pack_start(gtkpwx.wrap_in_frame(self.value, stype), expand=False, fill=True, padding=0)
         self.chroma = ChromaDisplay(colour=colour, size=(w, h / 4))
-        self.pack_start(gtkpwx.wrap_in_frame(self.chroma, stype), expand=False)
+        self.pack_start(gtkpwx.wrap_in_frame(self.chroma, stype), expand=False, fill=True, padding=0)
         self.show()
     def set_colour(self, new_colour):
         self.chroma.set_colour(new_colour)
@@ -406,23 +435,23 @@ class HCVDisplay(gtk.VBox):
         self.value.set_colour(new_colour)
 
 class HCVWDisplay(HCVDisplay):
-    def __init__(self, colour=paint.WHITE, size=(256, 120), stype = gtk.SHADOW_ETCHED_IN):
+    def __init__(self, colour=paint.WHITE, size=(256, 120), stype = Gtk.ShadowType.ETCHED_IN):
         HCVDisplay.__init__(self, colour=colour, size=size, stype=stype)
         w, h = size
         self.warmth = WarmthDisplay(colour=colour, size=(w, h / 4))
-        self.pack_start(gtkpwx.wrap_in_frame(self.warmth, stype), expand=False)
+        self.pack_start(gtkpwx.wrap_in_frame(self.warmth, stype), expand=False, fill=True, padding=0)
         self.show()
     def set_colour(self, new_colour):
         HCVDisplay.set_colour(self, new_colour)
         self.warmth.set_colour(new_colour)
 
-class HueWheelNotebook(gtk.Notebook):
+class HueWheelNotebook(Gtk.Notebook):
     def __init__(self):
-        gtk.Notebook.__init__(self)
+        Gtk.Notebook.__init__(self)
         self.hue_chroma_wheel = HueChromaWheel(nrings=5)
         self.hue_value_wheel = HueValueWheel()
-        self.append_page(self.hue_chroma_wheel, gtk.Label(_('Hue/Chroma Wheel')))
-        self.append_page(self.hue_value_wheel, gtk.Label(_('Hue/Value Wheel')))
+        self.append_page(self.hue_chroma_wheel, Gtk.Label(_('Hue/Chroma Wheel')))
+        self.append_page(self.hue_value_wheel, Gtk.Label(_('Hue/Value Wheel')))
     def add_colour(self, new_colour):
         self.hue_chroma_wheel.add_colour(new_colour)
         self.hue_value_wheel.add_colour(new_colour)
@@ -430,33 +459,87 @@ class HueWheelNotebook(gtk.Notebook):
         self.hue_chroma_wheel.del_colour(colour)
         self.hue_value_wheel.del_colour(colour)
 
-class ColourWheel(gtk.DrawingArea):
-    def __init__(self, nrings=9):
-        gtk.DrawingArea.__init__(self)
+class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
+    UI_DESCR = '''
+        <ui>
+            <popup name='colour_wheel_I_popup'>
+                <menuitem action='colour_info'/>
+            </popup>
+            <popup name='colour_wheel_AI_popup'>
+                <menuitem action='add_colour'/>
+                <menuitem action='colour_info'/>
+            </popup>
+        </ui>
+        '''
+    AC_HAVE_POPUP_COLOUR, _DUMMY = actions.ActionCondns.new_flags_and_mask(1)
+    def __init__(self, nrings=9, popup='/colour_wheel_I_popup'):
+        Gtk.DrawingArea.__init__(self)
+        actions.CAGandUIManager.__init__(self, popup=popup)
+        self.__popup_colour = None
+        self.BLACK = get_colour([0, 0, 0])
         self.set_size_request(400, 400)
         self.scale = 1.0
         self.zoom = 1.0
         self.one = 100 * self.scale
         self.size = 3
         self.scaled_size = self.size * self.scale
-        self.cx = 0.0
-        self.cy = 0.0
+        self.centre = gtkpwx.XY(0, 0)
+        self.offset = gtkpwx.XY(0, 0)
+        self.__last_xy = gtkpwx.XY(0, 0)
         self.tube_colours = {}
         self.mixed_colours = {}
         self.nrings = nrings
-        self.connect('expose-event', self.expose_cb)
+        self.connect("draw", self.expose_cb)
         self.set_has_tooltip(True)
         self.connect('query-tooltip', self.query_tooltip_cb)
-        self.add_events(gtk.gdk.SCROLL_MASK)
+        self.add_events(Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK)
         self.connect('scroll-event', self.scroll_event_cb)
+        self.__press_cb_id = self.connect('button_press_event', self._button_press_cb)
+        self.__cb_ids = []
+        self.__cb_ids.append(self.connect('button_release_event', self._button_release_cb))
+        self.__cb_ids.append(self.connect('motion_notify_event', self._motion_notify_cb))
+        self.__cb_ids.append(self.connect('leave_notify_event', self._leave_notify_cb))
+        for cb_id in self.__cb_ids:
+            self.handler_block(cb_id)
         self.show()
+    @property
+    def popup_colour(self):
+        return self.__popup_colour
+    def populate_action_groups(self):
+        self.action_groups[self.AC_HAVE_POPUP_COLOUR].add_actions([
+            ('colour_info', Gtk.STOCK_INFO, None, None,
+             _('Detailed information for this colour.'),
+            ),
+            ('add_colour', Gtk.STOCK_ADD, None, None,
+             _('Add this colour to the mixer.'),
+            ),
+        ])
+        self.__ci_acbid = self.action_groups.connect_activate('colour_info', self._show_colour_details_acb)
+        self.__ac_acbid = None
+    def _show_colour_details_acb(self, _action):
+        TubeColourInformationDialogue(self.__popup_colour).show()
+    def do_popup_preliminaries(self, event):
+        colour, rng = self.get_colour_nearest_to_xy(event.x, event.y)
+        if colour is not None and rng <= self.scaled_size:
+            self.__popup_colour = colour
+            self.action_groups.update_condns(actions.MaskedCondns(self.AC_HAVE_POPUP_COLOUR, self.AC_HAVE_POPUP_COLOUR))
+        else:
+            self.__popup_colour = None
+            self.action_groups.update_condns(actions.MaskedCondns(0, self.AC_HAVE_POPUP_COLOUR))
+    def set_colour_info_acb(self, callback):
+        self.action_groups.disconnect_action('colour_info', self.__ci_acbid)
+        self.__ci_acbid = self.action_groups.connect_activate('colour_info', callback, self)
+    def set_add_colour_acb(self, callback):
+        if self.__ac_acbid is not None:
+            self.action_groups.disconnect_action('add_colour', self.__ac_acbid)
+        self.__ac_acbid = self.action_groups.connect_activate('add_colour', callback, self)
     def polar_to_cartesian(self, radius, angle):
         if options.get('colour_wheel', 'red_to_yellow_clockwise'):
             x = -radius * math.cos(angle)
         else:
             x = radius * math.cos(angle)
         y = radius * math.sin(angle)
-        return (int(self.cx + x), int(self.cy - y))
+        return (int(self.centre.x + x), int(self.centre.y - y))
     def get_colour_nearest_to_xy(self, x, y):
         smallest = 0xFF
         nearest = None
@@ -473,11 +556,16 @@ class ColourWheel(gtk.DrawingArea):
     def query_tooltip_cb(self, widget, x, y, keyboard_mode, tooltip):
         # TODO: move location of tootip as mouse moves
         colour, rng = self.get_colour_nearest_to_xy(x, y)
-        tooltip.set_text(colour.name if colour is not None else '')
-        return True
+        if colour is not None and rng <= self.scaled_size:
+            tooltip.set_text(colour.name)
+            return True
+        else:
+            tooltip.set_text("")
+            return False
     def scroll_event_cb(self, _widget, event):
-        if event.device.source == gtk.gdk.SOURCE_MOUSE:
-            new_zoom = self.zoom + 0.025 * (-1 if event.direction == gtk.gdk.SCROLL_UP else 1)
+        # TODO: investigate strange zoom behaviour in colour wheel
+        if event.device.get_source() == Gdk.InputSource.MOUSE:
+            new_zoom = self.zoom + 0.025 * (-1 if event.direction == Gdk.ScrollDirection.UP else 1)
             if new_zoom > 1.0 and new_zoom < 5.0:
                 self.zoom = new_zoom
                 self.queue_draw()
@@ -498,48 +586,73 @@ class ColourWheel(gtk.DrawingArea):
         # The data has changed so do a redraw
         self.queue_draw()
     def new_colour(self, rgb):
-        colour = gtk.gdk.Color(*rgb)
-        return self.get_colormap().alloc_color(colour)
-    def draw_circle(self, cx, cy, radius, filled=False):
-        cx -= radius
-        cy -= radius
-        diam = int(2 * radius)
-        self.window.draw_arc(self.gc, filled, int(cx), int(cy), diam, diam, 0, 360 * 64)
-    def expose_cb(self, _widget, _event):
-        self.gc = self.window.new_gc()
-        self.gc.copy(self.get_style().fg_gc[gtk.STATE_NORMAL])
+        colour = Gdk.Color(*rgb)
+        return colour
+    def expose_cb(self, widget, cairo_ctxt):
         #
         spacer = 10
         scaledmax = 110.0
         #
-        self.gc.set_background(self.new_colour(paint.RGB_WHITE / 2))
+        bg_colour = (paint.RGB_WHITE / 2).converted_to(rgbh.RGBPN)
+        cairo_ctxt.set_source_rgb(*bg_colour)
+        cairo_ctxt.paint()
         #
-        dw, dh = self.window.get_size()
-        self.cx = dw / 2
-        self.cy = dh / 2
+        dw = widget.get_allocated_width()
+        dh = widget.get_allocated_height()
+        self.centre = gtkpwx.XY(dw / 2, dh / 2) + self.offset
         #
         # calculate a scale factor to use for drawing the graph based
         # on the minimum available width or height
-        mindim = min(self.cx, dh / 2)
+        mindim = min(self.centre.x, dh / 2)
         self.scale = mindim / scaledmax
         self.one = self.scale * 100
         self.scaled_size = self.size * self.scale
         #
         # Draw the graticule
-        self.gc.set_foreground(self.new_colour(paint.RGB_WHITE * 3 / 4))
+        ring_colour = (paint.RGB_WHITE * 3 / 4).converted_to(rgbh.RGBPN)
+        cairo_ctxt.set_source_rgb(*ring_colour)
         for radius in [100 * (i + 1) * self.scale / self.nrings for i in range(self.nrings)]:
-            self.draw_circle(self.cx, self.cy, int(round(radius * self.zoom)))
+            draw_circle(cairo_ctxt, self.centre.x, self.centre.y, int(round(radius * self.zoom)))
         #
-        self.gc.line_width = 2
+        cairo_ctxt.set_line_width(2)
         for angle in [utils.PI_60 * i for i in range(6)]:
             hue = paint.Hue.from_angle(angle)
-            self.gc.set_foreground(self.new_colour(hue.rgb))
-            self.window.draw_line(self.gc, self.cx, self.cy, *self.polar_to_cartesian(self.one * self.zoom, angle))
+            cairo_ctxt.set_source_rgb(*hue.rgb_converted_to(rgbh.RGBPN))
+            cairo_ctxt.move_to(self.centre.x, self.centre.y)
+            cairo_ctxt.line_to(*self.polar_to_cartesian(self.one * self.zoom, angle))
+            cairo_ctxt.stroke()
         for tube in self.tube_colours.values():
-            tube.draw()
+            tube.draw(cairo_ctxt)
         for mix in self.mixed_colours.values():
-            mix.draw()
+            mix.draw(cairo_ctxt)
         return True
+    # Allow graticule to be moved using mouse (left button depressed)
+    # Careful not to override CAGandUIManager method
+    def _button_press_cb(self, widget, event):
+        if event.button == 1:
+            self.__last_xy = gtkpwx.XY(int(event.x), int(event.y))
+            for cb_id in self.__cb_ids:
+                widget.handler_unblock(cb_id)
+            return True
+        return actions.CAGandUIManager._button_press_cb(self, widget, event)
+    def _motion_notify_cb(self, widget, event):
+        this_xy = gtkpwx.XY(int(event.x), int(event.y))
+        delta_xy = this_xy - self.__last_xy
+        self.__last_xy = this_xy
+        # TODO: limit offset values
+        self.offset += delta_xy
+        widget.queue_draw()
+        return True
+    def _button_release_cb(self, widget, event):
+        if event.button != 1:
+            return False
+        for cb_id in self.__cb_ids:
+            widget.handler_block(cb_id)
+        return True
+    def _leave_notify_cb(self, widget, event):
+        for cb_id in self.__cb_ids:
+            widget.handler_block(cb_id)
+        return False
     class ColourShape(object):
         def __init__(self, parent, colour):
             self.parent = parent
@@ -553,9 +666,9 @@ class ColourWheel(gtk.DrawingArea):
             Set up colour values ready for drawing
             """
             self.colour_angle = self.colour.hue.angle if not self.colour.hue.is_grey() else utils.Angle(math.pi / 2)
-            self.fg_colour = self.parent.new_colour(self.colour.rgb)
-            self.value_colour = self.parent.new_colour(paint.BLACK)
-            self.chroma_colour = self.parent.new_colour(self.colour.hcvw.chroma_side())
+            self.fg_colour = self.colour.rgb #self.parent.new_colour(self.colour.rgb)
+            self.value_colour = paint.BLACK #self.parent.new_colour(paint.BLACK)
+            self.chroma_colour = self.colour.hcvw.chroma_side() #self.parent.new_colour(self.colour.hcvw.chroma_side())
             self.choose_radius_attribute()
         def range_from(self, x, y):
             dx = x - self.x
@@ -563,30 +676,35 @@ class ColourWheel(gtk.DrawingArea):
             return math.sqrt(dx * dx + dy * dy)
     class ColourSquare(ColourShape):
         polypoints = ((-1, 1), (-1, -1), (1, -1), (1, 1))
-        def draw(self):
+        def draw(self, cairo_ctxt):
             self.predraw_setup()
             self.x, self.y = self.parent.polar_to_cartesian(self.radius * self.parent.zoom, self.colour_angle)
             square = tuple(tuple(pp[i] * self.parent.scaled_size for i in range(2)) for pp in self.polypoints)
             square_pts = [tuple((int(self.x + pt[0]), int(self.y +  pt[1]))) for pt in square]
             # draw the middle
-            self.parent.gc.set_foreground(self.fg_colour)
-            self.parent.window.draw_polygon(self.parent.gc, filled=True, points=square_pts)
-            self.parent.gc.set_foreground(self.chroma_colour)
-            self.parent.window.draw_polygon(self.parent.gc, filled=False, points=square_pts)
+            cairo_ctxt.set_source_rgb(*self.fg_colour.converted_to(rgbh.RGBPN))
+            draw_polygon(cairo_ctxt, square_pts, filled=True)
+            cairo_ctxt.set_source_rgb(*self.chroma_colour)
+            draw_polygon(cairo_ctxt, square_pts, filled=False)
+    class ColourDiamond(ColourSquare):
+        polypoints = ((1.5, 0), (0, -1.5), (-1.5, 0), (0, 1.5))
     class ColourCircle(ColourShape):
-        def draw(self):
+        def draw(self, cairo_ctxt):
             self.predraw_setup()
             self.x, self.y = self.parent.polar_to_cartesian(self.radius * self.parent.zoom, self.colour_angle)
-            self.parent.gc.set_foreground(self.fg_colour)
-            self.parent.draw_circle(self.x, self.y, radius=self.parent.scaled_size, filled=True)
-            self.parent.gc.set_foreground(self.chroma_colour)
-            self.parent.draw_circle(self.x, self.y, radius=self.parent.scaled_size, filled=False)
+            cairo_ctxt.set_source_rgb(*self.fg_colour.converted_to(rgbh.RGBPN))
+            draw_circle(cairo_ctxt, self.x, self.y, radius=self.parent.scaled_size, filled=True)
+            cairo_ctxt.set_source_rgb(*self.chroma_colour)
+            draw_circle(cairo_ctxt, self.x, self.y, radius=self.parent.scaled_size, filled=False)
 
 class HueChromaWheel(ColourWheel):
     class ColourSquare(ColourWheel.ColourSquare):
         def choose_radius_attribute(self):
             self.radius = self.parent.one * self.colour.chroma
     class ColourCircle(ColourWheel.ColourCircle):
+        def choose_radius_attribute(self):
+            self.radius = self.parent.one * self.colour.chroma
+    class ColourDiamond(ColourWheel.ColourDiamond):
         def choose_radius_attribute(self):
             self.radius = self.parent.one * self.colour.chroma
 
@@ -597,12 +715,15 @@ class HueValueWheel(ColourWheel):
     class ColourCircle(ColourWheel.ColourCircle):
         def choose_radius_attribute(self):
             self.radius = self.parent.one * self.colour.value
+    class ColourDiamond(ColourWheel.ColourDiamond):
+        def choose_radius_attribute(self):
+            self.radius = self.parent.one * self.colour.value
 
 class ColourListStore(tlview.NamedListStore):
-    Row = collections.namedtuple('Row', ['colour'])
-    types = Row(colour=object)
+    ROW = collections.namedtuple('ROW', ['colour'])
+    TYPES = ROW(colour=object)
     def append_colour(self, colour):
-        self.append(self.Row(colour))
+        self.append(self.ROW(colour))
     def remove_colour(self, colour):
         model_iter = self.find_named(lambda x: x.colour == colour)
         if model_iter is None:
@@ -623,22 +744,22 @@ class ColourListStore(tlview.NamedListStore):
             if row.colour.name == colour_name:
                 return row.colour
         return None
-gobject.signal_new('colour-removed', ColourListStore, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+GObject.signal_new('colour-removed', ColourListStore, GObject.SignalFlags.RUN_LAST, None, (GObject.TYPE_PYOBJECT,))
 
 def paint_cell_data_func(column, cell, model, model_iter, attribute):
     colour = model.get_value_named(model_iter, 'colour')
     if attribute == 'name':
         cell.set_property('text', colour.name)
-        cell.set_property('background', gtk.gdk.Color(*colour.rgb))
-        cell.set_property('foreground', gtkpwx.best_foreground(colour.rgb))
+        cell.set_property('background-gdk', Gdk.Color(*colour.rgb))
+        cell.set_property('foreground-gdk', gtkpwx.best_foreground(colour.rgb))
     elif attribute == 'value':
-        cell.set_property('text', str(round(colour.value, 2)))
-        cell.set_property('background', gtk.gdk.Color(*colour.value_rgb()))
-        cell.set_property('foreground', gtkpwx.best_foreground(colour.value_rgb()))
+        cell.set_property('text', str(float(round(colour.value, 2))))
+        cell.set_property('background-gdk', Gdk.Color(*colour.value_rgb()))
+        cell.set_property('foreground-gdk', gtkpwx.best_foreground(colour.value_rgb()))
     elif attribute == 'hue':
-        cell.set_property('background', gtk.gdk.Color(*colour.hue_rgb))
+        cell.set_property('background-gdk', Gdk.Color(*colour.hue_rgb))
     elif attribute == 'warmth':
-        cell.set_property('background', gtk.gdk.Color(*colour.warmth_rgb()))
+        cell.set_property('background-gdk', Gdk.Color(*colour.warmth_rgb()))
     elif attribute == 'permanence':
         cell.set_property('text', str(colour.permanence))
     elif attribute == 'transparency':
@@ -654,11 +775,11 @@ def colour_attribute_column_spec(tns):
         cells=[
             tlview.CellSpec(
                 cell_renderer_spec=tlview.CellRendererSpec(
-                    cell_renderer=gtk.CellRendererText,
+                    cell_renderer=Gtk.CellRendererText,
                     expand=None,
+                    properties=None,
                     start=False
                 ),
-                properties=None,
                 cell_data_function_spec=tlview.CellDataFunctionSpec(
                     function=paint_cell_data_func,
                     user_data=tns.attr
@@ -669,7 +790,7 @@ def colour_attribute_column_spec(tns):
     )
 
 COLOUR_ATTRS = [
-    TNS(_('Colour Name'), 'name', {'resizable' : True}, lambda row: row.colour.name),
+    TNS(_('Colour Name'), 'name', {'resizable' : True, 'expand' : True}, lambda row: row.colour.name),
     TNS(_('Value'), 'value', {}, lambda row: row.colour.value),
     TNS(_('Hue'), 'hue', {}, lambda row: row.colour.hue),
     TNS(_('Warmth'), 'warmth', {}, lambda row: row.colour.warmth),
@@ -685,17 +806,17 @@ def colour_attribute_column_specs(model):
 
 def generate_colour_list_spec(model):
     """
-    Generate the specification for a paint colour list
+    Generate the SPECIFICATION for a paint colour list
     """
     return tlview.ViewSpec(
         properties={},
-        selection_mode=gtk.SELECTION_MULTIPLE,
+        selection_mode=Gtk.SelectionMode.MULTIPLE,
         columns=colour_attribute_column_specs(model)
     )
 
 class ColourListView(tlview.View, actions.CAGandUIManager):
-    Model = ColourListStore
-    specification = generate_colour_list_spec(ColourListStore)
+    MODEL = ColourListStore
+    SPECIFICATION = generate_colour_list_spec(ColourListStore)
     UI_DESCR = '''
     <ui>
         <popup name='colour_list_popup'>
@@ -712,7 +833,7 @@ class ColourListView(tlview.View, actions.CAGandUIManager):
         """
         self.action_groups[actions.AC_SELN_MADE].add_actions(
             [
-                ('remove_selected_colours', gtk.STOCK_REMOVE, None, None,
+                ('remove_selected_colours', Gtk.STOCK_REMOVE, None, None,
                  _('Remove the selected colours from the list.'), self._remove_selection_cb),
             ]
         )
@@ -720,12 +841,43 @@ class ColourListView(tlview.View, actions.CAGandUIManager):
         """
         Delete the currently selected colours
         """
-        self.model.remove_colours(self.get_selected_colours())
+        colours = self.get_selected_colours()
+        if len(colours) == 0:
+            return
+        msg = _("The following colours are about to be deleted:\n")
+        for colour in colours:
+            msg += "\t{0}\n".format(colour.name)
+        msg += _("and will not be recoverable. OK?")
+        if gtkpwx.ask_user_to_confirm(msg):
+            self.model.remove_colours(colours)
     def get_selected_colours(self):
         """
         Return the currently selected colours as a list.
         """
-        return [row.colour for row in tlview.NamedTreeModel.get_selected_rows(self.get_selection())]
+        return [row.colour for row in self.MODEL.get_selected_rows(self.get_selection())]
+
+class TubeColourInformationDialogue(Gtk.Dialog):
+    """
+    A dialog to display the detailed information for a paint colour
+    """
+    def __init__(self, colour, parent=None):
+        Gtk.Dialog.__init__(self, title=_('Paint Colour: {}').format(colour.name), parent=parent)
+        last_size = recollect.get("paint_colour_information", "last_size")
+        if last_size:
+            self.set_default_size(*eval(last_size))
+        vbox = self.get_content_area()
+        vbox.pack_start(gtkpwx.ColouredLabel(colour.name, colour), expand=False, fill=True, padding=0)
+        if isinstance(colour, paint.TubeColour):
+            vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.name, colour), expand=False, fill=True, padding=0)
+            vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.maker, colour), expand=False, fill=True, padding=0)
+        vbox.pack_start(HCVDisplay(colour=colour), expand=False, fill=True, padding=0)
+        if isinstance(colour, paint.TubeColour):
+            vbox.pack_start(Gtk.Label(colour.transparency.description()), expand=False, fill=True, padding=0)
+            vbox.pack_start(Gtk.Label(colour.permanence.description()), expand=False, fill=True, padding=0)
+        self.connect("configure-event", self._configure_event_cb)
+        vbox.show_all()
+    def _configure_event_cb(self, widget, allocation):
+        recollect.set("paint_colour_information", "last_size", "({0.width}, {0.height})".format(allocation))
 
 if __name__ == '__main__':
     doctest.testmod()

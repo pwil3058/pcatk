@@ -14,7 +14,7 @@
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 '''
-Manipulate gtk.gdk.Pixbuf objects for fun and pleasure
+Manipulate Gdk.Pixbuf objects for fun and pleasure
 '''
 
 import collections
@@ -22,13 +22,15 @@ import math
 import fractions
 import array
 
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GObject
+from gi.repository import GdkPixbuf
 
-from pcatk import options
-from pcatk import utils
-from pcatk import gtkpwx
-from pcatk import rgbh
+from . import options
+from . import utils
+from . import gtkpwx
+from . import rgbh
 
 if __name__ == '__main__':
     _ = lambda x: x
@@ -41,7 +43,7 @@ class RGB(rgbh.RGB8):
         return array.array(cls.TYPECODE, (int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)))
     @classmethod
     def to_mono(cls, rgb):
-        val = (sum(rgb) + 1) / 3
+        val = (sum(rgb) + 1) // 3
         return array.array(cls.TYPECODE, (val, val, val))
 WHITE = array.array(RGB.TYPECODE, (RGB.ONE, RGB.ONE, RGB.ONE))
 BLACK = array.array(RGB.TYPECODE, (0, 0, 0))
@@ -80,7 +82,7 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         >>> vlc.get_value_index(ONE, 0, 0)
         2
         """
-        return (sum(rgb) * (self.n_values - 1) * 2 + self.THREE) / self.SIX
+        return (sum(rgb) * (self.n_values - 1) * 2 + self.THREE) // self.SIX
 
 class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hues', 'step'])):
     __slots__ = ()
@@ -139,7 +141,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
 
 class PixBufRow(rgbh.BPC8):
     def __init__(self, data, start, end, nc=3):
-        self.rgbs = [array.array(self.TYPECODE, (data[i], data[i+1], data[i+2])) for i in xrange(start, end, nc)]
+        self.rgbs = [array.array(self.TYPECODE, (data[i], data[i+1], data[i+2])) for i in range(start, end, nc)]
         self.hues = [Hue.from_rgb(rgb) for rgb in self.rgbs]
     def __iter__(self):
         for rgb, hue in zip(self.rgbs, self.hues):
@@ -221,13 +223,13 @@ def rgb_row_to_string(rgb_row):
         result.extend(rgb)
     return result.tostring()
 
-class RGBHImage(gobject.GObject):
+class RGBHImage(GObject.GObject):
     """
     An object containing a RGB and Hue array representing a Pixbuf
     """
     NPR = 50 # the number of progress reports to make during a loop
     def __init__(self, pixbuf=None):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
         self.__size = gtkpwx.WH(width=0, height=0)
         self.__pixel_rows = None
         if pixbuf is not None:
@@ -254,7 +256,7 @@ class RGBHImage(gobject.GObject):
             else:
                 new_h = int(640 / math.sqrt(ar) + 0.5)
                 new_w = int(new_h * ar + 0.5)
-            pixbuf = pixbuf.scale_simple(new_w, new_h, gtk.gdk.INTERP_BILINEAR)
+            pixbuf = pixbuf.scale_simple(new_w, new_h, GdkPixbuf.InterpType.BILINEAR)
         w, h = (pixbuf.get_width(), pixbuf.get_height())
         self.__size = gtkpwx.WH(width=w, height=h)
         # FUTUREPROOF: make useable for bps other than 8
@@ -278,8 +280,8 @@ class RGBHImage(gobject.GObject):
             return None
         bytes_per_row = self.__size.width * 3
         rowstride = calc_rowstride(bytes_per_row)
-        padding = '\000' * (rowstride - bytes_per_row)
-        data = ''
+        padding = b"\000" * (rowstride - bytes_per_row)
+        data = b""
         pr_step = len(self.__pixel_rows) / self.NPR
         next_pr_due = 0
         for row_n, pixel_row in enumerate(self.__pixel_rows):
@@ -289,9 +291,9 @@ class RGBHImage(gobject.GObject):
             data += rgb_row_to_string(map_to_flat_row(pixel_row))
             data += padding
         self.emit('progress-made', fractions.Fraction(1))
-        return gtk.gdk.pixbuf_new_from_data(
+        return GdkPixbuf.Pixbuf.new_from_data(
             data=data,
-            colorspace=gtk.gdk.COLORSPACE_RGB,
+            colorspace=GdkPixbuf.Colorspace.RGB,
             has_alpha=False,
             bits_per_sample=8,
             width=self.__size.width,
@@ -300,15 +302,15 @@ class RGBHImage(gobject.GObject):
         )
     def get_pixbuf(self):
         """
-        Return a gtk.gdk.Pixbuf representation of the image
+        Return a Gdk.Pixbuf representation of the image
         """
         def map_to_flat_row(row):
             for pixel in row:
                 for component in pixel.rgb:
                     yield component
         return self.get_mapped_pixbuf(map_to_flat_row)
-gobject.type_register(RGBHImage)
-gobject.signal_new('progress-made', RGBHImage, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+GObject.type_register(RGBHImage)
+GObject.signal_new('progress-made', RGBHImage, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
 
 class Transformer(object):
     """

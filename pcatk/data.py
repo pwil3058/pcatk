@@ -18,7 +18,7 @@
 import os
 import sys
 
-import gtk
+from gi.repository import Gtk
 
 # Words commonly used in paint names
 _COLOUR_NAME_LEXICON = [
@@ -39,9 +39,9 @@ _COLOUR_NAME_LEXICON = [
     _('Zinc'), _('Titanium'), _('Cerulean'),
 ]
 
-class LexiconListStore(gtk.ListStore):
+class LexiconListStore(Gtk.ListStore):
     def __init__(self, lexicon):
-        gtk.ListStore.__init__(self, str)
+        Gtk.ListStore.__init__(self, str)
         for word in lexicon:
             self.append([word])
 

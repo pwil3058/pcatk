@@ -1,4 +1,4 @@
-### Copyright: Peter Williams (2012) - All rights reserved
+### Copyright: Peter Williams (2014) - All rights reserved
 ###
 ### This program is free software; you can redistribute it and/or modify
 ### it under the terms of the GNU General Public License as published by
@@ -22,22 +22,25 @@ import os
 import hashlib
 import fractions
 
-import gtk
-import gobject
-import glib
+from gi.repository import Gtk
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
+from gi.repository import GObject
+from gi.repository import GLib
 
-from pcatk import options
-from pcatk import recollect
-from pcatk import utils
-from pcatk import actions
-from pcatk import gtkpwx
-from pcatk import paint
-from pcatk import gpaint
-from pcatk import data
-from pcatk import icons
-from pcatk import iview
+from . import options
+from . import recollect
+from . import utils
+from . import actions
+from . import gtkpwx
+from . import paint
+from . import gpaint
+from . import data
+from . import icons
+from . import iview
+from . import rgbh
 
-class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
+class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
     UI_DESCR = '''
     <ui>
       <menubar name='tube_series_editor_menubar'>
@@ -57,7 +60,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
     '''
     AC_HAS_COLOUR, AC_NOT_HAS_COLOUR, AC_HAS_FILE, AC_ID_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(4)
     def __init__(self):
-        gtk.HBox.__init__(self)
+        Gtk.HBox.__init__(self)
         actions.CAGandUIManager.__init__(self)
         #
         self.set_file_path(None)
@@ -80,27 +83,27 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.tube_colours.set_size_request(480, 480)
         self.tube_colours.tube_list.action_groups.connect_activate('edit_selected_colour', self._edit_selected_colour_cb)
         # as these are company names don't split them up for autocompletion
-        self.manufacturer_name = gtkpwx.TextEntryAutoComplete(gtk.ListStore(str), multiword=False)
+        self.manufacturer_name = gtkpwx.TextEntryAutoComplete(Gtk.ListStore(str), multiword=False)
         self.manufacturer_name.connect('changed', self._id_changed_cb)
-        mnlabel = gtk.Label(_('Manufacturer:'))
-        self.series_name = gtkpwx.TextEntryAutoComplete(gtk.ListStore(str))
+        mnlabel = Gtk.Label(_('Manufacturer:'))
+        self.series_name = gtkpwx.TextEntryAutoComplete(Gtk.ListStore(str))
         self.series_name.connect('changed', self._id_changed_cb)
-        snlabel = gtk.Label(_('Series:'))
+        snlabel = Gtk.Label(_('Series:'))
         self.set_current_colour(None)
         # Now arrange them
-        vbox = gtk.VBox()
-        table = gtk.Table(rows=2, columns=2, homogeneous=False)
+        vbox = Gtk.VBox()
+        table = Gtk.Table(rows=2, columns=2, homogeneous=False)
         table.attach(mnlabel, 0, 1, 0, 1, xoptions=0)
         table.attach(snlabel, 0, 1, 1, 2, xoptions=0)
         table.attach(self.manufacturer_name, 1, 2, 0, 1)
         table.attach(self.series_name, 1, 2, 1, 2)
-        vbox.pack_start(table, expand=False)
-        vbox.pack_start(self.tube_colours, expand=True, fill=True)
-        self.pack_start(vbox, expand=True, fill=True)
-        vbox = gtk.VBox()
-        vbox.pack_start(self.tube_editor, expand=True, fill=True)
-        vbox.pack_start(self.buttons, expand=False)
-        self.pack_start(vbox, expand=True, fill=True)
+        vbox.pack_start(table, expand=False, fill=True, padding=0)
+        vbox.pack_start(self.tube_colours, expand=True, fill=True, padding=0)
+        self.pack_start(vbox, expand=True, fill=True, padding=0)
+        vbox = Gtk.VBox()
+        vbox.pack_start(self.tube_editor, expand=True, fill=True, padding=0)
+        vbox.pack_start(self.buttons, expand=False, fill=True, padding=0)
+        self.pack_start(vbox, expand=True, fill=True, padding=0)
         self.show_all()
     def populate_action_groups(self):
         self.action_groups[gpaint.ColourSampleArea.AC_SAMPLES_PASTED].add_actions([
@@ -124,12 +127,12 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             self._accept_colour_changes_cb),
         ])
         self.action_groups[self.AC_HAS_FILE|self.AC_ID_READY].add_actions([
-            ('save_tube_series_to_file', gtk.STOCK_SAVE, None, None,
+            ('save_tube_series_to_file', Gtk.STOCK_SAVE, None, None,
             _('Save the current series definition to file.'),
             self._save_tube_series_to_file_cb),
         ])
         self.action_groups[self.AC_ID_READY].add_actions([
-            ('save_tube_series_as_file', gtk.STOCK_SAVE_AS, None, None,
+            ('save_tube_series_as_file', Gtk.STOCK_SAVE_AS, None, None,
             _('Save the current series definition to a user chosen file.'),
             self._save_tube_series_as_file_cb),
         ])
@@ -140,7 +143,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             ('reset_colour_editor', None, _('Reset'), None,
             _('Reset the colour editor to its default state.'),
             self._reset_colour_editor_cb),
-            ('open_tube_series_file', gtk.STOCK_OPEN, None, None,
+            ('open_tube_series_file', Gtk.STOCK_OPEN, None, None,
             _('Load a tube series from a file for editing.'),
             self._open_tube_series_file_cb),
             ('take_screen_sample', None, _('Take Sample'), None,
@@ -149,10 +152,10 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             ('open_sample_viewer', None, _('Open Sample Viewer'), None,
             _('Open a graphics file containing colour samples.'),
             self._open_sample_viewer_cb),
-            ('close_colour_editor', gtk.STOCK_CLOSE, None, None,
+            ('close_colour_editor', Gtk.STOCK_CLOSE, None, None,
             _('Close this window.'),
             self._close_colour_editor_cb),
-            ('new_tube_series', gtk.STOCK_NEW, None, None,
+            ('new_tube_series', Gtk.STOCK_NEW, None, None,
             _('Start a new tube colour series.'),
             self._new_tube_series_cb),
         ])
@@ -177,16 +180,16 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         if manl == 0 and serl == 0 and coll == 0:
             return True
         dtext = self.get_definition_text()
-        if hashlib.sha1(dtext).digest() == self.saved_hash:
+        if hashlib.sha1(dtext.encode()).digest() == self.saved_hash:
             return True
         parent = self.get_toplevel()
         dlg = gtkpwx.UnsavedChangesDialogue(
-            parent=parent if isinstance(parent, gtk.Window) else None,
+            parent=parent if isinstance(parent, Gtk.Window) else None,
             message='There are unsaved changes.'
         )
         response = dlg.run()
         dlg.destroy()
-        if response == gtk.RESPONSE_CANCEL:
+        if response == Gtk.ResponseType.CANCEL:
             return False
         elif response == gtkpwx.UnsavedChangesDialogue.CONTINUE_UNSAVED:
             return True
@@ -248,11 +251,11 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         title = _('Duplicate Colour Name')
         msg = _('A colour with the name "{0}" already exists.\n Overwrite?').format(name)
         dlg = gtkpwx.CancelOKDialog(title=title, parent=self.get_toplevel())
-        dlg.get_content_area().pack_start(gtk.Label(msg))
+        dlg.get_content_area().pack_start(Gtk.Label(msg), expand=False, fill=False, padding=0)
         dlg.show_all()
         response = dlg.run()
         dlg.destroy()
-        return response == gtk.RESPONSE_OK
+        return response == Gtk.ResponseType.OK
     def _accept_colour_changes_cb(self, _widget):
         edited_colour = self.tube_editor.get_colour()
         if edited_colour.name != self.current_colour.name:
@@ -304,10 +307,10 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.tube_editor.auto_match_sample(raw=True)
     def report_io_error(self, edata):
         msg = '{0}: {1}'.format(edata.strerror, edata.filename)
-        gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
+        Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
         return False
     def report_format_error(self, msg):
-        gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
+        Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
         return False
     def load_fm_file(self, filepath):
         try:
@@ -330,7 +333,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         self.manufacturer_name.set_text(series.series_id.maker)
         self.series_name.set_text(series.series_id.name)
         self.set_file_path(filepath)
-        self.saved_hash = hashlib.sha1(text).digest()
+        self.saved_hash = hashlib.sha1(text.encode()).digest()
     def _open_tube_series_file_cb(self, _action):
         """
         Ask the user for the name of the file then open it.
@@ -338,11 +341,11 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         if not self.unsaved_changes_ok():
             return
         parent = self.get_toplevel()
-        dlg = gtk.FileChooserDialog(
+        dlg = Gtk.FileChooserDialog(
             title=_('Load Tube Series Description'),
-            parent=parent if isinstance(parent, gtk.Window) else None,
-            action=gtk.FILE_CHOOSER_ACTION_OPEN,
-            buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
+            parent=parent if isinstance(parent, Gtk.Window) else None,
+            action=Gtk.FileChooserAction.OPEN,
+            buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
         )
         if self.file_path:
             lastdir = os.path.dirname(self.file_path)
@@ -352,7 +355,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             if last_file:
                 lastdir = os.path.dirname(last_file)
                 dlg.set_current_folder(lastdir)
-        if dlg.run() == gtk.RESPONSE_OK:
+        if dlg.run() == Gtk.ResponseType.OK:
             filepath = dlg.get_filename()
             self.load_fm_file(filepath)
         dlg.destroy()
@@ -379,7 +382,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             fobj.close()
             # save was successful so set our filepath
             self.set_file_path(filepath)
-            self.saved_hash = hashlib.sha1(definition).digest()
+            self.saved_hash = hashlib.sha1(definition.encode()).digest()
         except IOError as edata:
             return self.report_io_error(edata)
     def _save_tube_series_to_file_cb(self, _action):
@@ -392,11 +395,11 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         Ask the user for the name of the file then open it.
         """
         parent = self.get_toplevel()
-        dlg = gtk.FileChooserDialog(
+        dlg = Gtk.FileChooserDialog(
             title='Save Tube Series Description',
-            parent=parent if isinstance(parent, gtk.Window) else None,
-            action=gtk.FILE_CHOOSER_ACTION_SAVE,
-            buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
+            parent=parent if isinstance(parent, Gtk.Window) else None,
+            action=Gtk.FileChooserAction.SAVE,
+            buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
         )
         dlg.set_do_overwrite_confirmation(True)
         if self.file_path:
@@ -407,7 +410,7 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
             if last_file:
                 lastdir = os.path.dirname(last_file)
                 dlg.set_current_folder(lastdir)
-        if dlg.run() == gtk.RESPONSE_OK:
+        if dlg.run() == Gtk.ResponseType.OK:
             filepath = dlg.get_filename()
             self.save_to_file(filepath)
         dlg.destroy()
@@ -424,38 +427,38 @@ class TubeSeriesEditor(gtk.HBox, actions.CAGandUIManager):
         """
         if not self.unsaved_changes_ok():
             return
-        gtk.main_quit()
-gobject.signal_new('file_changed', TubeSeriesEditor, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+        Gtk.main_quit()
+GObject.signal_new('file_changed', TubeSeriesEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
 
-class TubeEditor(gtk.VBox):
+class TubeEditor(Gtk.VBox):
     AC_READY, AC_NOT_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(2)
 
     def __init__(self):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         #
-        table = gtk.Table(rows=3, columns=2, homogeneous=False)
+        table = Gtk.Table(rows=3, columns=2, homogeneous=False)
         # Colour Name
-        stext =  gtk.Label(_('Colour Name:'))
+        stext =  Gtk.Label(_('Colour Name:'))
         table.attach(stext, 0, 1, 0, 1, xoptions=0)
         self.colour_name = gtkpwx.TextEntryAutoComplete(data.COLOUR_NAME_LEXICON)
         self.colour_name.connect('changed', self._changed_cb)
         table.attach(self.colour_name, 1, 2, 0, 1)
         # Colour Transparence
-        stext =  gtk.Label(_('Transparency:'))
+        stext =  Gtk.Label(_('Transparency:'))
         table.attach(stext, 0, 1, 1, 2, xoptions=0)
         self.colour_transparency = gpaint.TransparencyChoice()
         self.colour_transparency.connect('changed', self._changed_cb)
         table.attach(self.colour_transparency, 1, 2, 1, 2)
         # Colour Permanence
-        stext =  gtk.Label(_('Permanence:'))
+        stext =  Gtk.Label(_('Permanence:'))
         table.attach(stext, 0, 1, 2, 3, xoptions=0)
         self.colour_permanence = gpaint.PermanenceChoice()
         self.colour_permanence.connect('changed', self._changed_cb)
         table.attach(self.colour_permanence, 1, 2, 2, 3)
-        self.pack_start(table, expand=False)
+        self.pack_start(table, expand=False, fill=True, padding=0)
         # Matcher
         self.colour_matcher = ColourSampleMatcher()
-        self.pack_start(self.colour_matcher, expand=True, fill=True)
+        self.pack_start(self.colour_matcher, expand=True, fill=True, padding=0)
         #
         self.show_all()
     def _changed_cb(self, widget):
@@ -488,9 +491,9 @@ class TubeEditor(gtk.VBox):
         if self.colour_transparency.get_active() == -1:
             return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
         return actions.MaskedCondns(self.AC_READY, self.AC_MASK)
-gobject.signal_new('changed', TubeEditor, gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, (gobject.TYPE_PYOBJECT,))
+GObject.signal_new('changed', TubeEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
 
-class ColourSampleMatcher(gtk.VBox):
+class ColourSampleMatcher(Gtk.VBox):
     HUE_DISPLAY_SPAN =  math.pi / 8
     VALUE_DISPLAY_INCR = fractions.Fraction(1, 10)
     DEFAULT_COLOUR = paint.Colour(paint.RGB_WHITE / 2)
@@ -537,47 +540,47 @@ class ColourSampleMatcher(gtk.VBox):
         def set_colour(self, colour):
             gtkpwx.ColouredButton.set_colour(self, colour.hcvw.hue_rgb_for_value())
     def __init__(self, auto_match_on_paste=False):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self._delta = 256 # must be a power of two
         self.auto_match_on_paste = auto_match_on_paste
         self.hcv_display = gpaint.HCVDisplay()
-        self.pack_start(self.hcv_display, expand=False)
+        self.pack_start(self.hcv_display, expand=False, fill=True, padding=0)
         # Add value modification buttons
         # Lighten
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         self.incr_value_button = self.IncrValueButton()
-        hbox.pack_start(self.incr_value_button, expand=True, fill=True)
+        hbox.pack_start(self.incr_value_button, expand=True, fill=True, padding=0)
         self.incr_value_button.connect('clicked', self.incr_value_cb)
-        self.pack_start(hbox, expand=False)
+        self.pack_start(hbox, expand=False, fill=True, padding=0)
         # Add anti clockwise hue angle modification button
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         self.hue_acw_button = self.HueAntiClockwiseButton()
-        hbox.pack_start(self.hue_acw_button, expand=False)
+        hbox.pack_start(self.hue_acw_button, expand=False, fill=True, padding=0)
         self.hue_acw_button.connect('clicked', self.modify_hue_acw_cb)
         # Add the sample display panel
         self.sample_display = gpaint.ColourSampleArea()
         self.sample_display.connect("samples_changed", self._sample_change_cb)
-        hbox.pack_start(self.sample_display, expand=True, fill=True)
+        hbox.pack_start(self.sample_display, expand=True, fill=True, padding=0)
         # Add anti clockwise hue angle modification button
         self.hue_cw_button = self.HueClockwiseButton()
-        hbox.pack_start(self.hue_cw_button, expand=False)
+        hbox.pack_start(self.hue_cw_button, expand=False, fill=True, padding=0)
         self.hue_cw_button.connect('clicked', self.modify_hue_cw_cb)
-        self.pack_start(hbox, expand=True)
+        self.pack_start(hbox, expand=True, fill=True, padding=0)
         # Darken
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         self.decr_value_button = self.DecrValueButton()
-        hbox.pack_start(self.decr_value_button, expand=True, fill=True)
+        hbox.pack_start(self.decr_value_button, expand=True, fill=True, padding=0)
         self.decr_value_button.connect('clicked', self.decr_value_cb)
-        self.pack_start(hbox, expand=False)
+        self.pack_start(hbox, expand=False, fill=True, padding=0)
         # Grayness
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         self.decr_grayness_button = self.DecrGraynessButton()
-        hbox.pack_start(self.decr_grayness_button, expand=True, fill=True)
+        hbox.pack_start(self.decr_grayness_button, expand=True, fill=True, padding=0)
         self.decr_grayness_button.connect('clicked', self.decr_grayness_cb)
         self.incr_grayness_button = self.IncrGraynessButton()
-        hbox.pack_start(self.incr_grayness_button, expand=True, fill=True)
+        hbox.pack_start(self.incr_grayness_button, expand=True, fill=True, padding=0)
         self.incr_grayness_button.connect('clicked', self.incr_grayness_cb)
-        self.pack_start(hbox, expand=False)
+        self.pack_start(hbox, expand=False, fill=True, padding=0)
         #
         self.set_colour(None)
         #
@@ -586,7 +589,7 @@ class ColourSampleMatcher(gtk.VBox):
         self._delta *= 2
     def decr_delta_cb(self, widget=None):
         if self._delta == 1:
-            gtk.gdk.beep()
+            Gdk.beep()
         else:
             self._delta /= 2
     def set_colour(self, colour):
@@ -608,7 +611,7 @@ class ColourSampleMatcher(gtk.VBox):
             rs = sample.get_rowstride()
             width = sample.get_width()
             n_rows = sample.get_height()
-            data = [ord(b) for b in sample.get_pixels()]
+            data = list(sample.get_pixels())
             for row_num in range(n_rows):
                 row_start = row_num * rs
                 for j in range(width):
@@ -616,7 +619,7 @@ class ColourSampleMatcher(gtk.VBox):
                     for i in range(3):
                         total[i] += data[offset + i]
             npixels += width * n_rows
-        rgb = paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
+        rgb = paint.RGB(*(paint.RGB.ROUND((total[i] << 8) / npixels) for i in range(3)))
         if raw:
             self.set_colour(rgb)
         else:
@@ -649,7 +652,7 @@ class ColourSampleMatcher(gtk.VBox):
             rgb[channel] = max(0, rgb[channel] - self._delta * rgb[channel] / denom)
     def incr_grayness_cb(self, event):
         if self.colour.hue.is_grey():
-            gtk.gdk.beep()
+            Gdk.beep()
             return # we're already gray so nothing to do
         ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
         new_colour = list(self.colour.rgb)
@@ -683,7 +686,7 @@ class ColourSampleMatcher(gtk.VBox):
             ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
             if ncomps != 3:
                 # if we have less than 3 comps then we have no grayness
-                gtk.gdk.beep()
+                Gdk.beep()
                 return
             elif new_colour[io[1]] == new_colour[io[2]]:
                 for i in io[1:]:
@@ -700,7 +703,7 @@ class ColourSampleMatcher(gtk.VBox):
         denom = sum(self.colour.rgb)
         if denom == paint.RGB.THREE:
             # we're white and can't go any further
-            gtk.gdk.beep()
+            Gdk.beep()
             return
         ncomps, io = paint.RGB.ncomps_and_indices_value_order(self.colour.rgb)
         # try to maintain the same grayness and hue angle
@@ -724,13 +727,13 @@ class ColourSampleMatcher(gtk.VBox):
         denom = sum(self.colour.rgb)
         if denom == 0:
             # we're black and can't go any further
-            gtk.gdk.beep()
+            Gdk.beep()
             return
         new_colour = [max(comp - self._delta * comp / denom, 0) for comp in self.colour.rgb]
         self.set_colour(new_colour)
     def modify_hue_acw_cb(self, button):
         if self.colour.hue.is_grey():
-            gtk.gdk.beep()
+            Gdk.beep()
             return
         if not options.get('colour_wheel', 'red_to_yellow_clockwise'):
             self.set_colour(self.colour.hcvw.get_rotated_rgb(self.DELTA_HUE))
@@ -738,7 +741,7 @@ class ColourSampleMatcher(gtk.VBox):
             self.set_colour(self.colour.hcvw.get_rotated_rgb(-self.DELTA_HUE))
     def modify_hue_cw_cb(self, button):
         if self.colour.hue.is_grey():
-            gtk.gdk.beep()
+            Gdk.beep()
             return
         if not options.get('colour_wheel', 'red_to_yellow_clockwise'):
             self.set_colour(self.colour.hcvw.get_rotated_rgb(-self.DELTA_HUE))
@@ -762,14 +765,14 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
             gpaint.ColourListView.populate_action_groups(self)
             self.action_groups[actions.AC_SELN_UNIQUE].add_actions(
                 [
-                    ('edit_selected_colour', gtk.STOCK_EDIT, None, None,
+                    ('edit_selected_colour', Gtk.STOCK_EDIT, None, None,
                      _('Load the selected colour into the tube editor.'), ),
                 ]
             )
     def __init__(self):
         gpaint.HueWheelNotebook.__init__(self)
         self.tube_list = TubeColourNotebook.ColourListView()
-        self.append_page(gtkpwx.wrap_in_scrolled_window(self.tube_list), gtk.Label(_('Tube Colours')))
+        self.append_page(gtkpwx.wrap_in_scrolled_window(self.tube_list), Gtk.Label(_('Tube Colours')))
         self.tube_list.get_model().connect('colour-removed', self._colour_removed_cb)
     def __len__(self):
         """
@@ -805,12 +808,12 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
         """
         return self.tube_list.get_model().get_colours()
 
-class TopLevelWindow(gtk.Window):
+class TopLevelWindow(Gtk.Window):
     """
     A top level window wrapper around a palette
     """
     def __init__(self):
-        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        Gtk.Window.__init__(self, Gtk.WindowType.TOPLEVEL)
         self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_title('pcatk: Tube Series Editor')
         self.editor = TubeSeriesEditor()
@@ -819,15 +822,15 @@ class TopLevelWindow(gtk.Window):
         self.editor.set_file_path(None)
         self._menubar = self.editor.ui_manager.get_widget('/tube_series_editor_menubar')
         self.connect("destroy", self.editor._exit_colour_editor_cb)
-        vbox = gtk.VBox()
-        vbox.pack_start(self._menubar, expand=False)
-        vbox.pack_start(self.editor, expand=True, fill=True)
+        vbox = Gtk.VBox()
+        vbox.pack_start(self._menubar, expand=False, fill=True, padding=0)
+        vbox.pack_start(self.editor, expand=True, fill=True, padding=0)
         self.add(vbox)
         self.show_all()
     def _file_changed_cb(self, widget, file_path):
         self.set_title(_('pcatk: Tube Series Editor: {0}').format(file_path))
 
-class SampleViewer(gtk.Window, actions.CAGandUIManager):
+class SampleViewer(Gtk.Window, actions.CAGandUIManager):
     """
     A top level window for a colour sample file
     """
@@ -843,14 +846,14 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
     '''
     TITLE_TEMPLATE = _('pcatk: Colour Sample: {}')
     def __init__(self, parent):
-        gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+        Gtk.Window.__init__(self, Gtk.WindowType.TOPLEVEL)
         actions.CAGandUIManager.__init__(self)
         self.set_icon_from_file(icons.APP_ICON_FILE)
         self.set_size_request(300, 200)
         last_samples_file = recollect.get('sample_viewer', 'last_file')
         if os.path.isfile(last_samples_file):
             try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file(last_samples_file)
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(last_samples_file)
             except glib.GError:
                 pixbuf = None
                 last_samples_file = None
@@ -864,10 +867,10 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
             'zoom_in',
             'zoom_out',
         ])
-        vbox = gtk.VBox()
-        vbox.pack_start(self._menubar, expand=False)
-        vbox.pack_start(self.pixbuf_view, expand=True, fill=True)
-        vbox.pack_start(self.buttons, expand=False)
+        vbox = Gtk.VBox()
+        vbox.pack_start(self._menubar, expand=False, fill=True, padding=0)
+        vbox.pack_start(self.pixbuf_view, expand=True, fill=True, padding=0)
+        vbox.pack_start(self.buttons, expand=False, fill=True, padding=0)
         self.add(vbox)
         #self.set_transient_for(parent)
         self.show_all()
@@ -875,10 +878,10 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
     def populate_action_groups(self):
         self.action_groups[actions.AC_DONT_CARE].add_actions([
             ('colour_sample_file_menu', None, _('File')),
-            ('open_colour_sample_file', gtk.STOCK_OPEN, None, None,
+            ('open_colour_sample_file', Gtk.STOCK_OPEN, None, None,
             _('Load a colour sample file.'),
             self._open_colour_sample_file_cb),
-            ('close_colour_sample_viewer', gtk.STOCK_CLOSE, None, None,
+            ('close_colour_sample_viewer', Gtk.STOCK_CLOSE, None, None,
             _('Close this window.'),
             self._close_colour_sample_viewer_cb),
         ])
@@ -887,28 +890,28 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
         Ask the user for the name of the file then open it.
         """
         parent = self.get_toplevel()
-        dlg = gtk.FileChooserDialog(
+        dlg = Gtk.FileChooserDialog(
             title=_('Open Colour Sample File'),
-            parent=parent if isinstance(parent, gtk.Window) else None,
-            action=gtk.FILE_CHOOSER_ACTION_OPEN,
-            buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK)
+            parent=parent if isinstance(parent, Gtk.Window) else None,
+            action=Gtk.FileChooserAction.OPEN,
+            buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
         )
         last_samples_file = recollect.get('sample_viewer', 'last_file')
         last_samples_dir = None if last_samples_file is None else os.path.dirname(last_samples_file)
         if last_samples_dir:
             dlg.set_current_folder(last_samples_dir)
-        gff = gtk.FileFilter()
+        gff = Gtk.FileFilter()
         gff.set_name(_('Image Files'))
         gff.add_pixbuf_formats()
         dlg.add_filter(gff)
-        if dlg.run() == gtk.RESPONSE_OK:
+        if dlg.run() == Gtk.ResponseType.OK:
             filepath = dlg.get_filename()
             dlg.destroy()
             try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file(filepath)
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(filepath)
             except glib.GError:
                 msg = _('{}: Problem extracting image from file.').format(filepath)
-                gtk.MessageDialog(type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format=msg).run()
+                Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
                 return
             recollect.set('sample_viewer', 'last_file', filepath)
             self.set_title(self.TITLE_TEMPLATE.format(None if filepath is None else os.path.relpath(filepath)))
@@ -917,25 +920,6 @@ class SampleViewer(gtk.Window, actions.CAGandUIManager):
             dlg.destroy()
     def _close_colour_sample_viewer_cb(self, _action):
         self.get_toplevel().destroy()
-
-def get_avg_rgb_for_samples(samples):
-    total = [0, 0, 0]
-    npixels = 0
-    for sample in samples:
-        assert sample.get_bits_per_sample() == 8
-        nc = sample.get_n_channels()
-        rs = sample.get_rowstride()
-        width = sample.get_width()
-        n_rows = sample.get_height()
-        data = [ord(b) for b in sample.get_pixels()]
-        for row_num in range(n_rows):
-            row_start = row_num * rs
-            for j in range(width):
-                offset = row_start + j * nc
-                for i in range(3):
-                    total[i] += data[offset + i]
-        npixels += width * n_rows
-    return paint.RGB(*((total[i] / npixels) << 8 for i in range(3)))
 
 def get_avg_rgb_for_samples(samples):
     total = [0, 0, 0]

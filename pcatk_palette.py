@@ -1,4 +1,4 @@
-#! /bin/env python
+#! /bin/env python3
 ### Copyright: Peter Williams (2012) - All rights reserved
 ###
 ### This program is free software; you can redistribute it and/or modify
@@ -14,8 +14,7 @@
 ### along with this program; if not, write to the Free Software
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gtk
-from pcatk import palette
+from pcatk import palette, Gtk
 
 palette.TopLevelWindow()
-gtk.main()
+Gtk.main()

@@ -19,10 +19,10 @@ Analyse digital images in a painterly way
 
 import fractions
 
-import gtk
+from gi.repository import Gtk
 
-from pcatk import pixbuf
-from pcatk import iview
+from . import pixbuf
+from . import iview
 
 class Analysis(object):
     """
@@ -79,20 +79,20 @@ class AnalysisHighChroma(Analysis):
     TRANSFORMER = pixbuf.TransformerHighChroma
 ANALYSES.append(AnalysisHighChroma)
 
-class Analyser(gtk.VBox):
+class Analyser(Gtk.VBox):
     def __init__(self):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self.__image = pixbuf.RGBHImage()
         self.__image.connect('progress-made', self._progress_made_cb)
         self.__analyses = [A(self.__image) for A in ANALYSES]
-        self.notebook = gtk.Notebook()
+        self.notebook = Gtk.Notebook()
         self.notebook.set_scrollable(True)
         self.notebook.popup_enable()
         for analysis in self.__analyses:
-            self.notebook.append_page(analysis.pixbuf_view, gtk.Label(analysis.get_label()))
+            self.notebook.append_page(analysis.pixbuf_view, Gtk.Label(analysis.get_label()))
         self.notebook.show_all()
-        self.progress_bar = gtk.ProgressBar()
-        self.pack_start(self.notebook, expand=True, fill=True)
+        self.progress_bar = Gtk.ProgressBar()
+        self.pack_start(self.notebook, expand=True, fill=True, padding=0)
         # Leave packing of the progress_bar to the user
         self.show_all()
     def set_pixbuf(self, pixbuf):
@@ -108,7 +108,7 @@ class Analyser(gtk.VBox):
         Report progress made by anal
         """
         self.progress_bar.set_fraction(progress)
-        while gtk.events_pending():
-            gtk.main_iteration()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
     def get_image_size(self):
         return self.__image.size
