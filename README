@@ -27,8 +27,8 @@ USAGE:
 This software has a number of components:
 
 1. The Palette Planner (pcatk_palette.py) is a GUI that (once the user
-has slected some tube colours for use) enables the painter to mix new
-colours by specifying the number of "parts" of tube (or earlier mixed)
+has slected some paint colours for use) enables the painter to mix new
+colours by specifying the number of "parts" of paint (or earlier mixed)
 colours to be used in a mixed colour.  This mixed colour can then be
 saved to a list of mixed colours (along with notes about its intended
 use) and used in the mixing of further colours.  When the painter has
@@ -39,11 +39,11 @@ planner and displays a number of transformations of a (user selected)
 digital image from which the user can copy samples for pasting into
 the mixed colour area for matching.
 
-2. The Tube Series Editor (pcatk_editor.py) is a GUI that enables the
-painter create sets of tube colours for use in the palette planner.
+2. The Paint Series Editor (pcatk_editor.py) is a GUI that enables the
+painter create sets of paint colours for use in the palette planner.
 The recommended method is to produce a "sampler" of the actual paints
 to be used on a suitable medium, take a digital photograph and then
-cut and paste from that photograph into the tube series editor where
+cut and paste from that photograph into the paint series editor where
 its buttons can be used to match the colour.  A Colour Sample Viewer
 is included as part of the editor. An example colour sampler
 file has been added and should be loaded by the viewer the first time
@@ -51,14 +51,14 @@ it is launched (and after that it should remember the last file used).
 
 TUBE SERIES:
 
-At this time, the only tube series data included in the distribution is for an
+At this time, the only paint series data included in the distribution is for an
 imaginary set of paints known as the "Ideal Paint Colours Series" which
 features six colours equally spaced around the colour circle (at maximim chroma)
 together with black and white. This series can be found in the file "ideal.tsd"
 in the "data" subdirectory of the source distribution and in the directory
 "$ROOT/share/PaintersColourAssistant/data" in installed distributions. On Linux
 $ROOT should be "/usr" and to facilitate finding the file on Windows the file
-selector should open in that directory when the "Tube Colour Series/Open" menu
+selector should open in that directory when the "Paint Colour Series/Open" menu
 option in the Palette Planner is invoked.
 
 INTERNATIONALIZATION:

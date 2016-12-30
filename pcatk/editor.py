@@ -14,7 +14,7 @@
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 '''
-Edit/create tube paint colours
+Edit/create paint colours
 '''
 
 import math
@@ -40,18 +40,18 @@ from . import icons
 from . import iview
 from . import rgbh
 
-class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
+class PaintSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
     UI_DESCR = '''
     <ui>
-      <menubar name='tube_series_editor_menubar'>
-        <menu action='tube_series_editor_file_menu'>
-          <menuitem action='new_tube_series'/>
-          <menuitem action='open_tube_series_file'/>
-          <menuitem action='save_tube_series_to_file'/>
-          <menuitem action='save_tube_series_as_file'/>
+      <menubar name='paint_series_editor_menubar'>
+        <menu action='paint_series_editor_file_menu'>
+          <menuitem action='new_paint_series'/>
+          <menuitem action='open_paint_series_file'/>
+          <menuitem action='save_paint_series_to_file'/>
+          <menuitem action='save_paint_series_as_file'/>
           <menuitem action='close_colour_editor'/>
         </menu>
-        <menu action='tube_series_editor_samples_menu'>
+        <menu action='paint_series_editor_samples_menu'>
           <menuitem action='take_screen_sample'/>
           <menuitem action='open_sample_viewer'/>
         </menu>
@@ -68,9 +68,9 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         self.saved_hash = None
 
         # First assemble the parts
-        self.tube_editor = TubeEditor()
-        self.tube_editor.connect('changed', self._tube_editor_change_cb)
-        self.tube_editor.colour_matcher.sample_display.connect('samples-changed', self._sample_change_cb)
+        self.paint_editor = PaintEditor()
+        self.paint_editor.connect('changed', self._paint_editor_change_cb)
+        self.paint_editor.colour_matcher.sample_display.connect('samples-changed', self._sample_change_cb)
         self.buttons = self.action_groups.create_action_button_box([
             'add_colour_into_series',
             'accept_colour_changes',
@@ -79,9 +79,9 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             'automatch_sample_images',
             'automatch_sample_images_raw',
         ])
-        self.tube_colours = TubeColourNotebook()
-        self.tube_colours.set_size_request(480, 480)
-        self.tube_colours.tube_list.action_groups.connect_activate('edit_selected_colour', self._edit_selected_colour_cb)
+        self.paint_colours = PaintColourNotebook()
+        self.paint_colours.set_size_request(480, 480)
+        self.paint_colours.paint_list.action_groups.connect_activate('edit_selected_colour', self._edit_selected_colour_cb)
         # as these are company names don't split them up for autocompletion
         self.manufacturer_name = gtkpwx.TextEntryAutoComplete(Gtk.ListStore(str), multiword=False)
         self.manufacturer_name.connect('changed', self._id_changed_cb)
@@ -98,10 +98,10 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         table.attach(self.manufacturer_name, 1, 2, 0, 1)
         table.attach(self.series_name, 1, 2, 1, 2)
         vbox.pack_start(table, expand=False, fill=True, padding=0)
-        vbox.pack_start(self.tube_colours, expand=True, fill=True, padding=0)
+        vbox.pack_start(self.paint_colours, expand=True, fill=True, padding=0)
         self.pack_start(vbox, expand=True, fill=True, padding=0)
         vbox = Gtk.VBox()
-        vbox.pack_start(self.tube_editor, expand=True, fill=True, padding=0)
+        vbox.pack_start(self.paint_editor, expand=True, fill=True, padding=0)
         vbox.pack_start(self.buttons, expand=False, fill=True, padding=0)
         self.pack_start(vbox, expand=True, fill=True, padding=0)
         self.show_all()
@@ -116,36 +116,36 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
               'This is appropriate for matching Modellers\' Paints which tend to be already mixed to match commonly used colours.'),
             self._automatch_sample_images_raw_cb),
         ])
-        self.action_groups[TubeEditor.AC_READY|self.AC_NOT_HAS_COLOUR].add_actions([
+        self.action_groups[PaintEditor.AC_READY|self.AC_NOT_HAS_COLOUR].add_actions([
             ('add_colour_into_series', None, _('Add'), None,
             _('Accept this colour and add it to the series.'),
             self._add_colour_into_series_cb),
         ])
-        self.action_groups[TubeEditor.AC_READY|self.AC_HAS_COLOUR].add_actions([
+        self.action_groups[PaintEditor.AC_READY|self.AC_HAS_COLOUR].add_actions([
             ('accept_colour_changes', None, _('Accept'), None,
             _('Accept the changes made to this colour.'),
             self._accept_colour_changes_cb),
         ])
         self.action_groups[self.AC_HAS_FILE|self.AC_ID_READY].add_actions([
-            ('save_tube_series_to_file', Gtk.STOCK_SAVE, None, None,
+            ('save_paint_series_to_file', Gtk.STOCK_SAVE, None, None,
             _('Save the current series definition to file.'),
-            self._save_tube_series_to_file_cb),
+            self._save_paint_series_to_file_cb),
         ])
         self.action_groups[self.AC_ID_READY].add_actions([
-            ('save_tube_series_as_file', Gtk.STOCK_SAVE_AS, None, None,
+            ('save_paint_series_as_file', Gtk.STOCK_SAVE_AS, None, None,
             _('Save the current series definition to a user chosen file.'),
-            self._save_tube_series_as_file_cb),
+            self._save_paint_series_as_file_cb),
         ])
         # TODO: make some of these conditional
         self.action_groups[actions.AC_DONT_CARE].add_actions([
-            ('tube_series_editor_file_menu', None, _('File')),
-            ('tube_series_editor_samples_menu', None, _('Samples')),
+            ('paint_series_editor_file_menu', None, _('File')),
+            ('paint_series_editor_samples_menu', None, _('Samples')),
             ('reset_colour_editor', None, _('Reset'), None,
             _('Reset the colour editor to its default state.'),
             self._reset_colour_editor_cb),
-            ('open_tube_series_file', Gtk.STOCK_OPEN, None, None,
-            _('Load a tube series from a file for editing.'),
-            self._open_tube_series_file_cb),
+            ('open_paint_series_file', Gtk.STOCK_OPEN, None, None,
+            _('Load a paint series from a file for editing.'),
+            self._open_paint_series_file_cb),
             ('take_screen_sample', None, _('Take Sample'), None,
             _('Take a sample of an arbitrary selected section of the screen and add it to the clipboard.'),
             gtkpwx.take_screen_sample),
@@ -155,9 +155,9 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             ('close_colour_editor', Gtk.STOCK_CLOSE, None, None,
             _('Close this window.'),
             self._close_colour_editor_cb),
-            ('new_tube_series', Gtk.STOCK_NEW, None, None,
-            _('Start a new tube colour series.'),
-            self._new_tube_series_cb),
+            ('new_paint_series', Gtk.STOCK_NEW, None, None,
+            _('Start a new paint colour series.'),
+            self._new_paint_series_cb),
         ])
     def get_masked_condns(self):
         condns = 0
@@ -176,7 +176,7 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         """
         manl = self.manufacturer_name.get_text_length()
         serl = self.series_name.get_text_length()
-        coll = len(self.tube_colours)
+        coll = len(self.paint_colours)
         if manl == 0 and serl == 0 and coll == 0:
             return True
         dtext = self.get_definition_text()
@@ -196,11 +196,11 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         elif self.file_path is not None:
             self.save_to_file(None)
         else:
-            self._save_tube_series_as_file_cb(None)
+            self._save_paint_series_as_file_cb(None)
         return True
-    def _tube_editor_change_cb(self, widget, *args):
+    def _paint_editor_change_cb(self, widget, *args):
         """
-        Update actions' "enabled" statuses based on tube editor condition
+        Update actions' "enabled" statuses based on paint editor condition
         """
         self.action_groups.update_condns(widget.get_masked_condns())
     def _sample_change_cb(self, widget, *args):
@@ -231,21 +231,21 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         self.action_groups.update_condns(actions.MaskedCondns(condns, mask))
     def set_file_path(self, file_path):
         """
-        Set the file path for the tube colour series currently being
+        Set the file path for the paint colour series currently being
         edited and update action conditions for this change
         """
         self.file_path = file_path
         condns = 0 if file_path is None else self.AC_HAS_FILE
         self.action_groups.update_condns(actions.MaskedCondns(condns, self.AC_HAS_FILE))
         if condns:
-            recollect.set('tube_series_editor', 'last_file', file_path)
+            recollect.set('paint_series_editor', 'last_file', file_path)
         self.emit("file_changed", self.file_path)
     def _edit_selected_colour_cb(self, _action):
         """
-        Load the selected tube colour into the editor
+        Load the selected paint colour into the editor
         """
-        colour = self.tube_colours.tube_list.get_selected_colours()[0]
-        self.tube_editor.set_colour(colour.name, colour.rgb, colour.transparency, colour.permanence)
+        colour = self.paint_colours.paint_list.get_selected_colours()[0]
+        self.paint_editor.set_colour(colour.name, colour.rgb, colour.transparency, colour.permanence)
         self.set_current_colour(colour)
     def _ask_overwrite_ok(self, name):
         title = _('Duplicate Colour Name')
@@ -257,54 +257,54 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         dlg.destroy()
         return response == Gtk.ResponseType.OK
     def _accept_colour_changes_cb(self, _widget):
-        edited_colour = self.tube_editor.get_colour()
+        edited_colour = self.paint_editor.get_colour()
         if edited_colour.name != self.current_colour.name:
             # there's a name change so check for duplicate names
-            other_colour = self.tube_colours.get_colour_with_name(edited_colour.name)
+            other_colour = self.paint_colours.get_colour_with_name(edited_colour.name)
             if other_colour is not None:
                 if self._ask_overwrite_ok(edited_colour.name):
-                    self.tube_colours.remove_colour(other_colour)
+                    self.paint_colours.remove_colour(other_colour)
                 else:
                     return
         self.current_colour.name = edited_colour.name
         self.current_colour.set_rgb(edited_colour.rgb)
         self.current_colour.set_permanence(edited_colour.permanence)
         self.current_colour.set_transparency(edited_colour.transparency)
-        self.tube_colours.queue_draw()
+        self.paint_colours.queue_draw()
     def _reset_colour_editor_cb(self, _widget):
-        self.tube_editor.reset()
+        self.paint_editor.reset()
         self.set_current_colour(None)
-    def _new_tube_series_cb(self, _action):
+    def _new_paint_series_cb(self, _action):
         """
         Throw away the current data and prepare to create a new series
         """
         if not self.unsaved_changes_ok():
             return
-        self.tube_editor.reset()
-        self.tube_colours.clear()
+        self.paint_editor.reset()
+        self.paint_colours.clear()
         self.manufacturer_name.set_text('')
         self.series_name.set_text('')
         self.set_file_path(None)
         self.set_current_colour(None)
         self.saved_hash = None
     def _add_colour_into_series_cb(self, _widget):
-        new_colour = self.tube_editor.get_colour()
-        old_colour = self.tube_colours.get_colour_with_name(new_colour.name)
+        new_colour = self.paint_editor.get_colour()
+        old_colour = self.paint_colours.get_colour_with_name(new_colour.name)
         if old_colour is not None:
             if not self._ask_overwrite_ok(new_colour.name):
                 return
             old_colour.set_rgb(new_colour.rgb)
             old_colour.set_permanence(new_colour.permanence)
             old_colour.set_transparency(new_colour.transparency)
-            self.tube_colours.queue_draw()
+            self.paint_colours.queue_draw()
             self.set_current_colour(old_colour)
         else:
-            self.tube_colours.add_colour(new_colour)
+            self.paint_colours.add_colour(new_colour)
             self.set_current_colour(new_colour)
     def _automatch_sample_images_cb(self, _widget):
-        self.tube_editor.auto_match_sample()
+        self.paint_editor.auto_match_sample()
     def _automatch_sample_images_raw_cb(self, _widget):
-        self.tube_editor.auto_match_sample(raw=True)
+        self.paint_editor.auto_match_sample(raw=True)
     def report_io_error(self, edata):
         msg = '{0}: {1}'.format(edata.strerror, edata.filename)
         Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
@@ -323,18 +323,18 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             series = paint.Series.fm_definition(text)
         except paint.Series.ParseError as edata:
             return self.report_format_error(edata)
-        # All OK so clear the tube editor and ditch the current colours
-        self.tube_editor.reset()
+        # All OK so clear the paint editor and ditch the current colours
+        self.paint_editor.reset()
         self.set_current_colour(None)
-        self.tube_colours.clear()
+        self.paint_colours.clear()
         # and load the new ones
-        for colour in series.tube_colours.values():
-            self.tube_colours.add_colour(colour)
+        for colour in series.paint_colours.values():
+            self.paint_colours.add_colour(colour)
         self.manufacturer_name.set_text(series.series_id.maker)
         self.series_name.set_text(series.series_id.name)
         self.set_file_path(filepath)
         self.saved_hash = hashlib.sha1(text.encode()).digest()
-    def _open_tube_series_file_cb(self, _action):
+    def _open_paint_series_file_cb(self, _action):
         """
         Ask the user for the name of the file then open it.
         """
@@ -342,7 +342,7 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             return
         parent = self.get_toplevel()
         dlg = Gtk.FileChooserDialog(
-            title=_('Load Tube Series Description'),
+            title=_('Load Paint Series Description'),
             parent=parent if isinstance(parent, Gtk.Window) else None,
             action=Gtk.FileChooserAction.OPEN,
             buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
@@ -351,7 +351,7 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             lastdir = os.path.dirname(self.file_path)
             dlg.set_current_folder(lastdir)
         else:
-            last_file = recollect.get('tube_series_editor', 'last_file')
+            last_file = recollect.get('paint_series_editor', 'last_file')
             if last_file:
                 lastdir = os.path.dirname(last_file)
                 dlg.set_current_folder(lastdir)
@@ -370,7 +370,7 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         """
         maker = self.manufacturer_name.get_text()
         name = self.series_name.get_text()
-        series = paint.Series(maker=maker, name=name, colours=self.tube_colours.get_colours())
+        series = paint.Series(maker=maker, name=name, colours=self.paint_colours.get_colours())
         return series.definition_text()
     def save_to_file(self, filepath=None):
         if filepath is None:
@@ -385,18 +385,18 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             self.saved_hash = hashlib.sha1(definition.encode()).digest()
         except IOError as edata:
             return self.report_io_error(edata)
-    def _save_tube_series_to_file_cb(self, _action):
+    def _save_paint_series_to_file_cb(self, _action):
         """
-        Save the tube series to the current file
+        Save the paint series to the current file
         """
         self.save_to_file(None)
-    def _save_tube_series_as_file_cb(self, _action):
+    def _save_paint_series_as_file_cb(self, _action):
         """
         Ask the user for the name of the file then open it.
         """
         parent = self.get_toplevel()
         dlg = Gtk.FileChooserDialog(
-            title='Save Tube Series Description',
+            title='Save Paint Series Description',
             parent=parent if isinstance(parent, Gtk.Window) else None,
             action=Gtk.FileChooserAction.SAVE,
             buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
@@ -406,7 +406,7 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
             lastdir = os.path.dirname(self.file_path)
             dlg.set_current_folder(lastdir)
         else:
-            last_file = recollect.get('tube_series_editor', 'last_file')
+            last_file = recollect.get('paint_series_editor', 'last_file')
             if last_file:
                 lastdir = os.path.dirname(last_file)
                 dlg.set_current_folder(lastdir)
@@ -416,21 +416,21 @@ class TubeSeriesEditor(Gtk.HBox, actions.CAGandUIManager):
         dlg.destroy()
     def _close_colour_editor_cb(self, _action):
         """
-        Close the Tube Series Editor
+        Close the Paint Series Editor
         """
         if not self.unsaved_changes_ok():
             return
         self.get_toplevel().destroy()
     def _exit_colour_editor_cb(self, _action):
         """
-        Exit the Tube Series Editor
+        Exit the Paint Series Editor
         """
         if not self.unsaved_changes_ok():
             return
         Gtk.main_quit()
-GObject.signal_new('file_changed', TubeSeriesEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
+GObject.signal_new('file_changed', PaintSeriesEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
 
-class TubeEditor(Gtk.VBox):
+class PaintEditor(Gtk.VBox):
     AC_READY, AC_NOT_READY, AC_MASK = actions.ActionCondns.new_flags_and_mask(2)
 
     def __init__(self):
@@ -491,7 +491,7 @@ class TubeEditor(Gtk.VBox):
         if self.colour_transparency.get_active() == -1:
             return actions.MaskedCondns(self.AC_NOT_READY, self.AC_MASK)
         return actions.MaskedCondns(self.AC_READY, self.AC_MASK)
-GObject.signal_new('changed', TubeEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
+GObject.signal_new('changed', PaintEditor, GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, (GObject.TYPE_PYOBJECT,))
 
 class ColourSampleMatcher(Gtk.VBox):
     HUE_DISPLAY_SPAN =  math.pi / 8
@@ -748,7 +748,7 @@ class ColourSampleMatcher(Gtk.VBox):
         else:
             self.set_colour(self.colour.hcvw.get_rotated_rgb(self.DELTA_HUE))
 
-class TubeColourNotebook(gpaint.HueWheelNotebook):
+class PaintColourNotebook(gpaint.HueWheelNotebook):
     class ColourListView(gpaint.ColourListView):
         UI_DESCR = '''
             <ui>
@@ -766,19 +766,19 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
             self.action_groups[actions.AC_SELN_UNIQUE].add_actions(
                 [
                     ('edit_selected_colour', Gtk.STOCK_EDIT, None, None,
-                     _('Load the selected colour into the tube editor.'), ),
+                     _('Load the selected colour into the paint editor.'), ),
                 ]
             )
     def __init__(self):
         gpaint.HueWheelNotebook.__init__(self)
-        self.tube_list = TubeColourNotebook.ColourListView()
-        self.append_page(gtkpwx.wrap_in_scrolled_window(self.tube_list), Gtk.Label(_('Tube Colours')))
-        self.tube_list.get_model().connect('colour-removed', self._colour_removed_cb)
+        self.paint_list = PaintColourNotebook.ColourListView()
+        self.append_page(gtkpwx.wrap_in_scrolled_window(self.paint_list), Gtk.Label(_('Paint Colours')))
+        self.paint_list.get_model().connect('colour-removed', self._colour_removed_cb)
     def __len__(self):
         """
         Return the number of colours currently held
         """
-        return len(self.tube_list.model)
+        return len(self.paint_list.model)
     def _colour_removed_cb(self, model, colour):
         """
         Delete colour deleted from the list from the wheels also.
@@ -786,27 +786,27 @@ class TubeColourNotebook(gpaint.HueWheelNotebook):
         gpaint.HueWheelNotebook.del_colour(self, colour)
     def add_colour(self, new_colour):
         gpaint.HueWheelNotebook.add_colour(self, new_colour)
-        self.tube_list.get_model().append_colour(new_colour)
+        self.paint_list.get_model().append_colour(new_colour)
     def remove_colour(self, colour):
         # 'colour-removed' callback will get the wheels
-        self.tube_list.get_model().remove_colour(colour)
+        self.paint_list.get_model().remove_colour(colour)
     def clear(self):
         """
         Remove all colours from the notebook
         """
-        for colour in self.tube_list.get_model().get_colours():
+        for colour in self.paint_list.get_model().get_colours():
             gpaint.HueWheelNotebook.del_colour(self, colour)
-        self.tube_list.get_model().clear()
+        self.paint_list.get_model().clear()
     def get_colour_with_name(self, colour_name):
         """
         Return the colour with the given name of None if not found
         """
-        return self.tube_list.get_model().get_colour_with_name(colour_name)
+        return self.paint_list.get_model().get_colour_with_name(colour_name)
     def get_colours(self):
         """
         Return all colours as a list in the current order
         """
-        return self.tube_list.get_model().get_colours()
+        return self.paint_list.get_model().get_colours()
 
 class TopLevelWindow(Gtk.Window):
     """
@@ -815,12 +815,12 @@ class TopLevelWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, Gtk.WindowType.TOPLEVEL)
         self.set_icon_from_file(icons.APP_ICON_FILE)
-        self.set_title('pcatk: Tube Series Editor')
-        self.editor = TubeSeriesEditor()
+        self.set_title('pcatk: Paint Series Editor')
+        self.editor = PaintSeriesEditor()
         self.editor.action_groups.get_action('close_colour_editor').set_visible(False)
         self.editor.connect("file_changed", self._file_changed_cb)
         self.editor.set_file_path(None)
-        self._menubar = self.editor.ui_manager.get_widget('/tube_series_editor_menubar')
+        self._menubar = self.editor.ui_manager.get_widget('/paint_series_editor_menubar')
         self.connect("destroy", self.editor._exit_colour_editor_cb)
         vbox = Gtk.VBox()
         vbox.pack_start(self._menubar, expand=False, fill=True, padding=0)
@@ -828,7 +828,7 @@ class TopLevelWindow(Gtk.Window):
         self.add(vbox)
         self.show_all()
     def _file_changed_cb(self, widget, file_path):
-        self.set_title(_('pcatk: Tube Series Editor: {0}').format(file_path))
+        self.set_title(_('pcatk: Paint Series Editor: {0}').format(file_path))
 
 class SampleViewer(Gtk.Window, actions.CAGandUIManager):
     """

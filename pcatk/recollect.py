@@ -87,8 +87,8 @@ def set(section, oname, val):
 
 define('sample_viewer', 'last_file', Defn(str, os.path.join(options.get_sys_samples_dir(), 'example.jpg')))
 define("paint_colour_information", "last_size", Defn(str, ""))
-define('tube_series_selector', 'last_file', Defn(str, os.path.join(options.get_sys_data_dir(), 'ideal.tsd')))
-define('tube_series_editor', 'last_file', Defn(str, ""))
+define('paint_series_selector', 'last_file', Defn(str, os.path.join(options.get_sys_data_dir(), 'ideal.tsd')))
+define('paint_series_editor', 'last_file', Defn(str, ""))
 define('analysed_image_viewer', 'last_file', Defn(str, ''))
 
 load_recollections()

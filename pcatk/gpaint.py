@@ -486,7 +486,7 @@ class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
         self.centre = gtkpwx.XY(0, 0)
         self.offset = gtkpwx.XY(0, 0)
         self.__last_xy = gtkpwx.XY(0, 0)
-        self.tube_colours = {}
+        self.paint_colours = {}
         self.mixed_colours = {}
         self.nrings = nrings
         self.connect("draw", self.expose_cb)
@@ -517,7 +517,7 @@ class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
         self.__ci_acbid = self.action_groups.connect_activate('colour_info', self._show_colour_details_acb)
         self.__ac_acbid = None
     def _show_colour_details_acb(self, _action):
-        TubeColourInformationDialogue(self.__popup_colour).show()
+        PaintColourInformationDialogue(self.__popup_colour).show()
     def do_popup_preliminaries(self, event):
         colour, rng = self.get_colour_nearest_to_xy(event.x, event.y)
         if colour is not None and rng <= self.scaled_size:
@@ -543,7 +543,7 @@ class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
     def get_colour_nearest_to_xy(self, x, y):
         smallest = 0xFF
         nearest = None
-        for colour_set in [self.tube_colours.values(), self.mixed_colours.values()]:
+        for colour_set in [self.paint_colours.values(), self.mixed_colours.values()]:
             for colour in colour_set:
                 rng = colour.range_from(x, y)
                 if rng < smallest:
@@ -575,14 +575,14 @@ class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
         if isinstance(new_colour, paint.MixedColour):
             self.mixed_colours[new_colour] = self.ColourCircle(self, new_colour)
         else:
-            self.tube_colours[new_colour] = self.ColourSquare(self, new_colour)
+            self.paint_colours[new_colour] = self.ColourSquare(self, new_colour)
         # The data has changed so do a redraw
         self.queue_draw()
     def del_colour(self, colour):
         if isinstance(colour, paint.MixedColour):
             self.mixed_colours.pop(colour)
         else:
-            self.tube_colours.pop(colour)
+            self.paint_colours.pop(colour)
         # The data has changed so do a redraw
         self.queue_draw()
     def new_colour(self, rgb):
@@ -621,8 +621,8 @@ class ColourWheel(Gtk.DrawingArea, actions.CAGandUIManager):
             cairo_ctxt.move_to(self.centre.x, self.centre.y)
             cairo_ctxt.line_to(*self.polar_to_cartesian(self.one * self.zoom, angle))
             cairo_ctxt.stroke()
-        for tube in self.tube_colours.values():
-            tube.draw(cairo_ctxt)
+        for paint_colour in self.paint_colours.values():
+            paint_colour.draw(cairo_ctxt)
         for mix in self.mixed_colours.values():
             mix.draw(cairo_ctxt)
         return True
@@ -856,7 +856,7 @@ class ColourListView(tlview.View, actions.CAGandUIManager):
         """
         return [row.colour for row in self.MODEL.get_selected_rows(self.get_selection())]
 
-class TubeColourInformationDialogue(Gtk.Dialog):
+class PaintColourInformationDialogue(Gtk.Dialog):
     """
     A dialog to display the detailed information for a paint colour
     """
@@ -867,11 +867,11 @@ class TubeColourInformationDialogue(Gtk.Dialog):
             self.set_default_size(*eval(last_size))
         vbox = self.get_content_area()
         vbox.pack_start(gtkpwx.ColouredLabel(colour.name, colour), expand=False, fill=True, padding=0)
-        if isinstance(colour, paint.TubeColour):
+        if isinstance(colour, paint.PaintColour):
             vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.name, colour), expand=False, fill=True, padding=0)
             vbox.pack_start(gtkpwx.ColouredLabel(colour.series.series_id.maker, colour), expand=False, fill=True, padding=0)
         vbox.pack_start(HCVDisplay(colour=colour), expand=False, fill=True, padding=0)
-        if isinstance(colour, paint.TubeColour):
+        if isinstance(colour, paint.PaintColour):
             vbox.pack_start(Gtk.Label(colour.transparency.description()), expand=False, fill=True, padding=0)
             vbox.pack_start(Gtk.Label(colour.permanence.description()), expand=False, fill=True, padding=0)
         self.connect("configure-event", self._configure_event_cb)

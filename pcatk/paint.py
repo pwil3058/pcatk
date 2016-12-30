@@ -137,7 +137,7 @@ class MappedFloat(object):
     class BadValue(Exception): pass
     MAP = None
     def __init__(self, ival=0.0):
-        if isinstance(ival, (str, bytes)):
+        if isinstance(ival, str):
             self.val = None
             for mapi in self.MAP:
                 if ival == mapi.abbrev or ival == mapi.descr:
@@ -288,7 +288,7 @@ IDEAL_COLOURS = [WHITE, MAGENTA, RED, YELLOW, GREEN, CYAN, BLUE, BLACK]
 
 SERIES_ID = collections.namedtuple('SERIES_ID', ['maker', 'name'])
 
-class TubeColour(NamedColour):
+class PaintColour(NamedColour):
     def __init__(self, series, name, rgb, transparency=None, permanence=None):
         NamedColour.__init__(self, name, rgb, transparency=transparency, permanence=permanence)
         self.series = series
@@ -302,7 +302,7 @@ class Series(object):
         pass
     def __init__(self, maker, name, colours=None):
         self.series_id = SERIES_ID(maker=maker, name=name)
-        self.tube_colours = {}
+        self.paint_colours = {}
         for colour in colours:
             self.add_colour(colour)
     def __cmp__(self, other):
@@ -311,13 +311,13 @@ class Series(object):
             result = cmp(self.series_id.name, other.series_id.name)
         return result
     def add_colour(self, colour):
-        tube_colour = TubeColour(self, name=colour.name, rgb=colour.rgb, transparency=colour.transparency, permanence=colour.permanence)
-        self.tube_colours[tube_colour.name] = tube_colour
+        paint_colour = PaintColour(self, name=colour.name, rgb=colour.rgb, transparency=colour.transparency, permanence=colour.permanence)
+        self.paint_colours[paint_colour.name] = paint_colour
     def definition_text(self):
         # No i18n for these strings
         string = 'Manufacturer: {0}\n'.format(self.series_id.maker)
         string += 'Series: {0}\n'.format(self.series_id.name)
-        for colour in self.tube_colours.values():
+        for colour in self.paint_colours.values():
             string += '{0}\n'.format(repr(colour))
         return string
     @staticmethod
@@ -336,7 +336,7 @@ class Series(object):
         matcher = re.compile('(^[^:]+):\s+(RGB\([^)]+\)), (Transparency\([^)]+\)), (Permanence\([^)]+\))$')
         if len(lines) > 2 and matcher.match(lines[2]):
             # Old format
-            # TODO: remove support for old tube series format
+            # TODO: remove support for old paint series format
             colours = []
             for line in lines[2:]:
                 match = matcher.match(line)

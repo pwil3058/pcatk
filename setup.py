@@ -58,9 +58,9 @@ SCRIPTS = ['pcatk_palette.py', 'pcatk_editor.py']
 
 PACKAGES = ['pcatk']
 
-tubes = glob.glob('data/*.tsd')
+paints = glob.glob('data/*.tsd')
 
-TUBES = [(os.path.join('share', NAME, 'data'), tubes)]
+TUBES = [(os.path.join('share', NAME, 'data'), paints)]
 
 samples = glob.glob('samples/*.jpg')
 
