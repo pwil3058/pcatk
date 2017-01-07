@@ -1,0 +1,9 @@
+[submodule "pcatk/bab"]
+	path = pcatk/bab
+	url = git@github.com:pwil3058/pysm_bab.git
+[submodule "pcatk/gtx"]
+	path = pcatk/gtx
+	url = git@github.com:pwil3058/pysm_gtx.git
+[submodule "pcatk/epaint"]
+	path = pcatk/epaint
+	url = git@github.com:pwil3058/pysm_epaint.git
