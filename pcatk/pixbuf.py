@@ -27,10 +27,11 @@ from gi.repository import Gdk
 from gi.repository import GObject
 from gi.repository import GdkPixbuf
 
-from . import options
+from .bab import options
+
+from .epaint import rgbh
+
 from . import utils
-from . import gtkpwx
-from . import rgbh
 
 if __name__ == '__main__':
     _ = lambda x: x
@@ -40,13 +41,13 @@ class RGB(rgbh.RGB8):
     @classmethod
     def scaled_to_sum(cls, rgb, new_sum):
         cur_sum = sum(rgb)
-        return array.array(cls.TYPECODE, (int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)))
+        return array.array(cls.ARRAY_TYPECODE, (int(rgb[i] * new_sum / cur_sum + 0.5) for i in range(3)))
     @classmethod
     def to_mono(cls, rgb):
         val = (sum(rgb) + 1) // 3
-        return array.array(cls.TYPECODE, (val, val, val))
-WHITE = array.array(RGB.TYPECODE, (RGB.ONE, RGB.ONE, RGB.ONE))
-BLACK = array.array(RGB.TYPECODE, (0, 0, 0))
+        return array.array(cls.ARRAY_TYPECODE, (val, val, val))
+WHITE = array.array(RGB.ARRAY_TYPECODE, (RGB.ONE, RGB.ONE, RGB.ONE))
+BLACK = array.array(RGB.ARRAY_TYPECODE, (0, 0, 0))
 
 class Hue(rgbh.Hue8):
     pass
@@ -69,7 +70,7 @@ class ValueLimitCriteria(collections.namedtuple('ValueLimitCriteria', ['n_values
         ValueLimitCriteria(n_values=6, c_totals=(Fraction(0, 1), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5), Fraction(1, 1)))
         """
         c_totals = tuple([int(cls.THREE * i / (n_values - 1) + 0.5) for i in range(n_values)])
-        value_rgbs = tuple([array.array(cls.TYPECODE, (int((total + 0.5) / 3),) * 3) for total in c_totals])
+        value_rgbs = tuple([array.array(cls.ARRAY_TYPECODE, (int((total + 0.5) / 3),) * 3) for total in c_totals])
         return ValueLimitCriteria(n_values, c_totals, value_rgbs)
     def get_value_index(self, rgb):
         """
@@ -141,7 +142,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
 
 class PixBufRow(rgbh.BPC8):
     def __init__(self, data, start, end, nc=3):
-        self.rgbs = [array.array(self.TYPECODE, (data[i], data[i+1], data[i+2])) for i in range(start, end, nc)]
+        self.rgbs = [array.array(self.ARRAY_TYPECODE, (data[i], data[i+1], data[i+2])) for i in range(start, end, nc)]
         self.hues = [Hue.from_rgb(rgb) for rgb in self.rgbs]
     def __iter__(self):
         for rgb, hue in zip(self.rgbs, self.hues):

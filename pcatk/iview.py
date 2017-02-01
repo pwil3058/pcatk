@@ -26,7 +26,6 @@ from gi.repository import Gtk
 from gi.repository import GObject
 
 from . import actions
-from . import gtkpwx
 from . import printer
 
 class ZoomedPixbuf(object):

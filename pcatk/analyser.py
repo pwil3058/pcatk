@@ -21,8 +21,9 @@ import fractions
 
 from gi.repository import Gtk
 
+from .gtx import iview
+
 from . import pixbuf
-from . import iview
 
 class Analysis(object):
     """

@@ -13,6 +13,7 @@
 ### along with this program; if not, write to the Free Software
 ### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+import os
 import sys
 
 import gi
@@ -23,3 +24,21 @@ from gi.repository import Gtk
 
 # Importing i18n here means that _() is defined for all package modules
 from . import i18n
+
+__all__ = []
+__author__ = "Peter Williams <pwil3058@gmail.com>"
+__version__ = "0.0"
+
+APP_NAME = "pcatk"
+
+# TODO: improve configuration directory path
+CONFIG_DIR_PATH = os.path.expanduser("~/.PaintersColourAssistant")
+PGND_CONFIG_DIR_PATH = None
+from . import sys_config
+SYS_DATA_DIR_PATH = sys_config.get_sys_data_dir()
+SYS_SAMPLES_DIR_PATH = sys_config.get_sys_samples_dir()
+from . import recollect # Temporary until definitions get moved
+
+ISSUES_URL = "<https://github.com/pwil3058/pcatk/issues>"
+ISSUES_EMAIL = __author__
+ISSUES_VERSION = __version__
