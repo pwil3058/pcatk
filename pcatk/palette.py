@@ -242,7 +242,6 @@ class ArtPaintSelector(pmix.PaintSelector):
 class ArtPaintSeriesManager(pmix.PaintSeriesManager):
     PAINT_SELECTOR = ArtPaintSelector
 
-recollect.define("palette", "last_geometry", recollect.Defn(str, ""))
 recollect.define("palette", "hpaned_position", recollect.Defn(int, -1))
 recollect.define("palette", "vpaned_position", recollect.Defn(int, -1))
 
@@ -586,6 +585,8 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         # TODO: add checks for unsaved work in palette before exiting
         Gtk.main_quit()
 
+recollect.define("palette", "last_geometry", recollect.Defn(str, ""))
+
 class TopLevelWindow(dialogue.MainWindow):
     """
     A top level window wrapper around a palette
@@ -602,6 +603,9 @@ class TopLevelWindow(dialogue.MainWindow):
         self.show_all()
     def _configure_event_cb(self, widget, event):
         recollect.set("palette", "last_geometry", "{0.width}x{0.height}+{0.x}+{0.y}".format(event))
+
+recollect.define("analysed_image_viewer", "last_geometry", recollect.Defn(str, ""))
+recollect.define("analysed_image_viewer", 'last_file', recollect.Defn(str, ''))
 
 class AnalysedImageViewer(Gtk.Window, actions.CAGandUIManager):
     """
@@ -621,8 +625,9 @@ class AnalysedImageViewer(Gtk.Window, actions.CAGandUIManager):
     def __init__(self, parent):
         Gtk.Window.__init__(self, Gtk.WindowType.TOPLEVEL)
         actions.CAGandUIManager.__init__(self)
+        self.parse_geometry(recollect.get("analysed_image_viewer", "last_geometry"))
+        self.connect("configure-event", self._configure_event_cb)
         self.set_icon_from_file(icons.APP_ICON_FILE)
-        self.set_size_request(300, 200)
         last_image_file = recollect.get("analysed_image_viewer", "last_file")
         if os.path.isfile(last_image_file):
             try:
@@ -650,6 +655,8 @@ class AnalysedImageViewer(Gtk.Window, actions.CAGandUIManager):
         self.show_all()
         if pixbuf is not None:
             self.analyser.set_pixbuf(pixbuf)
+    def _configure_event_cb(self, widget, event):
+        recollect.set("analysed_image_viewer", "last_geometry", "{0.width}x{0.height}+{0.x}+{0.y}".format(event))
     def populate_action_groups(self):
         self.action_groups[actions.AC_DONT_CARE].add_actions([
             ("analysed_image_file_menu", None, _("File")),

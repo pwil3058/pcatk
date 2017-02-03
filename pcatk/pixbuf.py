@@ -24,9 +24,11 @@ import array
 
 from gi.repository import Gtk
 from gi.repository import Gdk
+from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import GdkPixbuf
 
+from .bab import nmd_tuples
 from .bab import options
 
 from .epaint import rgbh
@@ -117,7 +119,7 @@ class HueLimitCriteria(collections.namedtuple('HueLimitCriteria', ['n_hues', 'hu
         >>> hlc.get_hue_index((ONE, 0, ONE / 2))
         0
         """
-        if hue.is_grey():
+        if hue.is_grey:
             return None
         if hue.angle > 0.0:
             index = int(round(float(hue.angle) / self.step))
@@ -133,7 +135,7 @@ class HueValueLimitCriteria(collections.namedtuple('HueValueLimitCriteria', ['hl
     def create(cls, n_hues, n_values):
         hlc = HueLimitCriteria.create(n_hues)
         vlc = ValueLimitCriteria.create(n_values)
-        hv_rgbs = [[hue.rgb_with_total(total) for total in vlc.c_totals] for hue in hlc.hues]
+        hv_rgbs = [[hue.rgb_array_with_total(total) for total in vlc.c_totals] for hue in hlc.hues]
         return HueValueLimitCriteria(hlc, vlc, hv_rgbs)
     def get_hue_index(self, hue):
         return self.hlc.get_hue_index(hue)
@@ -149,7 +151,7 @@ class PixBufRow(rgbh.BPC8):
             yield (rgb, hue)
     @property
     def width(self):
-        return len(self.pixels)
+        return len(self.rgbs)
     @property
     def has_alpha(self):
         return False
@@ -165,7 +167,7 @@ def transform_row_notan(pbr, threshold):
     return [BLACK if sum(rgb) <= sum_thr else WHITE for rgb in pbr.rgbs]
 
 def transform_row_high_chroma(pbr):
-    return [hue.rgb_with_total(sum(rgb)) for rgb, hue in pbr]
+    return [hue.rgb_array_with_total(sum(rgb)) for rgb, hue in pbr]
 
 def transform_row_limited_value(pbr, vlc):
     def transform_limited_value(rgb, hue, vlc):
@@ -177,7 +179,7 @@ def transform_row_limited_value(pbr, vlc):
         try:
             rgb = RGB.scaled_to_sum(rgb, vlc.c_totals[index])
         except OverflowError:
-            rgb = hue.rgb_with_total(vlc.c_totals[index])
+            rgb = hue.rgb_array_with_total(vlc.c_totals[index])
         return rgb
     return [transform_limited_value(rgb, hue, vlc) for rgb, hue in pbr]
 
@@ -189,10 +191,10 @@ def transform_row_limited_hue(pbr, hlc):
         index = hlc.get_hue_index(hue)
         if index is None:
             return rgb
-        if RGB.ncomps(rgb) == 2:
-            rgb = hlc.hues[index].rgb_with_total(sum(rgb))
+        if (len(rgb) - rgb.count(0)) == 2:
+            rgb = hlc.hues[index].rgb_array_with_total(sum(rgb))
         else:
-            rgb = RGB.rotated(rgb, hlc.hues[index].angle - hue.angle)
+            rgb = RGB(*rgb).rotated(hlc.hues[index].angle - hue.angle).as_array()
         return rgb
     return [transform_limited_hue(rgb, hue, hlc) for rgb, hue in pbr]
 
@@ -207,10 +209,10 @@ def transform_row_limited_hue_value(pbr, hvlc):
         if h_index is None:
             return hvlc.vlc.value_rgbs[v_index]
         target_total = hvlc.vlc.c_totals[v_index]
-        if RGB.ncomps(rgb) == 2:
-            rgb = hvlc.hlc.hues[h_index].rgb_with_total(target_total)
+        if (len(rgb) - rgb.count(0)) == 2:
+            rgb = hvlc.hlc.hues[h_index].rgb_array_with_total(target_total)
         else:
-            rgb = RGB.rotated(rgb, hvlc.hlc.hues[h_index].angle - hue.angle)
+            rgb = RGB(*rgb).rotated(hvlc.hlc.hues[h_index].angle - hue.angle).as_array()
             try:
                 rgb = RGB.scaled_to_sum(rgb, target_total)
             except OverflowError:
@@ -218,11 +220,11 @@ def transform_row_limited_hue_value(pbr, hvlc):
         return rgb
     return [transform_limited_hue_value(rgb, hue, hvlc) for rgb, hue in pbr]
 
-def rgb_row_to_string(rgb_row):
+def rgb_row_to_bytes(rgb_row):
     result = array.array('B')
     for rgb in rgb_row:
         result.extend(rgb)
-    return result.tostring()
+    return result.tobytes()
 
 class RGBHImage(GObject.GObject):
     """
@@ -231,14 +233,14 @@ class RGBHImage(GObject.GObject):
     NPR = 50 # the number of progress reports to make during a loop
     def __init__(self, pixbuf=None):
         GObject.GObject.__init__(self)
-        self.__size = gtkpwx.WH(width=0, height=0)
+        self.__size = nmd_tuples.WH(width=0, height=0)
         self.__pixel_rows = None
         if pixbuf is not None:
             self.set_from_pixbuf(pixbuf)
     @property
     def size(self):
         """
-        The size of this image as an instance gtkpwx.WH
+        The size of this image as an instance nmd_tuples.WH
         """
         return self.__size
     def __getitem__(self, index):
@@ -259,7 +261,7 @@ class RGBHImage(GObject.GObject):
                 new_w = int(new_h * ar + 0.5)
             pixbuf = pixbuf.scale_simple(new_w, new_h, GdkPixbuf.InterpType.BILINEAR)
         w, h = (pixbuf.get_width(), pixbuf.get_height())
-        self.__size = gtkpwx.WH(width=w, height=h)
+        self.__size = nmd_tuples.WH(width=w, height=h)
         # FUTUREPROOF: make useable for bps other than 8
         # TODO: think about what to do if pixbuf has alpha
         assert pixbuf.get_bits_per_sample() == 8
@@ -289,11 +291,11 @@ class RGBHImage(GObject.GObject):
             if row_n >= next_pr_due:
                 self.emit('progress-made', fractions.Fraction(row_n, self.__size.height))
                 next_pr_due += pr_step
-            data += rgb_row_to_string(map_to_flat_row(pixel_row))
+            data += rgb_row_to_bytes(map_to_flat_row(pixel_row))
             data += padding
         self.emit('progress-made', fractions.Fraction(1))
-        return GdkPixbuf.Pixbuf.new_from_data(
-            data=data,
+        mapped_pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(
+            data=GLib.Bytes(data),
             colorspace=GdkPixbuf.Colorspace.RGB,
             has_alpha=False,
             bits_per_sample=8,
@@ -301,6 +303,7 @@ class RGBHImage(GObject.GObject):
             height=self.__size.height,
             rowstride=rowstride
         )
+        return mapped_pixbuf
     def get_pixbuf(self):
         """
         Return a Gdk.Pixbuf representation of the image

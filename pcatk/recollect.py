@@ -32,4 +32,3 @@ from .import sys_config
 recollect.define("paint_colour_information", "last_size", recollect.Defn(str, ""))
 recollect.define('paint_series_selector', 'last_file', recollect.Defn(str, os.path.join(sys_config.get_sys_data_dir(), 'ideal.tsd')))
 recollect.define('paint_series_editor', 'last_file', recollect.Defn(str, ""))
-recollect.define('analysed_image_viewer', 'last_file', recollect.Defn(str, ''))
