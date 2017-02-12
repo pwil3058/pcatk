@@ -21,9 +21,8 @@ import fractions
 
 from gi.repository import Gtk
 
-from .gtx import iview
-
-from . import pixbuf
+from .pixbufx import iview
+from .pixbufx import transforms
 
 class Analysis(object):
     """
@@ -41,49 +40,47 @@ class Analysis(object):
         self.update_pixbuf()
     def get_label(self):
         return self.transformer.LABEL
-    def initialize_parameters(self):
-        pass
     def update_pixbuf(self):
         self.pixbuf_view.set_pixbuf(self.transformer.transformed_pixbuf(self.__image))
 
 ANALYSES = []
 
 class AnalysisRaw(Analysis):
-    TRANSFORMER = pixbuf.TransformerRaw
+    TRANSFORMER = transforms.Transformer
 ANALYSES.append(AnalysisRaw)
 
 class AnalysisNotan(Analysis):
-    TRANSFORMER = pixbuf.TransformerNotan
+    TRANSFORMER = transforms.TransformerNotan
 ANALYSES.append(AnalysisNotan)
 
-class AnalysisValue(Analysis):
-    TRANSFORMER = pixbuf.TransformerValue
-ANALYSES.append(AnalysisValue)
+class AnalysisMonotone(Analysis):
+    TRANSFORMER = transforms.TransformerMonotone
+ANALYSES.append(AnalysisMonotone)
 
-class AnalysisRestrictedValue(Analysis):
-    TRANSFORMER = pixbuf.TransformerRestrictedValue
-ANALYSES.append(AnalysisRestrictedValue)
+class AnalysisMonotoneRestrictedValue(Analysis):
+    TRANSFORMER = transforms.TransformerMonotoneRestrictedValue
+ANALYSES.append(AnalysisMonotoneRestrictedValue)
 
 class AnalysisColourRestrictedValue(Analysis):
-    TRANSFORMER = pixbuf.TransformerColourRestrictedValue
+    TRANSFORMER = transforms.TransformerColourRestrictedValue
 ANALYSES.append(AnalysisColourRestrictedValue)
 
 class AnalysisRestrictedHue(Analysis):
-    TRANSFORMER = pixbuf.TransformerRestrictedHue
+    TRANSFORMER = transforms.TransformerRestrictedHue
 ANALYSES.append(AnalysisRestrictedHue)
 
 class AnalysisRestrictedHueValue(Analysis):
-    TRANSFORMER = pixbuf.TransformerRestrictedHueValue
+    TRANSFORMER = transforms.TransformerRestrictedHueValue
 ANALYSES.append(AnalysisRestrictedHueValue)
 
 class AnalysisHighChroma(Analysis):
-    TRANSFORMER = pixbuf.TransformerHighChroma
+    TRANSFORMER = transforms.TransformerHighChroma
 ANALYSES.append(AnalysisHighChroma)
 
 class Analyser(Gtk.VBox):
     def __init__(self):
         Gtk.VBox.__init__(self)
-        self.__image = pixbuf.RGBHImage()
+        self.__image = transforms.RGBHImage()
         self.__image.connect('progress-made', self._progress_made_cb)
         self.__analyses = [A(self.__image) for A in ANALYSES]
         self.notebook = Gtk.Notebook()

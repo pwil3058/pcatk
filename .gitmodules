@@ -7,3 +7,6 @@
 [submodule "pcatk/epaint"]
 	path = pcatk/epaint
 	url = git@github.com:pwil3058/pysm_epaint.git
+[submodule "pcatk/pixbufx"]
+	path = pcatk/pixbufx
+	url = git@github.com:pwil3058/pysm_pixbufx.git
