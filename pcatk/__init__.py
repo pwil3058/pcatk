@@ -22,22 +22,38 @@ gi.require_version("PangoCairo", "1.0")
 
 from gi.repository import Gtk
 
-# Importing i18n here means that _() is defined for all package modules
-from . import i18n
-
 __all__ = []
 __author__ = "Peter Williams <pwil3058@gmail.com>"
 __version__ = "0.0"
 
 APP_NAME = "pcatk"
 
-# TODO: improve configuration directory path
-CONFIG_DIR_PATH = os.path.expanduser("~/.PaintersColourAssistant")
+CONFIG_DIR_PATH = os.path.expanduser(os.path.join("~", ".config", APP_NAME))
 PGND_CONFIG_DIR_PATH = None
-from . import sys_config
-SYS_DATA_DIR_PATH = sys_config.get_sys_data_dir()
-SYS_SAMPLES_DIR_PATH = sys_config.get_sys_samples_dir()
-from . import recollect # Temporary until definitions get moved
+
+if not os.path.exists(CONFIG_DIR_PATH):
+    old_config_dir_path = os.path.expanduser(os.path.join("~", ".PaintersColourAssistant"))
+    if os.path.exists(old_config_dir_path):
+        os.rename(old_config_dir_path, CONFIG_DIR_PATH)
+    else:
+        os.mkdir(CONFIG_DIR_PATH)
+
+def _find_sys_base_dir():
+    sys_data_dir = os.path.join(sys.path[0], "data")
+    if os.path.exists(sys_data_dir) and os.path.isdir(sys_data_dir):
+        return os.path.dirname(sys_data_dir)
+    else:
+        _TAILEND = os.path.join("share", APP_NAME, "data")
+        _prefix = sys.path[0]
+        while _prefix:
+            sys_data_dir = os.path.join(_prefix, _TAILEND)
+            if os.path.exists(sys_data_dir) and os.path.isdir(sys_data_dir):
+                return os.path.dirname(sys_data_dir)
+            _prefix = os.path.dirname(_prefix)
+
+SYS_BASE_DIR_PATH = _find_sys_base_dir()
+SYS_DATA_DIR_PATH = os.path.join(SYS_BASE_DIR_PATH, "data")
+SYS_SAMPLES_DIR_PATH = os.path.join(SYS_BASE_DIR_PATH, "samples")
 
 ISSUES_URL = "<https://github.com/pwil3058/pcatk/issues>"
 ISSUES_EMAIL = __author__

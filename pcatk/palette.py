@@ -40,6 +40,7 @@ from .gtx import coloured
 from .gtx import dialogue
 from .gtx import entries
 from .gtx import gutils
+from .gtx import icons
 from .gtx import printer
 from .gtx import recollect
 from .gtx import screen
@@ -47,9 +48,7 @@ from .gtx import tlview
 
 from .pixbufx import iview
 
-from . import icons
 from . import analyser
-from . import utils
 
 def pango_rgb_str(rgb, bits_per_channel=16):
     """
@@ -442,7 +441,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         mixed_contribs = self.mixed_colours.get_contributions()
         if len(paint_contribs) + len(mixed_contribs) < 2:
             return
-        gcd = utils.gcd(*[b.parts for b in paint_contribs + mixed_contribs])
+        gcd = mathx.gcd(*[b.parts for b in paint_contribs + mixed_contribs])
         if gcd is not None and gcd > 1:
             paint_contribs = [pmix.BLOB(colour=tc.colour, parts=tc.parts / gcd) for tc in paint_contribs]
             mixed_contribs = [pmix.BLOB(colour=mc.colour, parts=mc.parts / gcd) for mc in mixed_contribs]
@@ -462,7 +461,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
     def simplify_parts(self):
         paint_parts = [blob.parts for blob in self.paint_colours.get_contributions()]
         mixed_parts = [blob.parts for blob in self.mixed_colours.get_contributions()]
-        gcd = utils.gcd(*(paint_parts + mixed_parts))
+        gcd = mathx.gcd(*(paint_parts + mixed_parts))
         self.paint_colours.divide_parts(gcd)
         self.mixed_colours.divide_parts(gcd)
     def _simplify_contributions_cb(self, _action):
@@ -519,55 +518,6 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         for colour in colours:
             if len(self.mixed_colours.get_colour_users(colour)) == 0:
                 self.del_paint(colour)
-    def report_io_error(self, edata):
-        msg = "{0}: {1}".format(edata.strerror, edata.filename)
-        Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
-        return False
-    def report_format_error(self, msg):
-        Gtk.MessageDialog(type=Gtk.MessageType.ERROR, buttons=Gtk.BUTTONS_CLOSE, message_format=msg).run()
-        return False
-    def launch_selector(self, filepath):
-        try:
-            fobj = open(filepath, "r")
-            text = fobj.read()
-            fobj.close()
-        except IOError as edata:
-            return self.report_io_error(edata)
-        try:
-            series = vpaint.PaintSeries.fm_definition(text)
-        except vpaint.PaintSeries.ParseError as edata:
-            return self.report_format_error(edata)
-        # All OK so we can launch the selector
-        selector = ArtPaintSelector(series)
-        selector.connect("add-paint-colours", self._add_colours_to_palette_cb)
-        window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-        window.set_icon_from_file(icons.APP_ICON_FILE)
-        window.set_title(_("Paint Series: {}").format(os.path.relpath(filepath)))
-        window.connect("destroy", lambda w: w.destroy())
-        window.add(selector)
-        window.show()
-        return True
-    def _open_paint_series_selector_cb(self, _action):
-        """
-        Open a tool for adding paint colours to the palette
-        Ask the user for the name of the file then open it.
-        """
-        parent = self.get_toplevel()
-        dlg = Gtk.FileChooserDialog(
-            title="Open Paint Series Description File",
-            parent=parent if isinstance(parent, Gtk.Window) else None,
-            action=Gtk.FileChooserAction.OPEN,
-            buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK)
-        )
-        last_paint_file = recollect.get("paint_series_selector", "last_file")
-        last_paint_dir = None if last_paint_file is None else os.path.dirname(last_paint_file)
-        if last_paint_dir:
-            dlg.set_current_folder(last_paint_dir)
-        if dlg.run() == Gtk.ResponseType.OK:
-            filepath = dlg.get_filename()
-            if self.launch_selector(filepath):
-                recollect.set("paint_series_selector", "last_file", filepath)
-        dlg.destroy()
     def _print_palette_cb(self, _action):
         """
         Print the palette as simple text

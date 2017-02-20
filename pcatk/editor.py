@@ -42,15 +42,11 @@ from .gtx import coloured
 from .gtx import dialogue
 from .gtx import entries
 from .gtx import gutils
+from .gtx import icons
 from .gtx import recollect
 from .gtx import screen
 
 from .pixbufx import iview
-
-from . import utils
-from . import data
-from . import icons
-from . import sys_config
 
 class UnsavedChangesDialogue(dialogue.Dialog):
     # TODO: make a better UnsavedChangesDialogue()
