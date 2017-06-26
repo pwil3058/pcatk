@@ -33,6 +33,7 @@ from .bab import mathx
 from .epaint import gpaint
 from .epaint import lexicon
 from .epaint import pmix
+from .epaint import pseries
 from .epaint import vpaint
 
 from .gtx import actions
@@ -218,7 +219,7 @@ class MatchedArtPaintListView(pmix.MatchedPaintListView):
         else:
             gpaint.PaintColourInformationDialogue(paint).show()
 
-class ArtPaintSelector(pmix.PaintSelector):
+class ArtPaintSelector(pseries.PaintSelector):
     class SELECT_PAINT_LIST_VIEW (gpaint.ArtPaintListView):
         UI_DESCR = """
         <ui>
@@ -239,7 +240,7 @@ class ArtPaintSelector(pmix.PaintSelector):
                 ]
             )
 
-class ArtPaintSeriesManager(pmix.PaintSeriesManager):
+class ArtPaintSeriesManager(pseries.PaintSeriesManager):
     PAINT_SELECTOR = ArtPaintSelector
 
 recollect.define("palette", "hpaned_position", recollect.Defn(int, -1))
@@ -252,6 +253,9 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
             <menu action="palette_file_menu">
                 <menuitem action="print_palette"/>
                 <menuitem action="quit_palette"/>
+            </menu>
+            <menu action="palette_series_manager_menu">
+                <menuitem action="palette_load_paint_series"/>
             </menu>
             <menu action="reference_resource_menu">
                 <menuitem action="open_analysed_image_viewer"/>
@@ -318,7 +322,10 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         hpaned.connect("notify", self._paned_notify_cb)
         self.paint_series_manager = ArtPaintSeriesManager()
         self.paint_series_manager.connect("add-paint-colours", self._add_colours_to_palette_cb)
-        menubar.insert(self.paint_series_manager.menu, 1)
+        psmm = self.ui_manager.get_widget("/palette_menubar/palette_series_manager_menu").get_submenu()
+        psmm.prepend(self.paint_series_manager.open_menu_item)
+        psmm.append(self.paint_series_manager.remove_menu_item)
+        #menubar.insert(self.paint_series_manager.menu, 1)
         self.show_all()
         self.recalculate_colour([])
     def _paned_notify_cb(self, widget, parameter):
@@ -333,6 +340,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         """
         self.action_groups[actions.AC_DONT_CARE].add_actions([
             ("palette_file_menu", None, _("File")),
+            ("palette_series_manager_menu", None, _("Paint Colour Series")),
             ("reference_resource_menu", None, _("Reference Resources")),
             ("remove_unused_paints", None, _("Remove Unused Paints"), None,
             _("Remove all unused paint colours from the palette."),
@@ -340,6 +348,10 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
             ("quit_palette", Gtk.STOCK_QUIT, None, None,
             _("Quit this program."),
             self._quit_palette_cb),
+            ("palette_load_paint_series", None, _("Load"), None,
+             _("Load a paint series from a file."),
+             lambda _action: self.paint_series_manager.add_paint_series()
+            ),
             ("open_analysed_image_viewer", None, _("Open Analysed Image Viewer"), None,
             _("Open a tool for viewing analysed reference images."),
             self._open_analysed_image_viewer_cb),

@@ -35,6 +35,7 @@ from .epaint import gpaint
 from .epaint import vpaint
 from .epaint import pchar
 from .epaint import pedit
+from .epaint import pseries
 from .epaint import rgbh
 
 from .gtx import actions
@@ -119,11 +120,11 @@ class ArtPaintListNotebook(gpaint.PaintListNotebook):
                 ]
             )
 
-class ArtPaintSeriesEditor(pedit.PaintSeriesEditor):
+class ArtPaintSeriesEditor(pseries.PaintSeriesEditor):
     PAINT_EDITOR = ArtPaintEditor
     PAINT_LIST_NOTEBOOK = ArtPaintListNotebook
     BUTTONS = [
-            "add_colour_into_series",
+            "add_colour_into_collection",
             "accept_colour_changes",
             "reset_colour_editor",
             "take_screen_sample",
@@ -144,7 +145,7 @@ class TopLevelWindow(dialogue.MainWindow):
         self.editor.action_groups.get_action('close_colour_editor').set_visible(False)
         self.editor.connect("file_changed", self._file_changed_cb)
         self.editor.set_file_path(None)
-        self._menubar = self.editor.ui_manager.get_widget('/paint_series_editor_menubar')
+        self._menubar = self.editor.ui_manager.get_widget('/paint_collection_editor_menubar')
         self.connect("destroy", self.editor._exit_colour_editor_cb)
         self.connect("configure-event", self._configure_event_cb)
         vbox = Gtk.VBox()
