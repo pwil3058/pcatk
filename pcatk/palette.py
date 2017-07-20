@@ -213,7 +213,7 @@ class MatchedArtPaintListView(pmix.MatchedPaintListView):
     MIXED_PAINT_INFORMATION_DIALOGUE = MixedArtPaintInformationDialogue
     SPECIFICATION = generate_matched_art_paint_list_spec
     def _show_paint_details_cb(self, _action):
-        paint = self.get_selected_paints()[0]
+        paint = self.get_clicked_paint()
         if hasattr(paint, "blobs"):
             MixedArtPaintInformationDialogue(paint).show()
         else:
@@ -224,8 +224,9 @@ class ArtPaintSelector(pseries.PaintSelector):
         UI_DESCR = """
         <ui>
             <popup name="paint_list_popup">
-                <menuitem action="show_paint_details"/>
+                <menuitem action="add_paint_to_mixer"/>
                 <menuitem action="add_paints_to_mixer"/>
+                <menuitem action="show_paint_details"/>
             </popup>
         </ui>
         """
@@ -237,6 +238,12 @@ class ArtPaintSelector(pseries.PaintSelector):
                 [
                     ("add_paints_to_mixer", Gtk.STOCK_ADD, None, None,
                      _("Add the selected paints to the pallete."),),
+                ]
+            )
+            self.action_groups[actions.AC_SELN_NONE|self.AC_CLICKED_ON_ROW].add_actions(
+                [
+                    ("add_paint_to_mixer", Gtk.STOCK_ADD, None, None,
+                     _("Add the clicked paint to the mixer."),),
                 ]
             )
 

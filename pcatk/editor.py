@@ -104,7 +104,7 @@ class ArtPaintListNotebook(gpaint.PaintListNotebook):
         UI_DESCR = '''
             <ui>
                 <popup name='paint_list_popup'>
-                    <menuitem action='edit_selected_paint'/>
+                    <menuitem action='edit_clicked_paint'/>
                     <menuitem action='remove_selected_paints'/>
                 </popup>
             </ui>
@@ -117,6 +117,12 @@ class ArtPaintListNotebook(gpaint.PaintListNotebook):
                 [
                     ('edit_selected_paint', Gtk.STOCK_EDIT, None, None,
                      _('Load the selected paint into the paint editor.'), ),
+                ]
+            )
+            self.action_groups[self.AC_CLICKED_ON_ROW].add_actions(
+                [
+                    ("edit_clicked_paint", Gtk.STOCK_EDIT, None, None,
+                     _("Load the clicked paint into the paint editor."), ),
                 ]
             )
 
