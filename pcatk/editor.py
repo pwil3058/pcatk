@@ -49,62 +49,17 @@ from .gtx import screen
 
 from .pixbufx import iview
 
-class UnsavedChangesDialogue(dialogue.Dialog):
-    # TODO: make a better UnsavedChangesDialogue()
-    SAVE_AND_CONTINUE, CONTINUE_UNSAVED = range(1, 3)
-    def __init__(self, parent, message):
-        buttons = (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-        buttons += (_("Save and Continue"), UnsavedChangesDialogue.SAVE_AND_CONTINUE)
-        buttons += (_("Continue Without Saving"), UnsavedChangesDialogue.CONTINUE_UNSAVED)
-        dialogue.Dialog.__init__(self,
-            parent=parent,
-            flags=Gtk.DialogFlags.MODAL,
-            buttons=buttons,
-        )
-        self.vbox.pack_start(Gtk.Label(message), expand=True, fill=True, padding=0)
-        self.show_all()
-
-class UnacceptedChangesDialogue(dialogue.Dialog):
-    # TODO: make a better UnacceptedChangesDialogue()
-    ACCEPT_CHANGES_AND_CONTINUE, CONTINUE_DISCARDING_CHANGES = range(1, 3)
-    def __init__(self, parent, message):
-        buttons = (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-        buttons += (_('Accept and Continue'), UnacceptedChangesDialogue.ACCEPT_CHANGES_AND_CONTINUE)
-        buttons += (_('Continue (Discarding Changes)'), UnacceptedChangesDialogue.CONTINUE_DISCARDING_CHANGES)
-        dialogue.Dialog.__init__(self,
-            parent=parent,
-            flags=Gtk.DialogFlags.MODAL,
-            buttons=buttons,
-        )
-        self.vbox.pack_start(Gtk.Label(message), expand=True, fill=True, padding=0)
-        self.show_all()
-
-class UnaddedNewColourDialogue(dialogue.Dialog):
-    # TODO: make a better UnaddedNewColourDialogue()
-    DISCARD_AND_CONTINUE = 1
-    def __init__(self, parent, message):
-        buttons = (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
-        buttons += (_('Discard and Continue'), UnaddedNewColourDialogue.DISCARD_AND_CONTINUE)
-        dialogue.Dialog.__init__(self,
-            parent=parent,
-            flags=Gtk.DialogFlags.MODAL,
-            buttons=buttons,
-        )
-        self.vbox.pack_start(Gtk.Label(message), expand=True, fill=True, padding=0)
-        self.show_all()
+from . import apaint
 
 recollect.define("editor", "last_geometry", recollect.Defn(str, ""))
 
-class ArtPaintEditor(pedit.PaintEditor):
-    PAINT = vpaint.ArtPaint
-    PROVIDE_RGB_ENTRY = False
-
 class ArtPaintListNotebook(gpaint.PaintListNotebook):
-    class PAINT_LIST_VIEW(gpaint.ArtPaintListView):
+    class PAINT_LIST_VIEW(apaint.ArtPaintListView):
         UI_DESCR = '''
             <ui>
                 <popup name='paint_list_popup'>
                     <menuitem action='edit_clicked_paint'/>
+                    <menuitem action='show_paint_details'/>
                     <menuitem action='remove_selected_paints'/>
                 </popup>
             </ui>
@@ -127,8 +82,9 @@ class ArtPaintListNotebook(gpaint.PaintListNotebook):
             )
 
 class ArtPaintSeriesEditor(pseries.PaintSeriesEditor):
-    PAINT_EDITOR = ArtPaintEditor
+    PAINT_EDITOR = apaint.ArtPaintEditor
     PAINT_LIST_NOTEBOOK = ArtPaintListNotebook
+    PAINT_COLLECTION = apaint.ArtPaintSeries
     BUTTONS = [
             "add_colour_into_collection",
             "accept_colour_changes",

@@ -50,6 +50,7 @@ from .gtx import tlview
 from .pixbufx import iview
 
 from . import analyser
+from . import apaint
 
 def pango_rgb_str(rgb, bits_per_channel=16):
     """
@@ -61,7 +62,7 @@ def pango_rgb_str(rgb, bits_per_channel=16):
     return string
 
 class ArtMixture(pmix.Mixture):
-    PAINT = vpaint.ArtPaint
+    PAINT = apaint.ArtPaint
 
 class MixedArtPaint(pmix.MixedPaint):
     MIXTURE = ArtMixture
@@ -69,7 +70,7 @@ class MixedArtPaint(pmix.MixedPaint):
 class MixedArtPaintInformationDialogue(pmix.MixedPaintInformationDialogue):
     class COMPONENT_LIST_VIEW(pmix.MixedPaintComponentsListView):
         class MODEL(pmix.MixedPaintComponentsListStore):
-            COLUMN_DEFS = gpaint.ArtPaintListStore.COLUMN_DEFS[1:]
+            COLUMN_DEFS = apaint.ArtPaintListStore.COLUMN_DEFS[1:]
         def _show_paint_details_cb(self, _action):
             paint = self.get_selected_paints()[0]
             if hasattr(paint, "blobs"):
@@ -78,7 +79,7 @@ class MixedArtPaintInformationDialogue(pmix.MixedPaintInformationDialogue):
                 gpaint.PaintColourInformationDialogue(paint).show()
 
 class MatchedArtPaintListStore(gpaint.PaintListStore):
-    COLUMN_DEFS = gpaint.ArtPaintListStore.COLUMN_DEFS[1:]
+    COLUMN_DEFS = apaint.ArtPaintListStore.COLUMN_DEFS[1:]
     TYPES = [object, int]
     def __init__(self):
         gpaint.PaintListStore.__init__(self, int)
@@ -219,37 +220,6 @@ class MatchedArtPaintListView(pmix.MatchedPaintListView):
         else:
             gpaint.PaintColourInformationDialogue(paint).show()
 
-class ArtPaintSelector(pseries.PaintSelector):
-    class SELECT_PAINT_LIST_VIEW (gpaint.ArtPaintListView):
-        UI_DESCR = """
-        <ui>
-            <popup name="paint_list_popup">
-                <menuitem action="add_paint_to_mixer"/>
-                <menuitem action="add_paints_to_mixer"/>
-                <menuitem action="show_paint_details"/>
-            </popup>
-        </ui>
-        """
-        def populate_action_groups(self):
-            """
-            Populate action groups ready for UI initialization.
-            """
-            self.action_groups[actions.AC_SELN_MADE].add_actions(
-                [
-                    ("add_paints_to_mixer", Gtk.STOCK_ADD, None, None,
-                     _("Add the selected paints to the pallete."),),
-                ]
-            )
-            self.action_groups[actions.AC_SELN_NONE|self.AC_CLICKED_ON_ROW].add_actions(
-                [
-                    ("add_paint_to_mixer", Gtk.STOCK_ADD, None, None,
-                     _("Add the clicked paint to the mixer."),),
-                ]
-            )
-
-class ArtPaintSeriesManager(pseries.PaintSeriesManager):
-    PAINT_SELECTOR = ArtPaintSelector
-
 recollect.define("palette", "hpaned_position", recollect.Defn(int, -1))
 recollect.define("palette", "vpaned_position", recollect.Defn(int, -1))
 
@@ -271,6 +241,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
     </ui>
     """
     AC_HAVE_MIXTURE, AC_MASK = actions.ActionCondns.new_flags_and_mask(1)
+    MIXED_PAINT_INFORMATION_DIALOGUE = MixedArtPaintInformationDialogue
     def __init__(self):
         Gtk.VBox.__init__(self)
         actions.CAGandUIManager.__init__(self)
@@ -327,7 +298,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         hpaned.set_position(recollect.get("palette", "hpaned_position"))
         vpaned.connect("notify", self._paned_notify_cb)
         hpaned.connect("notify", self._paned_notify_cb)
-        self.paint_series_manager = ArtPaintSeriesManager()
+        self.paint_series_manager = apaint.ArtPaintSeriesManager()
         self.paint_series_manager.connect("add-paint-colours", self._add_colours_to_palette_cb)
         psmm = self.ui_manager.get_widget("/palette_menubar/palette_series_manager_menu").get_submenu()
         psmm.prepend(self.paint_series_manager.open_menu_item)
@@ -383,7 +354,7 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
     def _show_wheel_colour_details_cb(self, _action, wheel):
         colour = wheel.popup_colour
         if hasattr(colour, "blobs"):
-            self.MIXED_PAINT_INFORMATION_DIALOGUE(colour, self.mixed_colours.get_target_colour(colour)).show()
+            self.MIXED_PAINT_INFORMATION_DIALOGUE(colour).show()
         else:
             gpaint.PaintColourInformationDialogue(colour).show()
         return True
