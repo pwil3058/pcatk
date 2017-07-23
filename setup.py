@@ -56,7 +56,7 @@ URL = 'http://sourceforge.net/projects/pcatk/'
 
 SCRIPTS = ['pcatk_palette.py', 'pcatk_editor.py']
 
-PACKAGES = ['pcatk']
+PACKAGES = ['pcatk_pkg']
 
 paints = glob.glob('data/*.tsd')
 

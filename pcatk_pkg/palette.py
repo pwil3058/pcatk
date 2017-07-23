@@ -224,6 +224,8 @@ recollect.define("palette", "hpaned_position", recollect.Defn(int, -1))
 recollect.define("palette", "vpaned_position", recollect.Defn(int, -1))
 
 class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
+    PAINT_SERIES_MANAGER = apaint.ArtPaintSeriesManager
+    MIXED_PAINT_INFORMATION_DIALOGUE = MixedArtPaintInformationDialogue
     UI_DESCR = """
     <ui>
         <menubar name="palette_menubar">
@@ -241,11 +243,12 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
     </ui>
     """
     AC_HAVE_MIXTURE, AC_MASK = actions.ActionCondns.new_flags_and_mask(1)
-    MIXED_PAINT_INFORMATION_DIALOGUE = MixedArtPaintInformationDialogue
-    def __init__(self):
+    def __init__(self, paint_series_manager=None):
         Gtk.VBox.__init__(self)
         actions.CAGandUIManager.__init__(self)
         # Components
+        self.paint_series_manager = paint_series_manager if paint_series_manager else self.PAINT_SERIES_MANAGER()
+        self.paint_series_manager.connect("add-paint-colours", self._add_colours_to_palette_cb)
         self.notes = entries.TextEntryAutoComplete(lexicon.GENERAL_WORDS_LEXICON)
         self.notes.connect("new-words", lexicon.new_general_words_cb)
         self.mixpanel = gpaint.ColourSampleArea()
@@ -271,8 +274,9 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
             "take_screen_sample"
         ])
         menubar = self.ui_manager.get_widget("/palette_menubar")
+        toolbar = self.ui_manager.get_widget("/palette_toolbar")
         # Lay out components
-        self.pack_start(menubar, expand=False, fill=True, padding=0)
+        self.pack_start(menubar if menubar else toolbar, expand=False, fill=True, padding=0)
         hbox = Gtk.HBox()
         hbox.pack_start(Gtk.Label(_("Notes:")), expand=False, fill=True, padding=0)
         hbox.pack_start(self.notes, expand=True, fill=True, padding=0)
@@ -298,12 +302,11 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
         hpaned.set_position(recollect.get("palette", "hpaned_position"))
         vpaned.connect("notify", self._paned_notify_cb)
         hpaned.connect("notify", self._paned_notify_cb)
-        self.paint_series_manager = apaint.ArtPaintSeriesManager()
-        self.paint_series_manager.connect("add-paint-colours", self._add_colours_to_palette_cb)
-        psmm = self.ui_manager.get_widget("/palette_menubar/palette_series_manager_menu").get_submenu()
-        psmm.prepend(self.paint_series_manager.open_menu_item)
-        psmm.append(self.paint_series_manager.remove_menu_item)
-        #menubar.insert(self.paint_series_manager.menu, 1)
+        psm = self.ui_manager.get_widget("/palette_menubar/palette_series_manager_menu")
+        if psm:
+            psmm = psm.get_submenu()
+            psmm.prepend(self.paint_series_manager.open_menu_item)
+            psmm.append(self.paint_series_manager.remove_menu_item)
         self.show_all()
         self.recalculate_colour([])
     def _paned_notify_cb(self, widget, parameter):
@@ -321,35 +324,43 @@ class Palette(Gtk.VBox, actions.CAGandUIManager, dialogue.AskerMixin):
             ("palette_series_manager_menu", None, _("Paint Colour Series")),
             ("reference_resource_menu", None, _("Reference Resources")),
             ("remove_unused_paints", None, _("Remove Unused Paints"), None,
-            _("Remove all unused paint colours from the palette."),
-            self._remove_unused_paints_cb),
+             _("Remove all unused paint colours from the palette."),
+             self._remove_unused_paints_cb
+            ),
             ("quit_palette", Gtk.STOCK_QUIT, None, None,
-            _("Quit this program."),
-            self._quit_palette_cb),
+              _("Quit this program."),
+                self._quit_palette_cb
+            ),
             ("palette_load_paint_series", None, _("Load"), None,
              _("Load a paint series from a file."),
              lambda _action: self.paint_series_manager.add_paint_series()
             ),
             ("open_analysed_image_viewer", None, _("Open Analysed Image Viewer"), None,
-            _("Open a tool for viewing analysed reference images."),
-            self._open_analysed_image_viewer_cb),
+             _("Open a tool for viewing analysed reference images."),
+             self._open_analysed_image_viewer_cb
+            ),
             ("print_palette", Gtk.STOCK_PRINT, None, None,
-            _("Print a text description of the palette."),
-            self._print_palette_cb),
+             _("Print a text description of the palette."),
+             self._print_palette_cb
+            ),
             ("take_screen_sample", None, _("Take Screen Sample"), None,
-            _("Take a sample of an arbitrary selected section of the screen and add it to the clipboard."),
-            lambda _action: screen.take_screen_sample()),
+             _("Take a sample of an arbitrary selected section of the screen and add it to the clipboard."),
+             lambda _action: screen.take_screen_sample()
+            ),
         ])
         self.action_groups[self.AC_HAVE_MIXTURE].add_actions([
             ("simplify_contributions", None, _("Simplify"), None,
-            _("Simplify all colour contributions (by dividing by their greatest common divisor)."),
-            self._simplify_contributions_cb),
+             _("Simplify all colour contributions (by dividing by their greatest common divisor)."),
+             self._simplify_contributions_cb
+            ),
             ("reset_contributions", None, _("Reset"), None,
-            _("Reset all colour contributions to zero."),
-            self._reset_contributions_cb),
+             _("Reset all colour contributions to zero."),
+             self._reset_contributions_cb
+            ),
             ("add_mixed_colour", None, _("Add"), None,
-            _("Add this colour to the palette as a mixed colour."),
-            self._add_mixed_colour_cb),
+             _("Add this colour to the palette as a mixed colour."),
+             self._add_mixed_colour_cb
+            ),
         ])
     def _show_wheel_colour_details_cb(self, _action, wheel):
         colour = wheel.popup_colour
@@ -643,3 +654,8 @@ class AnalysedImageViewer(Gtk.Window, actions.CAGandUIManager):
             dlg.destroy()
     def _close_analysed_image_viewer_cb(self, _action):
         self.get_toplevel().destroy()
+
+actions.CLASS_INDEP_AGS[actions.AC_DONT_CARE].add_actions([
+    ("pcatk_reference_resource_menu", None, _("Reference Resources")),
+    ("pcatk_samples_menu", None, _("Samples")),
+])
