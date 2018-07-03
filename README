@@ -6,27 +6,34 @@ below for more details.
 
 STATUS:
 
-This software is still under development and is only Alpha standard at
+This software is still under development and is only Beta standard at
 this time.
 
 REQUIREMENTS:
 
-This software requires:
- - Python 2.7 or later
- - PyGTK2 2.24 or later
- - PyCairo 1.8.10 or later
- 
+There are two versions of this software: a Python3 script and a Rust
+compilable program.
+
+The Python3 version of the software requires:
+ - Python 3.4.3 or later
+ - PyGObject 3.22 or later
+
+The Rust version requires rustc 1.26.2 or later.
+
 INSTALLATION:
 
 It is NOT necessary to install this software in order to use it.  All
-that is necessary for the applications to be usable is for the base
-directory to be in the usere PATH environment variable.
+that is necessary for the Python3 version to be usable is for the base
+directory to be in the user's PATH environment variable.  For the Rust
+version all that is required is for the .target/release and/or
+.target/debug (as appropriate) to be in the user's PATH environment
+variable.
 
 USAGE:
 
-This software has a number of components:
+The software's GUI (pcatk.py or pcatk_rs) has 2 selectable components:
 
-1. The Palette Planner (pcatk_palette.py) is a GUI that (once the user
+1. The Palette Planner is a GUI the component that (once the user
 has slected some paint colours for use) enables the painter to mix new
 colours by specifying the number of "parts" of paint (or earlier mixed)
 colours to be used in a mixed colour.  This mixed colour can then be
@@ -39,7 +46,7 @@ planner and displays a number of transformations of a (user selected)
 digital image from which the user can copy samples for pasting into
 the mixed colour area for matching.
 
-2. The Paint Series Editor (pcatk_editor.py) is a GUI that enables the
+2. The Paint Series Editor is the component that enables the
 painter create sets of paint colours for use in the palette planner.
 The recommended method is to produce a "sampler" of the actual paints
 to be used on a suitable medium, take a digital photograph and then
@@ -63,43 +70,18 @@ option in the Palette Planner is invoked.
 
 INTERNATIONALIZATION:
 
-The code is extensively hooked for i18n but (at the moment) there is no
-localization available for languages other than English.
+The Python3 code is extensively hooked for i18n but (at the moment)
+there is no localization available for languages other than English.
 
 BUGS:
 
 It would be greatly appreciated if any bugs encountered by users are
 reported by creating an issue at:
 
-<http://sourceforge.net/p/pcatk/tickets/>
-
-or emailing:
-
-<pcatk-discussion@lists.sourceforge.net>
+<https://github.com/pwil3058/pcatk/issues>
 
 FEATURE REQUESTS:
 
 Feature requests can be made by creating an issue at:
 
-<http://sourceforge.net/p/pcatk/tickets/>
-
-or emailing:
-
-<pcatk-discussion@lists.sourceforge.net>
-
-<https://sourceforge.net/tracker/?group_id=386122&atid=1604800>
-
-or emailing:
-
-<darning-discussion@lists.sourceforge.net>
-
-FEATURE REQUESTS:
-
-Feature requests can be made by creating an issue at:
-
-<https://sourceforge.net/tracker/?group_id=386122&atid=1604803>
-
-or emailing:
-
-<darning-discussion@lists.sourceforge.net>
-
+<https://github.com/pwil3058/pcatk/issues>.
