@@ -5,7 +5,7 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-lazy_static = "0.2.8"
+lazy_static = "1.4.0"
 # TODO: change pw_gix dependency when it goes public
 #pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
 pw_gix = { path = "../../CRATES/rs_pw_gix.git" }
