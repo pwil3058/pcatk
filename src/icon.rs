@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use gdk_pixbuf;
-use gtk;
+use pw_gix::{gdk_pixbuf, gtk};
 
 /* XPM */
 static PCATKRS_XPM: &[&str] = &[
@@ -88,14 +87,14 @@ static PCATKRS_XPM: &[&str] = &[
 ];
 
 pub fn pcatkrs_pixbuf() -> gdk_pixbuf::Pixbuf {
-    gdk_pixbuf::Pixbuf::new_from_xpm_data(PCATKRS_XPM)
+    gdk_pixbuf::Pixbuf::from_xpm_data(PCATKRS_XPM)
 }
 
 pub fn pcatkrs_image(size: i32) -> gtk::Image {
     if let Some(pixbuf) =
         pcatkrs_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear)
     {
-        gtk::Image::new_from_pixbuf(Some(&pixbuf))
+        gtk::Image::from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
     }

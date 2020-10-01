@@ -30,7 +30,6 @@ from .epaint import pedit
 from .epaint import pmix
 from .epaint import pseries
 from .epaint import vpaint
-from .epaint import standards
 
 from . import APP_NAME
 
