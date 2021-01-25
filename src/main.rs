@@ -1,7 +1,7 @@
 use pw_gix::{
     gio::{self, ApplicationExt, prelude::ApplicationExtManual},
     gtk::{self, prelude::*},
-    gdk_pixbufx::iview::*,
+    gdk_pixbufx::viewer::*,
     gtkx::{dialog::dialog_user::DialogUser, window::*},
     recollections, sample, wrapper::*
 };
@@ -17,11 +17,9 @@ fn launch_image_viewer() {
     window.set_destroy_with_parent(true);
     window.set_title("pcatk: Image Viewer");
 
-    let iview = PixbufView::create();
+    let iview = PixbufViewBuilder::new().load_last_image(true).build();
     window.add(&iview.pwo());
     window.show_all();
-
-    iview.reload_last_image();
 
     window.present();
 }
