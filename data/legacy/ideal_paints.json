@@ -1,0 +1,5 @@
+Series: Ideal Paints
+Manufacturer: Imaginery
+PaintSpec(name="Blue", rgb=RGB16(red=0x0000, green=0x0000, blue=0xFFFF), permanence="AA", transparency="O", notes="")
+PaintSpec(name="Green", rgb=RGB16(red=0x0000, green=0xFFFF, blue=0x0000), permanence="AA", transparency="O", notes="")
+PaintSpec(name="Red", rgb=RGB16(red=0xFFFF, green=0x0000, blue=0x0000), permanence="AA", transparency="O", notes="")

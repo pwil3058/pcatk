@@ -1,5 +1,0 @@
-include COPYING copyright
-include *.desktop
-include MANIFEST.in
-include pixmaps/*.ico
-include rpm_post_install.script pcatk_win_post_install.py

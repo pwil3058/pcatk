@@ -11,40 +11,28 @@ this time.
 
 REQUIREMENTS:
 
-There are two versions of this software: a Python3 script and a Rust
-compilable program.
-
-The Python3 version of the software requires:
- - Python 3.4.3 or later
- - PyGObject 3.22 or later
-
-The Rust version requires rustc 1.26.2 or later.
+Requires Rust version rustc 1.26.2 or later.
 
 INSTALLATION:
 
-It is NOT necessary to install this software in order to use it.  All
-that is necessary for the Python3 version to be usable is for the base
-directory to be in the user's PATH environment variable.  For the Rust
+It is NOT necessary to install this software in order to use it.For the Rust
 version all that is required is for the .target/release and/or
 .target/debug (as appropriate) to be in the user's PATH environment
 variable.
 
 USAGE:
 
-The software's GUI (pcatk.py or pcatk_rs) has 2 selectable components:
+The software's GUI pcatk_rs has 2 selectable components:
 
 1. The Palette Planner is a GUI the component that (once the user
-has slected some paint colours for use) enables the painter to mix new
+has selected some paint colours for use) enables the painter to mix new
 colours by specifying the number of "parts" of paint (or earlier mixed)
 colours to be used in a mixed colour.  This mixed colour can then be
 saved to a list of mixed colours (along with notes about its intended
 use) and used in the mixing of further colours.  When the painter has
 finished planning their palette they may print out a report to be used
 as a reference while completing the painting for which the palette was
-planned. An analysed image viewer is included as part of the palette
-planner and displays a number of transformations of a (user selected)
-digital image from which the user can copy samples for pasting into
-the mixed colour area for matching.
+planned.
 
 2. The Paint Series Editor is the component that enables the
 painter create sets of paint colours for use in the palette planner.
@@ -60,18 +48,13 @@ TUBE SERIES:
 
 At this time, the only paint series data included in the distribution is for an
 imaginary set of paints known as the "Ideal Paint Colours Series" which
-features six colours equally spaced around the colour circle (at maximim chroma)
-together with black and white. This series can be found in the file "ideal.tsd"
-in the "data" subdirectory of the source distribution and in the directory
-"$ROOT/share/PaintersColourAssistant/data" in installed distributions. On Linux
-$ROOT should be "/usr" and to facilitate finding the file on Windows the file
-selector should open in that directory when the "Paint Colour Series/Open" menu
-option in the Palette Planner is invoked.
+features six colours equally spaced around the colour circle (at maximum chroma)
+together with black and white. This series can be found in the file "ideal_paints.json"
+in the "data" subdirectory of the source distribution.
 
 INTERNATIONALIZATION:
 
-The Python3 code is extensively hooked for i18n but (at the moment)
-there is no localization available for languages other than English.
+Not available.
 
 BUGS:
 
