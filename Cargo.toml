@@ -12,7 +12,7 @@ pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
 pw_pathux = { git = "https://github.com/pwil3058/rs_pw_pathux" }
 
 [dependencies.apaint_gtk]
-git = "https://github.com/pwil3058/rs_apaint.git"
-version = "*"
-#path = "/home/peter/SRC/GITHUB/RUST/CRATES/rs_apaint.git/apaint_gtk"
+#git = "https://github.com/pwil3058/rs_apaint.git"
+#version = "*"
+path = "/home/peter/SRC/GITHUB/RUST/CRATES/rs_apaint.git/apaint_gtk"
 features = ["palette_samples"]

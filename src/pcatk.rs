@@ -55,8 +55,8 @@ impl PaintersColourAssistantTK {
         pcatk.vbox.pack_start(&hbox, false, false, 0);
 
         let stack = gtk::StackBuilder::new().build();
-        stack.add_titled(&pcatk.palette.pwo(), "palette", "Palette");
-        stack.add_titled(&pcatk.factory.pwo(), "factory", "Paint Editor/Factory");
+        stack.add_titled(pcatk.palette.pwo(), "palette", "Palette");
+        stack.add_titled(pcatk.factory.pwo(), "factory", "Paint Editor/Factory");
         pcatk.vbox.pack_start(&stack, true, true, 0);
         let stack_switcher = gtk::StackSwitcherBuilder::new()
             .tooltip_text("Select mode.")
@@ -134,7 +134,7 @@ fn launch_image_viewer() {
     window.set_title("pcatk_gtk: Image Viewer");
 
     let view = PixbufViewBuilder::new().load_last_image(true).build();
-    window.add(&view.pwo());
+    window.add(view.pwo());
     window.show_all();
 
     window.present();

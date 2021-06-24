@@ -24,7 +24,7 @@ fn main() {
     }
     win.set_title("Painter's Colour Assistant Tool Kit");
     let pcatk = pcatk::PaintersColourAssistantTK::new();
-    win.add(&pcatk.pwo());
+    win.add(pcatk.pwo());
     let pcatk_c = Rc::clone(&pcatk);
     win.connect_delete_event(move |_, _| {
         if pcatk_c.ok_to_quit() {
