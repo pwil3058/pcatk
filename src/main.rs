@@ -66,10 +66,6 @@ mod icon {
     }
 
     pub fn _pcatkrs_image(size: i32) -> Option<gtk::Image> {
-        if let Some(pixbuf) = pcatkrs_pixbuf(size) {
-            Some(gtk::Image::from_pixbuf(Some(&pixbuf)))
-        } else {
-            None
-        }
+        pcatkrs_pixbuf(size).map(|pixbuf| gtk::Image::from_pixbuf(Some(&pixbuf)))
     }
 }
