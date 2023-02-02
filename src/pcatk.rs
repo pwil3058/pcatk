@@ -121,7 +121,7 @@ impl PaintersColourAssistantTK {
         // TODO: make pdf viewer configurable
         let viewer = "xreader";
         if let Err(err) = Command::new(viewer).spawn() {
-            let msg = format!("Error running \"{}\"", viewer);
+            let msg = format!("Error running \"{viewer}\"");
             self.report_error(&msg, &err);
         }
     }

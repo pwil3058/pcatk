@@ -14,9 +14,9 @@ mod pcatk;
 
 fn main() {
     if let Err(err) = gtk::init() {
-        panic!("GTK failed to initialize! {}.", err);
+        panic!("GTK failed to initialize! {err}.");
     };
-    recollections::init(&config::recollection_file_path());
+    recollections::init(config::recollection_file_path());
     let win = gtk::Window::new(gtk::WindowType::Toplevel);
     win.set_geometry_from_recollections("main_window", (600, 400));
     if let Some(icon) = icon::pcatkrs_pixbuf(64) {
@@ -28,9 +28,9 @@ fn main() {
     let pcatk_c = Rc::clone(&pcatk);
     win.connect_delete_event(move |_, _| {
         if pcatk_c.ok_to_quit() {
-            gtk::Inhibit(false)
+            Inhibit(false)
         } else {
-            gtk::Inhibit(true)
+            Inhibit(true)
         }
     });
     win.connect_destroy(|_| gtk::main_quit());
@@ -66,10 +66,6 @@ mod icon {
     }
 
     pub fn _pcatkrs_image(size: i32) -> Option<gtk::Image> {
-        if let Some(pixbuf) = pcatkrs_pixbuf(size) {
-            Some(gtk::Image::from_pixbuf(Some(&pixbuf)))
-        } else {
-            None
-        }
+        pcatkrs_pixbuf(size).map(|pixbuf| gtk::Image::from_pixbuf(Some(&pixbuf)))
     }
 }
