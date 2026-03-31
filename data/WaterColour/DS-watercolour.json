@@ -1,0 +1,499 @@
+{
+  "series_id": {
+    "proprietor": "Daniel Smith",
+    "series_name": "Daniel Smith Extra Fine Watercolor"
+  },
+  "paint_list": [
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            16933165072789793535
+          ]
+        },
+        "c_prop": 14106333703424951235,
+        "sum": 39208373678237556766
+      },
+      "id": "AY",
+      "name": "Azo Yellow",
+      "notes": "I.3.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            7925267824260399953
+          ]
+        },
+        "c_prop": 9765923333140350855,
+        "sum": 24378638246431838801
+      },
+      "id": "BS",
+      "name": "Burnt Sienna",
+      "notes": "I.1.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            18027499890216152716
+          ]
+        },
+        "c_prop": 6365935209750747224,
+        "sum": 45357288369474073971
+      },
+      "id": "BT",
+      "name": "Buff Titanium",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            8912471855837199095
+          ]
+        },
+        "c_prop": 6438275382588823897,
+        "sum": 15625477333024561368
+      },
+      "id": "BU",
+      "name": "Burnt Umber",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            10225912475643338396
+          ]
+        },
+        "c_prop": 6655295901103053916,
+        "sum": 29442450345097205911
+      },
+      "id": "CBC",
+      "name": "Cerulean Blue Chromium",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Primary": "Green"
+        },
+        "c_prop": 5714873654208057167,
+        "sum": 20038227876147238421
+      },
+      "id": "HG",
+      "name": "Hooker's Green",
+      "notes": "II.2.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            16011773855979890802
+          ]
+        },
+        "c_prop": 18085043209519168250,
+        "sum": 33999881233896036310
+      },
+      "id": "HYD",
+      "name": "Hansa Yellow Deep ",
+      "notes": "I.2.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            17427074803303495999
+          ]
+        },
+        "c_prop": 14395694394777257927,
+        "sum": 37978590739990253325
+      },
+      "id": "HYL",
+      "name": "Hansa Yellow Light",
+      "notes": "II.2.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            17256631552825064415
+          ]
+        },
+        "c_prop": 15697817505862638041,
+        "sum": 37327529184447563268
+      },
+      "id": "HYM",
+      "name": "Hansa Yellow Medium",
+      "notes": "I.2.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Secondary": "Magenta"
+        },
+        "c_prop": 434041037028460038,
+        "sum": 3689348814741910323
+      },
+      "id": "I",
+      "name": "Indigo",
+      "notes": "I(NR).3.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            7229129434291581039
+          ]
+        },
+        "c_prop": 5353172790017673802,
+        "sum": 23944597209403378763
+      },
+      "id": "IP",
+      "name": "Imperial Purple",
+      "notes": "I,2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            11621448766437017518
+          ]
+        },
+        "c_prop": 7234017283807667300,
+        "sum": 18302063728033398269
+      },
+      "id": "PBG",
+      "name": "Phthalo Blue (Green Shade)",
+      "notes": "I.4.N.",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            5825287602224068931
+          ]
+        },
+        "c_prop": 5497853135693827148,
+        "sum": 18302063728033398269
+      },
+      "id": "PBR",
+      "name": "Phthalo Blue (Red Shade)",
+      "notes": "I.4.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Primary": "Green"
+        },
+        "c_prop": 434041037028460038,
+        "sum": 14540374740453411273
+      },
+      "id": "PG",
+      "name": "Payne's Gray",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            813826944428362571
+          ]
+        },
+        "c_prop": 9838263505978427528,
+        "sum": 17651002172490708212
+      },
+      "id": "PRD",
+      "name": "Permanent Red Deep",
+      "notes": "II(NR).3.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            772638495233907921
+          ]
+        },
+        "c_prop": 13816973012072644543,
+        "sum": 22208433061289538611
+      },
+      "id": "PS",
+      "name": "Pyrrol Scarlet",
+      "notes": "I(NR).3.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            11375492178787556830
+          ]
+        },
+        "c_prop": 8680820740569200760,
+        "sum": 31829676048753736120
+      },
+      "id": "PYG",
+      "name": "Phthalo Yellow Green",
+      "notes": "II.3.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            5404778518411715760
+          ]
+        },
+        "c_prop": 11357407135578037661,
+        "sum": 27055224641440675702
+      },
+      "id": "QR",
+      "name": "Quinacridone Rose",
+      "notes": "I.3.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            11824835944685610010
+          ]
+        },
+        "c_prop": 5642533481369980494,
+        "sum": 16421219234243404771
+      },
+      "id": "RU",
+      "name": "Raw Umber",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            10780564718401686009
+          ]
+        },
+        "c_prop": 5570193308531903821,
+        "sum": 15119096123158024657
+      },
+      "id": "S",
+      "name": "Sepia",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            13021231110853801141
+          ]
+        },
+        "c_prop": 4919131752989213764,
+        "sum": 19459506493442625037
+      },
+      "id": "SG",
+      "name": "Sap Green",
+      "notes": "I.3.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            4143118989817118544
+          ]
+        },
+        "c_prop": 13527612320720337851,
+        "sum": 18736104765061858307
+      },
+      "id": "UB",
+      "name": "Ultramarine Blue",
+      "notes": "I.3.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            15123006402770893667
+          ]
+        },
+        "c_prop": 8029759185026510703,
+        "sum": 16999940616948018155
+      },
+      "id": "UT",
+      "name": "Ultramarine Turquoise",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            15713893099826655081
+          ]
+        },
+        "c_prop": 3906369333256140342,
+        "sum": 37833910394314099979
+      },
+      "id": "UV",
+      "name": "Ultramarine Violet",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            11844751457855606827
+          ]
+        },
+        "c_prop": 13744632839234567870,
+        "sum": 32336057258620272831
+      },
+      "id": "YO",
+      "name": "Yellow Ochre",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    }
+  ]
+}
