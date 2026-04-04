@@ -8,6 +8,26 @@
       "colour": {
         "hue": {
           "Sextant": [
+            "RedMagenta",
+            16040647020617001406
+          ]
+        },
+        "c_prop": 1663823975275763479,
+        "sum": 18736104765061858307
+      },
+      "id": "AG",
+      "name": "Amethyst Genuine",
+      "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
             "RedYellow",
             16933165072789793535
           ]
@@ -100,6 +120,21 @@
       "notes": "I.2.Y",
       "finish": "Gloss",
       "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": null,
+        "c_prop": 0,
+        "sum": 55340232221128654845
+      },
+      "id": "H2O",
+      "name": "Water",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
       "permanence": "Permanent",
       "fluorescence": "NonFluorescent",
       "metallicness": "NonMetallic"
