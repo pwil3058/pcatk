@@ -395,6 +395,26 @@
         "hue": {
           "Sextant": [
             "RedYellow",
+            10314308514332222409
+          ]
+        },
+        "c_prop": 13455272147882261178,
+        "sum": 29876491382125665949
+      },
+      "id": "RS",
+      "name": "Raw Sienna",
+      "notes": "I.2.Y.ST",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
             11824835944685610010
           ]
         },
@@ -504,6 +524,26 @@
       "id": "UV",
       "name": "Ultramarine Violet",
       "notes": "I.2.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            7378697629483820646
+          ]
+        },
+        "c_prop": 6148914691236517205,
+        "sum": 30744573456182586025
+      },
+      "id": "Vir",
+      "name": "Viridian",
+      "notes": "I.1.Y.T",
       "finish": "Gloss",
       "transparency": "Transparent",
       "permanence": "Permanent",
