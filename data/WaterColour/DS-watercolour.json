@@ -126,6 +126,26 @@
     },
     {
       "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            18144338433156936016
+          ]
+        },
+        "c_prop": 8825501086245354106,
+        "sum": 29008409308068745873
+      },
+      "id": "GG",
+      "name": "Green Gold",
+      "notes": "II.3.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
         "hue": null,
         "c_prop": 0,
         "sum": 55340232221128654845
@@ -258,6 +278,26 @@
         "hue": {
           "Sextant": [
             "BlueCyan",
+            15110630783783356111
+          ]
+        },
+        "c_prop": 6799976246779207262,
+        "sum": 38846672814047173401
+      },
+      "id": "MBH",
+      "name": "Manganese Blue Hue",
+      "notes": "II.3.Y",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
             11621448766437017518
           ]
         },
@@ -306,6 +346,46 @@
       "notes": "I.2.Y",
       "finish": "Gloss",
       "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            10138668498527387148
+          ]
+        },
+        "c_prop": 9476562641788044163,
+        "sum": 16638239752757634790
+      },
+      "id": "PGBS",
+      "name": "Phthalo Green (Blue Shade)",
+      "notes": "I.4.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            3201501037585955239
+          ]
+        },
+        "c_prop": 8753160913407277433,
+        "sum": 22425453579803768630
+      },
+      "id": "PGYS",
+      "name": "Phthalo Green (Yellow Shade)",
+      "notes": "I.4.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
       "permanence": "Permanent",
       "fluorescence": "NonFluorescent",
       "metallicness": "NonMetallic"
@@ -364,6 +444,26 @@
       "id": "PYG",
       "name": "Phthalo Yellow Green",
       "notes": "II.3.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            6100498040124418644
+          ]
+        },
+        "c_prop": 9187201950435737471,
+        "sum": 18953125283576088326
+      },
+      "id": "QM",
+      "name": "Quinacridone Magenta",
+      "notes": "I.3.N",
       "finish": "Gloss",
       "transparency": "Transparent",
       "permanence": "Permanent",
