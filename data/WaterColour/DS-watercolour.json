@@ -277,6 +277,43 @@
       "colour": {
         "hue": {
           "Sextant": [
+            "GreenCyan",
+            12297829382473034411
+          ]
+        },
+        "c_prop": 651061555542690057,
+        "sum": 9765923333140350855
+      },
+      "id": "JZNG",
+      "name": "Joseph Z’s Neutral Grey",
+      "notes": "I.2.G",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Primary": "Green"
+        },
+        "c_prop": 361700864190383365,
+        "sum": 3617008641903833650
+      },
+      "id": "LB",
+      "name": "Lamp Black",
+      "notes": "I.4.N",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
             "BlueCyan",
             15110630783783356111
           ]
@@ -289,6 +326,26 @@
       "notes": "II.3.Y",
       "finish": "Gloss",
       "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            3074457345618258602
+          ]
+        },
+        "c_prop": 868082074056920076,
+        "sum": 14033993530586874562
+      },
+      "id": "NT",
+      "name": "Neutral Tint",
+      "notes": "I.2.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
       "permanence": "Permanent",
       "fluorescence": "NonFluorescent",
       "metallicness": "NonMetallic"
@@ -394,6 +451,26 @@
       "colour": {
         "hue": {
           "Sextant": [
+            "RedYellow",
+            6208038870959945255
+          ]
+        },
+        "c_prop": 15046755950319947984,
+        "sum": 27055224641440675702
+      },
+      "id": "PO",
+      "name": "Pyrrol Orange",
+      "notes": "I.3.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
             "RedMagenta",
             813826944428362571
           ]
@@ -426,6 +503,26 @@
       "notes": "I(NR).3.N",
       "finish": "Gloss",
       "transparency": "SemiTransparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            15495265021916023358
+          ]
+        },
+        "c_prop": 7234017283807667300,
+        "sum": 16348879061405328098
+      },
+      "id": "PT",
+      "name": "Phthalo Turquoise",
+      "notes": "I.4.N",
+      "finish": "Gloss",
+      "transparency": "Transparent",
       "permanence": "Permanent",
       "fluorescence": "NonFluorescent",
       "metallicness": "NonMetallic"
@@ -567,6 +664,23 @@
       "finish": "Gloss",
       "transparency": "Transparent",
       "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Secondary": "Yellow"
+        },
+        "c_prop": 72340172838076673,
+        "sum": 55267892048290578172
+      },
+      "id": "TW",
+      "name": "Titanium White",
+      "notes": "I.1.N",
+      "finish": "Gloss",
+      "transparency": "SemiTransparent",
+      "permanence": "ExtremelyPermanent",
       "fluorescence": "NonFluorescent",
       "metallicness": "NonMetallic"
     },
