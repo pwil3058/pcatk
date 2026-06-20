@@ -1,0 +1,463 @@
+{
+  "series_id": {
+    "proprietor": "Daniel Smith",
+    "series_name": "Extra Fine Gouache"
+  },
+  "paint_list": [
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            4256940940086819603
+          ]
+        },
+        "c_prop": 1880844493789993498,
+        "sum": 5136152271503443783
+      },
+      "id": "AC",
+      "name": "Alizarin Crimson",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Fugitive",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            2869493522577041362
+          ]
+        },
+        "c_prop": 3255307777713450285,
+        "sum": 16782920098433788136
+      },
+      "id": "B",
+      "name": "Bordeaux",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            13176245766935394012
+          ]
+        },
+        "c_prop": 3544668469065756977,
+        "sum": 43838144739874463838
+      },
+      "id": "BT",
+      "name": "Buff Titanium",
+      "notes": "Non Staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            1101298153654301589
+          ]
+        },
+        "c_prop": 4846791580151137091,
+        "sum": 14685055086129564619
+      },
+      "id": "C",
+      "name": "Carmine",
+      "notes": "High staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            5764607523034234880
+          ]
+        },
+        "c_prop": 11574427654092267680,
+        "sum": 25174380147650682204
+      },
+      "id": "COH",
+      "name": "Cadmium Orange Hue",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            155014656081592870
+          ]
+        },
+        "c_prop": 8608480567731124087,
+        "sum": 19097805629252241672
+      },
+      "id": "CRMH",
+      "name": "Cadmium Red Medium Hue",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            6148914691236517205
+          ]
+        },
+        "c_prop": 868082074056920076,
+        "sum": 8536140394893047414
+      },
+      "id": "CV",
+      "name": "Carbazole Violet",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            17380458289102063083
+          ]
+        },
+        "c_prop": 12514849900987264429,
+        "sum": 32553077777134502850
+      },
+      "id": "CYLH",
+      "name": "Cadmium Yellow Light Hue",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            14268199836018437714
+          ]
+        },
+        "c_prop": 13093571283691877813,
+        "sum": 31250954666049122736
+      },
+      "id": "CYMH",
+      "name": "Cadmium Yellow Medium Hue",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            10968334314097571231
+          ]
+        },
+        "c_prop": 16059518370053021406,
+        "sum": 31250954666049122736
+      },
+      "id": "HYD",
+      "name": "Hansa Yellow Deep",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            17667304183271119858
+          ]
+        },
+        "c_prop": 10272304543006887566,
+        "sum": 40076455752294476842
+      },
+      "id": "HYL",
+      "name": "Hansa Yellow Light",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            15274905726193882107
+          ]
+        },
+        "c_prop": 15987178197214944733,
+        "sum": 35302004344981416424
+      },
+      "id": "HYM",
+      "name": "HansaYellow Medium",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            12698845557988459446
+          ]
+        },
+        "c_prop": 9982943851654580874,
+        "sum": 26404163085897985645
+      },
+      "id": "IY",
+      "name": "Indian Yellow",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            15567772455269332578
+          ]
+        },
+        "c_prop": 12514849900987264429,
+        "sum": 32625417949972579523
+      },
+      "id": "LY",
+      "name": "Lemon Yellow",
+      "notes": "Low staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            6565790263523738711
+          ]
+        },
+        "c_prop": 8536140394893047414,
+        "sum": 26331822913059908972
+      },
+      "id": "OP",
+      "name": "Opera Pink",
+      "notes": "Non staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Fugitive",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            3028569922549329369
+          ]
+        },
+        "c_prop": 4846791580151137091,
+        "sum": 13238251629368031159
+      },
+      "id": "PAC",
+      "name": "Permanent Alizarin Crimson",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            3978709506094217015
+          ]
+        },
+        "c_prop": 14757395258967641292,
+        "sum": 25319060493326835550
+      },
+      "id": "PO",
+      "name": "Pyrrol Orange",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            472993437787424400
+          ]
+        },
+        "c_prop": 11285066962739960988,
+        "sum": 24595658764946068820
+      },
+      "id": "PR",
+      "name": "Pyrrol Red",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            98120979115476338
+          ]
+        },
+        "c_prop": 13599952493558414524,
+        "sum": 24306298073593762128
+      },
+      "id": "PS",
+      "name": "Pyrrol Scarlet",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            7686143364045646507
+          ]
+        },
+        "c_prop": 7812738666512280684,
+        "sum": 16710579925595711463
+      },
+      "id": "QM",
+      "name": "Quinacridone Magenta",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            12496181469287115611
+          ]
+        },
+        "c_prop": 2242545357980376863,
+        "sum": 14612714913291487946
+      },
+      "id": "QP",
+      "name": "Quinacridone Purple",
+      "notes": "Medium staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": null,
+        "c_prop": 0,
+        "sum": 54255129628557504750
+      },
+      "id": "TW",
+      "name": "Titanium White",
+      "notes": "Non staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "ExtremelyPermanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            15763581299351798654
+          ]
+        },
+        "c_prop": 3978709506094217015,
+        "sum": 34072221406734112983
+      },
+      "id": "W",
+      "name": "Wisteria",
+      "notes": "Non staining",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    }
+  ]
+}

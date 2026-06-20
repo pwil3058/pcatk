@@ -1,0 +1,263 @@
+{
+  "series_id": {
+    "proprietor": "me",
+    "series_name": "CoatingBook"
+  },
+  "paint_list": [
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            6148914691236517205
+          ]
+        },
+        "c_prop": 434041037028460038,
+        "sum": 2531906049332683555
+      },
+      "id": "Black",
+      "name": "Black",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            2970238452546453226
+          ]
+        },
+        "c_prop": 8536140394893047414,
+        "sum": 9910603678816504201
+      },
+      "id": "Blue",
+      "name": "Blue",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            16769767339735956015
+          ]
+        },
+        "c_prop": 2387225703656530209,
+        "sum": 14757395258967641292
+      },
+      "id": "BlueGreen",
+      "name": "BlueGreen",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            7767050136298758575
+          ]
+        },
+        "c_prop": 5497853135693827148,
+        "sum": 17361641481138401520
+      },
+      "id": "Brown",
+      "name": "Brown",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            12607486956851851824
+          ]
+        },
+        "c_prop": 10055284024492657547,
+        "sum": 25608421184679142242
+      },
+      "id": "DarkYellow",
+      "name": "DarkYellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            8269230102007730035
+          ]
+        },
+        "c_prop": 2097865012304223517,
+        "sum": 13455272147882261178
+      },
+      "id": "Green",
+      "name": "Green",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            12981042125943758545
+          ]
+        },
+        "c_prop": 9765923333140350855,
+        "sum": 25536081011841065569
+      },
+      "id": "LightYellow",
+      "name": "LightYellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            8608480567731124087
+          ]
+        },
+        "c_prop": 2170205185142300190,
+        "sum": 8391460049216894068
+      },
+      "id": "Maroon",
+      "name": "Maroon",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            10945068150401000625
+          ]
+        },
+        "c_prop": 10851025925711500950,
+        "sum": 20110568048985315094
+      },
+      "id": "Pink",
+      "name": "Pink",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            10813608594933185430
+          ]
+        },
+        "c_prop": 6293595036912670551,
+        "sum": 11719107999768421026
+      },
+      "id": "Purple",
+      "name": "Purple",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            1929071275682044613
+          ]
+        },
+        "c_prop": 11068046444225730969,
+        "sum": 12876550765177647794
+      },
+      "id": "Red",
+      "name": "Red",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": null,
+        "c_prop": 0,
+        "sum": 55340232221128654845
+      },
+      "id": "Water",
+      "name": "Water",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            14563219005560172329
+          ]
+        },
+        "c_prop": 1374463283923456787,
+        "sum": 39570074542427940131
+      },
+      "id": "White",
+      "name": "White",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Transparent",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    }
+  ]
+}

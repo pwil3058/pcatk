@@ -1,0 +1,488 @@
+{
+  "series_id": {
+    "proprietor": "MontMartre",
+    "series_name": "MM-Gouache"
+  },
+  "paint_list": [
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            8172608133921953247
+          ]
+        },
+        "c_prop": 5714873654208057167,
+        "sum": 17578661999652631539
+      },
+      "id": "BS",
+      "name": "Burnt Sienna",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            16602069666338596455
+          ]
+        },
+        "c_prop": 1446803456761533460,
+        "sum": 14468034567615334600
+      },
+      "id": "BU",
+      "name": "Burnt Umber",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            3381903080180084463
+          ]
+        },
+        "c_prop": 4340410370284600380,
+        "sum": 13599952493558414524
+      },
+      "id": "C",
+      "name": "Crimson",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            9008875012741874045
+          ]
+        },
+        "c_prop": 6221254864074593878,
+        "sum": 20978650123042235170
+      },
+      "id": "CB",
+      "name": "Cerulean Blue",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            4368965701668051698
+          ]
+        },
+        "c_prop": 5497853135693827148,
+        "sum": 21557371505746848554
+      },
+      "id": "CoB",
+      "name": "Cobalt Blue",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            3310954064511970803
+          ]
+        },
+        "c_prop": 2821266740684990247,
+        "sum": 13527612320720337851
+      },
+      "id": "DG",
+      "name": "Deep Green",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            14347467612885206813
+          ]
+        },
+        "c_prop": 651061555542690057,
+        "sum": 8753160913407277433
+      },
+      "id": "LB",
+      "name": "Lamp Black",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            16076492041892123196
+          ]
+        },
+        "c_prop": 12948890938015724467,
+        "sum": 36604127456066796538
+      },
+      "id": "LY",
+      "name": "Lemon Yellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueMagenta",
+            10699111562751539937
+          ]
+        },
+        "c_prop": 3617008641903833650,
+        "sum": 18085043209519168250
+      },
+      "id": "M",
+      "name": "Mauve",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            11170528355746339590
+          ]
+        },
+        "c_prop": 13021231110853801140,
+        "sum": 31757335875915659447
+      },
+      "id": "MY",
+      "name": "Medium Yellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            7583661452525037886
+          ]
+        },
+        "c_prop": 13021231110853801140,
+        "sum": 29225429826582975892
+      },
+      "id": "OY",
+      "name": "Orange Yellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            461168601842738790
+          ]
+        },
+        "c_prop": 2893606913523066920,
+        "sum": 13382931975044184505
+      },
+      "id": "P",
+      "name": "Purple",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            6588122883467697006
+          ]
+        },
+        "c_prop": 3038287259199220266,
+        "sum": 13021231110853801140
+      },
+      "id": "PB",
+      "name": "Prussian Blue",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenYellow",
+            2078506374502484689
+          ]
+        },
+        "c_prop": 5136152271503443783,
+        "sum": 18736104765061858307
+      },
+      "id": "PG",
+      "name": "Pale Green",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            14230345428290225532
+          ]
+        },
+        "c_prop": 12659530246663417775,
+        "sum": 34361582098086419675
+      },
+      "id": "PY",
+      "name": "Pale Yellow",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedMagenta",
+            3867865692874583403
+          ]
+        },
+        "c_prop": 4485090715960753726,
+        "sum": 18880785110738011653
+      },
+      "id": "R",
+      "name": "Rose",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            1956472856302528201
+          ]
+        },
+        "c_prop": 9548902814626120836,
+        "sum": 20327588567499545113
+      },
+      "id": "S",
+      "name": "Scarlet",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            1799682348654590401
+          ]
+        },
+        "c_prop": 2965947086361143593,
+        "sum": 13672292666396491197
+      },
+      "id": "SG",
+      "name": "Sap Green",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            12887451339166947020
+          ]
+        },
+        "c_prop": 5280832617179597129,
+        "sum": 24595658764946068820
+      },
+      "id": "T",
+      "name": "Turquoise",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            3689348814741910323
+          ]
+        },
+        "c_prop": 361700864190383365,
+        "sum": 51216842369358284484
+      },
+      "id": "TW",
+      "name": "Titanium White",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "BlueCyan",
+            3633449590276123803
+          ]
+        },
+        "c_prop": 4774451407313060418,
+        "sum": 15697817505862638041
+      },
+      "id": "UB",
+      "name": "Ultramarine Blue",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            3617008641903833650
+          ]
+        },
+        "c_prop": 11068046444225730969,
+        "sum": 24306298073593762128
+      },
+      "id": "V",
+      "name": "Vermillion",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "SemiOpaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "GreenCyan",
+            6148914691236517205
+          ]
+        },
+        "c_prop": 2604246222170760228,
+        "sum": 13238251629368031159
+      },
+      "id": "Vv",
+      "name": "Veridean",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    },
+    {
+      "colour": {
+        "hue": {
+          "Sextant": [
+            "RedYellow",
+            9290695920335467602
+          ]
+        },
+        "c_prop": 9910603678816504201,
+        "sum": 25102039974812605531
+      },
+      "id": "YO",
+      "name": "Yellow Ochre",
+      "notes": "",
+      "finish": "Gloss",
+      "transparency": "Opaque",
+      "permanence": "Permanent",
+      "fluorescence": "NonFluorescent",
+      "metallicness": "NonMetallic"
+    }
+  ]
+}
