@@ -13,9 +13,9 @@ use pw_gtk_ext::{
 use colour_math::ScalarAttribute;
 
 use apaint_gtk::{
-    characteristics::CharacteristicType,
     factory::{BasicPaintFactory, BasicPaintFactoryBuilder},
     mixer::palette::{PalettePaintMixer, PalettePaintMixerBuilder},
+    properties::PropertyType,
 };
 
 use crate::config;
@@ -34,18 +34,15 @@ impl PaintersColourAssistantTK {
             ScalarAttribute::Value,
             ScalarAttribute::Warmth,
         ];
-        let characteristics = vec![
-            CharacteristicType::Transparency,
-            CharacteristicType::Permanence,
-        ];
+        let properties = vec![PropertyType::Transparency, PropertyType::Permanence];
         let palette = PalettePaintMixerBuilder::new()
             .attributes(&attributes)
-            .characteristics(&characteristics)
+            .properties(&properties)
             .config_dir_path(&config::config_dir_path())
             .build();
         let factory = BasicPaintFactoryBuilder::new()
             .attributes(&attributes)
-            .characteristics(&characteristics)
+            .properties(&properties)
             .build();
         let pcatk = Rc::new(Self {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
